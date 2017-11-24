@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Therma Europe</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/jquery.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+<script src="js/bootstrap-datepicker.min.js"></script>
+<script src="js/custom.js"></script>
+<script src="js/jquery.scrollbar.js"></script>
+  <script> 
+	$( document ).ready(function() {
+	
+  $("#menu").load("menu.html"); 
+ 
+
+    
+});
+</script>
+</head>
+<body>
+
+
+<div class="main-wrap super-admin">
+<div class="top-header">
+	<div class="logo"><a href="index.html"><img src="images/logo.png" alt="logo"/></a></div>
+    
+    <div class="float-right">
+    <div class="search-box-top"><input type="text" placeholder="Search for reservations"/></div>
+    <div class="tab-menu">
+    
+     <ul class="nav nav-tabs" role="tablist">
+            <li><a href="#ciao"  data-toggle="tab"> <img src="images/user.png" alt="User"/> <span>Ciao.</span> <p>Marco</p> </a></li>
+            <li ><a href="#hotel"  data-toggle="tab"> <img src="images/hotel.png" alt="Hotel"/> <span>user</span> <p>id 784789</p> </a></li>
+            <li ><a href="#lang"  data-toggle="tab"><img src="images/english.jpg" alt="English"/></a></li>
+          </ul>
+        
+    
+          <div class="tab-content"><div  class="tab-pan" id="ciao">
+                	
+                    <div class="user-menu-tab">
+                    	<ul class="list-unstyled">
+                    		<li><a href="my-profile.html">My Profile</a></li>
+                            <li><a href="change-password.html">change passoword</a></li>
+                            <li><a href="message.html">my notification</a></li>
+                            <li><a href="#">Log out</a></li>
+                        </ul>
+                    </div>
+                
+                   <!-- <div class="radio round-checkbox">
+                             <input type="radio" id="myprofile" name="ossm"> 
+                            <label for="myprofile">my profile</label> 
+                            <div class="check"><div class="inside"></div></div>
+                    </div>
+                    
+                    <div class="radio round-checkbox">
+                             <input type="radio" id="change-pass" name="ossm"> 
+                            <label for="change-pass">change password</label> 
+                            <div class="check"><div class="inside"></div></div>
+                    </div>
+                
+                    <div class="radio round-checkbox">
+                            <input type="radio" id="my-notifi" name="ossm"> 
+                       		<label for="my-notifi">my notification</label>
+                            <div class="check"><div class="inside"></div></div>
+                    </div>
+                
+                    <div class="radio round-checkbox">
+                             <input type="radio" id="log-out" name="ossm"> 
+                            <label for="log-out">log out</label> 
+                            <div class="check"><div class="inside"></div></div>
+                    </div>-->
+                    
+			</div><div  class="tab-pane" id="hotel"><div class="search-box-top"><input type="text" placeholder="Search hotel"/></div>
+            			<div class="add-new-hotel">
+                        	<input type="text" placeholder="Add a new hotel"/><div class="search-link"><a href="basic-info.html"><img src="images/plus.png"/></a></div></div></div> <div  class="tab-pane" id="lang"><div class="search-box-top"><input type="text" placeholder="Language selector"/></div></div>
+          </div>
+     
+    
+          
+    </div> 
+    </div>
+</div>
+
+
+<div id="wrapper" class="toggled">
+
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper" class="sidebar-wrapper">
+        	<div class="side-heading"><h1>Admin</h1></div>
+            <ul class="sidebar-nav">
+                
+                <li><a href="manage-users.html" class="active">Manage agent</a></li>
+                <li><a href="commision-area.html">agent commission area</a></li>
+               	<li><a href="hotel-admin-profile.html">Manage hotel Admin profile</a></li>
+               	<li><a href="manage-customer.html">Manage customer</a></li>                
+            </ul>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="page-content-wrapper">
+        	<div id="menu"></div>  
+            
+            <!-------------------------------->
+             <div class="content">
+                <div class="row">
+                    		<div class="col-md-12 col-sm-12 col-xs-12">	
+                            	
+                                	<div class="main-form-wrap">
+                                    	<div class="set-width-form">
+                                    	<form action="/action_page.php">
+                                            <div class="form-group">
+                                              <label for="">Name:</label>
+                                              <input type="text" class="form-control" id="" placeholder="Enter Name" name="">
+                                            </div>
+                                            <div class="form-group">
+                                              <label for="">Email:</label>
+                                              <input type="text" class="form-control" id="" placeholder="Enter Email" name="">
+                                            </div>
+                                            <div class="form-group">
+                                              <label for="">Password:</label>
+                                              <input type="password" class="form-control" id="" placeholder="Enter Password" name="">
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <select class="form-control">
+                                                  <option selected>Select Country</option>
+                                                  <option>abc</option>
+                                                  <option>xyz</option>
+                                                  <option>pqr</option>
+                                                </select>
+                                            </div>
+                                            <div class="ryt-chk-content">
+                                                <div class="ryt-chk">
+                                                <input id="one" type="checkbox">
+                                                <label for="one">Remember me</label></div>
+                                            </div>
+                                           
+                                            <button type="submit" class="btn btn-default">Submit</button>
+                                          </form>
+                                         </div> 
+                                    </div>
+                                	
+                                </div>
+                            </div>
+                 </div>
+             </div>               
+            </div>
+            
+            <!---------------------------------->
+            
+            
+            
+        </div>
+        <!-- /#page-content-wrapper -->
+
+    
+  
+
+</body>
+</html>
