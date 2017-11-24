@@ -1,0 +1,396 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+
+
+        <div class="step-page"><div class="row">
+                <div class="col-md-12">
+                    <div class="navigation-root">
+                        <ul class="navigation-list">
+                            <li class="navigation-item navigation-previous-item " id="firstst"></li>
+                            <li class="navigation-item navigation-previous-item " id="secondst"></li>
+                            <li class="navigation-item navigation-previous-item " id="thirdst"></li>
+                            <li class="navigation-item navigation-previous-item " id="fourthst"></li>
+                            <li class="navigation-item navigation-previous-item  navigation-active-item" id="fifthst"></li>
+                            <li class="navigation-item" id="sixthst"></li>
+                            <li class="navigation-item" id="seven"></li>
+                            <li class="navigation-item" id="eight"></li>
+                            <li class="navigation-item" id="nine"></li>
+                        </ul>
+                    </div>
+                </div>
+            </div></div>
+
+        <div class="amenities-wrap">
+            <div class="row">
+                <div class="col-md-6 col-sm-12 col-xs-12">
+
+                    <div class="lft-side-amenities">
+
+                        <div class="section-border">
+
+                            <div class="bg-grey-amenities">
+                                <div class="heading-amenities">dotazioni dell'alloggio</div>
+
+                                <div class="row bg-grey">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">stand appendiabili</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista" type="checkbox">
+                                            <label for="vista">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista1" type="checkbox">
+                                            <label for="vista1">alcume camere</label>
+                                        </div>
+
+                                        <div class="">
+                                            <label class="gry-clr">Indica dove-e disponibile questo servizio.</label>
+                                            <div class="ryt-chk">
+                                                <input id="camere1" type="checkbox">
+                                                <label for="camere1">alcume camere</label>
+                                            </div>
+                                            <div class="ryt-chk">
+                                                <input id="camere2" type="checkbox">
+                                                <label for="camere2">alcume camere</label>
+                                            </div>
+                                            <div class="ryt-chk">
+                                                <input id="camere3" type="checkbox">
+                                                <label for="camere3">alcume camere</label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">standibiancheria</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista2" type="checkbox">
+                                            <label for="vista2">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista3" type="checkbox">
+                                            <label for="vista3">alcume camere</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">letto pieghevole</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista5" type="checkbox">
+                                            <label for="vista5">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vista4" type="checkbox">
+                                            <label for="vista4">alcume camere</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="section-border">
+
+                            <div class="bg-grey-amenities">
+                                <div class="heading-amenities">dotazioni dell'alloggio</div>
+
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">stand appendiabili</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="v1" type="checkbox">
+                                            <label for="v1">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="v2" type="checkbox">
+                                            <label for="v2">alcume camere</label>
+                                        </div>
+
+                                        <div class="none">
+                                            <label class="gry-clr">Indica dove-e disponibile questo servizio.</label>
+                                            <div class="ryt-chk">
+                                                <input id="c1" type="checkbox">
+                                                <label for="c1">alcume camere</label>
+                                            </div>
+                                            <div class="ryt-chk">
+                                                <input id="c2" type="checkbox">
+                                                <label for="c2">alcume camere</label>
+                                            </div>
+                                            <div class="ryt-chk">
+                                                <input id="c3" type="checkbox">
+                                                <label for="c3">alcume camere</label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">standibiancheria</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vis1" type="checkbox">
+                                            <label for="vis1">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vis2" type="checkbox">
+                                            <label for="vis2">alcume camere</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <p class="bold blue-head">letto pieghevole</p>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vis3" type="checkbox">
+                                            <label for="vis3">tuttle le camera</label></div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="ryt-chk">
+                                            <input id="vis4" type="checkbox">
+                                            <label for="vis4">alcume camere</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+
+
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <div class="section-border">
+                        <div class="bg-grey-amenities">
+                            <div class="heading-amenities">esterni e vista</div>
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">balcone</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis11" type="checkbox">
+                                        <label for="vis11">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis12" type="checkbox">
+                                        <label for="vis12">tuttle le camera</label></div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">patio</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis13" type="checkbox">
+                                        <label for="vis13">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis14" type="checkbox">
+                                        <label for="vis14">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">vista</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis15" type="checkbox">
+                                        <label for="vis15">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis16" type="checkbox">
+                                        <label for="vis16">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">terrazza</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis7" type="checkbox">
+                                        <label for="vis7">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis8" type="checkbox">
+                                        <label for="vis8">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">vista citta</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis9" type="checkbox">
+                                        <label for="vis9">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis10" type="checkbox">
+                                        <label for="vis10">alcune camere</label></div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="section-border">
+                        <div class="bg-grey-amenities">
+                            <div class="heading-amenities">esterni e vista</div>
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">balcone</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis111" type="checkbox">
+                                        <label for="vis111">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis122" type="checkbox">
+                                        <label for="vis122">tuttle le camera</label></div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">patio</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis133" type="checkbox">
+                                        <label for="vis133">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis144" type="checkbox">
+                                        <label for="vis144">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">vista</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis155" type="checkbox">
+                                        <label for="vis155">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis166" type="checkbox">
+                                        <label for="vis166">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">terrazza</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis77" type="checkbox">
+                                        <label for="vis77">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis88" type="checkbox">
+                                        <label for="vis88">alcune camere</label></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <p class="bold blue-head">vista citta</p>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis99" type="checkbox">
+                                        <label for="vis99">tuttle le camera</label></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="ryt-chk">
+                                        <input id="vis100" type="checkbox">
+                                        <label for="vis100">alcune camere</label></div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="btn-shape">
+
+            <div class="row">
+                <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left"><a href="{{ url('hotel/edit/room-options').'/'.$hotelid }}" class="btn btn-default">@lang('messages.keyword_previous')</a></div>
+                <div class="col-md-6 col-sm-12 col-xs-12 btn-right-shape text-right"><a href="{{ url('hotel/edit/extra').'/'.$hotelid }}" class="btn btn-default">@lang('messages.keyword_next')</a></div>
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+
+@endsection

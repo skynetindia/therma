@@ -1,0 +1,45 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 17/11/2016 19:25
+  	*/
+
+@font-face {
+  font-family: Flaticon-personale-medico;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-personale-medico;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-personale-medico-"]:before, [class*=" flaticon-personale-medico-"]:before,
+[class^="flaticon-personale-medico-"]:after, [class*=" flaticon-personale-medico-"]:after {   
+  font-family: Flaticon-personale-medico;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-personale-medico-baby-with-diaper:before { content: "\f100"; }
+.flaticon-personale-medico-brain-and-head:before { content: "\f101"; }
+.flaticon-personale-medico-cardiologist-stethoscope:before { content: "\f102"; }
+.flaticon-personale-medico-doctor:before { content: "\f103"; }
+.flaticon-personale-medico-doctor-1:before { content: "\f104"; }
+.flaticon-personale-medico-eye:before { content: "\f105"; }
+.flaticon-personale-medico-food:before { content: "\f106"; }
+.flaticon-personale-medico-fruit:before { content: "\f107"; }
+.flaticon-personale-medico-hospital:before { content: "\f108"; }
+.flaticon-personale-medico-kidneys:before { content: "\f109"; }
+.flaticon-personale-medico-medical:before { content: "\f10a"; }
+.flaticon-personale-medico-people:before { content: "\f10b"; }
+.flaticon-personale-medico-people-1:before { content: "\f10c"; }
+.flaticon-personale-medico-question-speech-bubble:before { content: "\f10d"; }

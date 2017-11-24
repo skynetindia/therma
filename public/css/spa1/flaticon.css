@@ -1,0 +1,48 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 17/11/2016 19:44
+  	*/
+
+@font-face {
+  font-family: Flaticon-spa1;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-spa1;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-spa1-"]:before, [class*=" flaticon-spa1-"]:before,
+[class^="flaticon-spa1-"]:after, [class*=" flaticon-spa1-"]:after {   
+  font-family: Flaticon-spa1;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-spa1-butt-wearing-underwear:before { content: "\f100"; }
+.flaticon-spa1-cut:before { content: "\f101"; }
+.flaticon-spa1-flower:before { content: "\f102"; }
+.flaticon-spa1-food:before { content: "\f103"; }
+.flaticon-spa1-food-1:before { content: "\f104"; }
+.flaticon-spa1-lotus:before { content: "\f105"; }
+.flaticon-spa1-lotus-position:before { content: "\f106"; }
+.flaticon-spa1-massage:before { content: "\f107"; }
+.flaticon-spa1-massage-1:before { content: "\f108"; }
+.flaticon-spa1-massage-2:before { content: "\f109"; }
+.flaticon-spa1-massage-spa-body-treatment:before { content: "\f10a"; }
+.flaticon-spa1-monument:before { content: "\f10b"; }
+.flaticon-spa1-multimedia:before { content: "\f10c"; }
+.flaticon-spa1-oil-drop:before { content: "\f10d"; }
+.flaticon-spa1-paint-spot:before { content: "\f10e"; }
+.flaticon-spa1-people:before { content: "\f10f"; }
+.flaticon-spa1-women:before { content: "\f110"; }

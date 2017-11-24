@@ -1,0 +1,20 @@
+[10-Oct-2017 10:49:20 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 342
+[10-Oct-2017 10:51:10 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 341
+[12-Oct-2017 06:01:10 UTC] PHP Parse error:  syntax error, unexpected ')', expecting ',' or ';' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/storage/framework/views/954410d1707fdbdc99a24e34ea4364aa15fe1a2e.php on line 214
+[12-Oct-2017 06:01:12 UTC] PHP Parse error:  syntax error, unexpected ')', expecting ',' or ';' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/storage/framework/views/954410d1707fdbdc99a24e34ea4364aa15fe1a2e.php on line 214
+[12-Oct-2017 10:24:10 UTC] PHP Parse error:  syntax error, unexpected ')', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 560
+[12-Oct-2017 10:24:35 UTC] PHP Parse error:  syntax error, unexpected ';' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/storage/framework/views/9ff64a0a0b192c2e67537d90e1bee996be1c45ea.php on line 95
+[12-Oct-2017 10:24:36 UTC] PHP Parse error:  syntax error, unexpected ';' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/storage/framework/views/9ff64a0a0b192c2e67537d90e1bee996be1c45ea.php on line 95
+[12-Oct-2017 11:03:01 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 513
+[12-Oct-2017 11:03:04 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 513
+[12-Oct-2017 11:03:04 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 513
+[12-Oct-2017 11:03:08 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 513
+[12-Oct-2017 11:03:15 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 513
+[12-Oct-2017 11:03:23 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 1069
+[12-Oct-2017 11:59:55 UTC] PHP Parse error:  syntax error, unexpected 'if' (T_IF) in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 602
+[12-Oct-2017 11:59:58 UTC] PHP Parse error:  syntax error, unexpected 'if' (T_IF) in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 602
+[12-Oct-2017 12:00:10 UTC] PHP Parse error:  syntax error, unexpected 'if' (T_IF) in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 602
+[12-Oct-2017 12:03:05 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 373
+[12-Oct-2017 12:19:04 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 373
+[12-Oct-2017 12:19:44 UTC] PHP Parse error:  syntax error, unexpected ''<div class="alert alert-info"' (T_ENCAPSED_AND_WHITESPACE) in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 726
+[12-Oct-2017 12:46:18 UTC] PHP Parse error:  syntax error, unexpected ''ho' (T_ENCAPSED_AND_WHITESPACE), expecting ']' in /home/sqfxnxdn/public_html/sys/system.thermaeurope.com/app/Http/Controllers/HotelController.php on line 1074

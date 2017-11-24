@@ -1,0 +1,304 @@
+
+$( document ).ready(function() {
+	
+
+  
+  $("#example tr").click(function(){
+	  
+        $('#example tr').removeClass("selected");
+		$(this).addClass("selected");
+    });
+ 
+ 
+  $(".invoice-wrap tr").click(function(){
+	  
+        $('.invoice-wrap tr').removeClass("selected");
+		$(this).addClass("selected");
+    });
+ 
+/****add field***/
+  $(function() {
+        $('.Select-option-wiz').change(function(){
+            $('.Wizard-field-set').hide();
+            $('#' + $(this).val()).show();
+        });
+    });
+	
+
+
+
+
+/*********forgot email valid***********/
+$('.btn-Forgot').click(function(){
+	 var sEmail = $('.Enter-Email-Forgot').val();
+   if($('.Enter-Email-Forgot').val() == ''){
+      alert('Please Enter Valid Email Address');
+	  $('.forgot-wrap .alert-success').addClass('none');
+	  $('.forgot-wrap .alert-danger').removeClass('none');
+	  $('.forgot-wrap .alert-danger').text('Please Enter Valid Email');
+   }
+ 
+   else if ($.trim(sEmail).length == 0) {
+            alert('Please enter valid email address');
+			$('.forgot-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.forgot-wrap .alert-danger').removeClass('none');
+			$('.forgot-wrap .alert-success').addClass('none');
+            e.preventDefault();
+        }
+      else  if (!validateEmail(sEmail)) {
+            
+            alert('Invalid Email Address');
+			$('.forgot-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.forgot-wrap .alert-danger').removeClass('none');
+			$('.forgot-wrap .alert-success').addClass('none');
+            e.preventDefault();
+        }
+	  else if($('.Create-Pass').val() == ''){$('.forgot-wrap .alert-danger').removeClass('none');$('.forgot-wrap .alert-danger').text('Enter Password');
+	  	$('.forgot-wrap .alert-success').addClass('none'); 
+	  }
+    
+	else{
+	$('.forgot-wrap .alert-success').removeClass('none').text('We Will send code within 10 mintus'); 
+	$('.forgot-wrap .alert-danger').addClass('none'); }
+	 	
+  
+    
+});
+
+function validateEmail(sEmail) {
+    var filter = /^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    if (filter.test(sEmail)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+
+/****register*********/
+$('.btn-Register').click(function(){
+	 var sEmail = $('.Enter-Email-Forgot').val();
+   if($('.Enter-Email-Forgot').val() == ''){
+      alert('Please Enter Valid Email Address');
+	  $('.register-wrap .alert-success').addClass('none');
+	  $('.register-wrap .alert-danger').removeClass('none');
+	  $('.register-wrap .alert-danger').text('Please Enter Valid Email');
+   }
+ 
+   else if ($.trim(sEmail).length == 0) {
+            alert('Please enter valid email address');
+			$('.register-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.register-wrap .alert-danger').removeClass('none');
+			$('.register-wrap .alert-success').addClass('none');
+            e.preventDefault();
+        }
+      else  if (!validateEmail(sEmail)) {
+            
+            alert('Invalid Email Address');
+			$('.register-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.register-wrap .alert-danger').removeClass('none');
+			$('.register-wrap .alert-success').addClass('none');
+            e.preventDefault();
+        }
+	  else if($('.Create-Pass').val() == ''){$('.register-wrap .alert-danger').removeClass('none');$('.register-wrap .alert-danger').text('Enter Password');
+	  	$('.register-wrap .alert-success').addClass('none'); 
+	  }
+    
+	else{
+	$('.register-wrap .alert-success').removeClass('none').text('Login Successfull'); 
+	$('.register-wrap .alert-danger').addClass('none'); }
+	 	
+  
+    
+});
+
+function validateEmail(sEmail) {
+    var filter = /^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    if (filter.test(sEmail)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+
+/****login*********/
+$('.btn-Signin').click(function(){
+	 var sEmail = $('.Enter-Email-Forgot').val();
+   if($('.Enter-Email-Forgot').val() == ''){
+      alert('Please Enter Valid Email Address');
+	  $('.login-wrap .alert-success').addClass('none');
+	  $('.login-wrap .alert-danger').removeClass('none');
+	  $('.login-wrap .alert-danger').text('Please Enter Valid Email');
+   }
+ 
+   else if ($.trim(sEmail).length == 0) {
+            alert('Please enter valid email address');
+			$('.login-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.login-wrap .alert-danger').removeClass('none');
+			$('.login-wrap .alert-success').addClass('none');
+           e.preventDefault();
+        }
+      else  if (!validateEmail(sEmail)) {
+            
+            alert('Invalid Email Address');
+			$('.login-wrap .alert-danger').text('Please Enter Valid Email');
+			$('.login-wrap .alert-danger').removeClass('none');
+			$('.login-wrap .alert-success').addClass('none');
+            e.preventDefault();
+        }
+	  else if($('.Create-Pass').val() == ''){$('.login-wrap .alert-danger').removeClass('none');$('.login-wrap .alert-danger').text('Enter Password');
+	  	$('.login-wrap .alert-success').addClass('none'); 
+	  }
+    
+	else{
+	$('.login-wrap .alert-success').removeClass('none').text('Login Successfull'); 
+	$('.login-wrap .alert-danger').addClass('none'); }
+	 	
+  
+    
+});
+
+function validateEmail(sEmail) {
+    var filter = /^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    if (filter.test(sEmail)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+$(function() {
+   $(".login-body .nav-tabs li:nth-child(2) a").click(function() {
+      // add class to the one we clicked
+      $(".tab-content #lang").toggleClass("active");
+	  // remove classes from all
+/*      $(".tab-content #lang").removeClass("active");*/
+      
+   });
+});
+
+
+ jQuery('.scrollbar-inner').scrollbar();
+		
+		/******** Funtion start **********/
+		
+				setTimeout(function() {
+		
+			var oldURL = window.location.href.substr(window.location.href.lastIndexOf("/")+1);
+			var index = 0;
+			var newURL = oldURL;
+			index = oldURL.indexOf('?');
+			if(index == -1){
+				index = oldURL.indexOf('#');
+			}
+			if(index != -1){
+				newURL = oldURL.substring(0, index);
+			}
+			
+				 /* START auto scroll to active menu */		
+				var total_menu_item = $(".navbar-default .navbar-nav > li > a").length;
+				var avgpos = parseInt(parseInt($( '.scrollbar-inner' ).width()) / parseInt(total_menu_item));
+				var tempcount = 1;
+				 /* END auto scroll to active menu */
+				 
+				$(".navbar-default .navbar-nav > li > a").each(function(index){
+					
+						  if($(this).attr("href") == newURL || $(this).attr("href") == '' ){
+							 
+						  $(this).addClass("active");
+						  
+						  	if(index > 3) {
+							  /* START auto scroll to active menu */					
+							  $( '.scrollbar-inner' ).animate( {
+										scrollLeft: parseInt(tempcount *  avgpos)
+									}, 500 );
+						  	}
+							  
+							}
+						  
+							  
+							  
+							   /* END auto scroll to active menu */
+						  
+						 
+
+						  if($(this).attr("href") == $(".sidebar-wrapper ul.sidebar-nav > li:first-child > a").attr("href")){
+							
+						  	$(this).addClass("active");
+							
+							if(index > 3) {
+						  /* START auto scroll to active menu */					
+							  $( '.scrollbar-inner' ).animate({
+										scrollLeft: parseInt(tempcount *  avgpos)
+									}, 500 );
+							}
+							  
+							  }
+							  
+							  tempcount++;
+						  
+						  
+						   /* END auto scroll to active menu */
+						  
+						  
+						  
+					 })
+				
+					 
+				$(".user-menu-tab .list-unstyled > li a").each(function(){
+					
+						  if($(this).attr("href") == newURL || $(this).attr("href") == '' ){
+							 
+						  $(this).addClass("active");
+						  
+						  }
+					 })
+				 
+				
+				 
+				 $(".sidebar-wrapper ul li a").each(function(){
+				
+					  if($(this).attr("href") == newURL || $(this).attr("href") == '' ){
+						 
+					  $(this).addClass("active");
+					 
+					  }
+				 })
+				 
+				
+				 
+				 
+				}, 800);
+
+		
+
+		/******** Funtion END **********/
+		
+		
+		
+		/*******************promotion box js************/
+		 $(".promotion-type .promotion-box").click(function(){
+	  
+        $('.promotion-type .promotion-box').removeClass("selected");
+		$(this).addClass("selected");
+    });
+	
+	
+ $(".promition .promotion-box").click(function(){
+	  
+        $('.promition .promotion-box').removeClass("selected");
+		$(this).addClass("selected");
+    });
+		
+		
+    
+});
+
+

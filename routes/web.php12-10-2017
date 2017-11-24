@@ -1,0 +1,220 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+    return Redirect::to('login');	
+});
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+
+/*===================================== Language section routes START =============================== */
+// Lanauge
+Route::get('/language', 'AdminController@language');
+Route::get('/language/json', 'AdminController@getjsonlanguage');
+Route::get('/modify/language/{languageid?}', 'AdminController@modifylanguage');
+Route::post('/update/language/{languageid?}', 'AdminController@saveLanguage');
+Route::get('/destroy/language/{languageid}', 'AdminController@destroylanguage');
+
+// Language Translations
+Route::get('/language/translation/{code?}', 'AdminController@translation');
+Route::get('/language/translation/json/{code?}', 'AdminController@getjsontranslation');
+Route::get('/language/translation/delete/{id}', 'AdminController@destroytranslation');
+Route::get('/language/writelanguage', 'AdminController@writelanguagefile');
+
+Route::any('/language/add/translation', 'AdminController@addedittranslation');
+Route::get('/language/modify/translation/{id}', 'AdminController@addedittranslation');
+Route::post('language/translation/store', 'AdminController@savetranslation');
+Route::post('language/translation/update/{key}', 'AdminController@updatetranslation');
+Route::any('/language/searchtranslation', 'AdminController@getpharses');
+
+/*Route::get('/language-chooser', 'LanguageController@changeLanguage');
+Route::get('/language/', array('before'=> 'csrf','as'=>'language-chooser','uses'=>'LanguageController@changeLanguage'));*/
+/*===================================== Language section routes END =============================== */
+
+/*===================================== Currency Section Start ========================================================= */
+// show taxation 
+Route::get('/currency', 'AdminController@showcurrency');
+// add taxation
+Route::get('/currency/add/{id?}', 'AdminController@addeditcurrency');
+// store taxation
+Route::post('/currency/store', 'AdminController@storecurrency');
+// delete taxation
+Route::get('/currency/delete/{id}', 'AdminController@deletecurrency');
+// get taxation
+Route::get('currency/json', 'AdminController@getjsoncurrency');
+Route::get('/currency/changestatus/{id}/{status}', 'AdminController@updatecurrencystatus');
+
+/*===================================== Currency Section End ========================================================= */
+
+/*===================================== Emotional Section Start ========================================================= */
+// show taxation 
+Route::get('/emotionalstatus', 'AdminController@showemotionalstatus');
+// add taxation
+Route::get('/emotionalstatus/add/{id?}', 'AdminController@addeditemotionalstatus');
+// store taxation
+Route::post('/emotionalstatus/store', 'AdminController@storeemotionalstatus');
+// delete taxation
+Route::get('/emotionalstatus/delete/{id}', 'AdminController@deleteemotionalstatus');
+// get taxation
+Route::get('emotionalstatus/json', 'AdminController@getjsonemotionalstatus');
+Route::get('/emotionalstatus/changestatus/{id}/{status}', 'AdminController@updateemotionalstatus');
+
+/*===================================== Emotional Section End ========================================================= */
+
+/*===================================== Taxonimies section routes =============================== */
+//Hotel 
+Route::get('taxonomies/hotel', 'AdminController@taxonomieshotel');
+Route::post('/taxonomies/creditcard/savenew', 'AdminController@savecreditcarttaxonomies');
+Route::post('/taxonomies/creditcard/update', 'AdminController@creditcardtaxonomiesUpdate');
+
+Route::post('/taxonomies/vatinvoice/savenew', 'AdminController@savevatinvoicetaxonomies');
+Route::post('/taxonomies/vatinvoice/update', 'AdminController@vatinvoicetaxonomiesUpdate');
+
+Route::post('/taxonomies/agetype/savenew', 'AdminController@saveagetypetaxonomies');
+Route::post('/taxonomies/agetype/update', 'AdminController@agetypetaxonomiesUpdate');
+
+Route::post('/taxonomies/emotionalstatus/savenew', 'AdminController@saveemotionalstatustaxonomies');
+Route::post('/taxonomies/emotionalstatus/update', 'AdminController@emotionalstatustaxonomiesUpdate');
+
+Route::get('taxonomies/room', 'AdminController@taxonomiesroom');
+Route::post('/taxonomies/meals/savenew', 'AdminController@savemealstaxonomies');
+Route::post('/taxonomies/meals/update', 'AdminController@mealstaxonomiesUpdate');
+
+Route::post('/taxonomies/mealscombination/savenew', 'AdminController@savemealscombinationtaxonomies');
+Route::post('/taxonomies/mealscombination/update', 'AdminController@mealscombinationtaxonomiesUpdate');
+
+Route::post('/taxonomies/roomtype/savenew', 'AdminController@saveroomtypetaxonomies');
+Route::post('/taxonomies/roomtype/update', 'AdminController@roomtypetaxonomiesUpdate');
+
+Route::post('/taxonomies/roombed/savenew', 'AdminController@saveroombedtaxonomies');
+Route::post('/taxonomies/roombed/update', 'AdminController@roombedtaxonomiesUpdate');
+
+
+Route::get('taxonomies/payment', 'AdminController@taxonomiespayment');
+Route::post('/taxonomies/CancellationPolicy/savenew', 'AdminController@savecanpolicytaxonomies');
+Route::post('/taxonomies/CancellationPolicy/update', 'AdminController@canpolicytaxonomiesUpdate');
+
+
+//Route::get('/tassonomie/creditcard/delete/id/{id}', 'AdminController@delete');
+
+/*// Stati emotivi enti
+Route::post('/admin/tassonomie/nuovostatoemotivo', 'AdminController@nuovoStatoEmotivo');
+Route::post('/admin/tassonomie/aggiornastatiemotivi', 'AdminController@actionEmotionalStae');
+Route::get('/admin/tassonomie/statiemotivi/delete/id/{id}', 'AdminController@deleteStatiEmotivi');
+*/
+
+
+/*===================================== Hotel Section Start ========================================================= */
+Route::get('/hotel', 'HotelController@index');
+Route::get('/hotel/property/json', 'HotelController@getjsonhotelproperty');
+Route::get('/hotel/changeactivestatus/{id}/{status}', 'HotelController@updatehotelstatus');
+Route::get('/hotel/delete/{id}', 'HotelController@deletehotel');
+
+
+/*
+* Hotel add/edit sections.
+* type : basic info,detail, room details, room options,amenities,..... 
+*/
+Route::get('/hotel/edit/{type}/{hotelid?}', 'HotelController@hoteledit');
+Route::post('/update/hotelbasicinfo/{hotelid?}', 'HotelController@savehotelbasicinfo');
+Route::post('/update/hoteldetail/{hotelid?}', 'HotelController@savehoteldetail');
+Route::post('/update/hotelcontactdetail/{contactid?}', 'HotelController@savehotelcontactdetail');
+Route::post('/update/hotelpaymentpolicy/{hotelid?}', 'HotelController@savehotelpolicy');
+Route::post('/update/hotelcontractagree/{hotelid?}', 'HotelController@savehotelcontract');
+Route::post('/update/hotelotherinfo/{hotelid?}', 'HotelController@savehotelotherinfo');
+Route::post('/update/hotelbillinfo/{hotelid?}', 'HotelController@savehotelbillinfo');
+
+
+
+/*Room Section*/
+Route::get('hotel/room/edit/{room_id?}', 'HotelController@roomdetailsaddedit');
+Route::get('hotel/room/property/json/{hotelid?}', 'HotelController@getjsonroomdetail');
+Route::get('/hotel/room/changeactivestatus/{id}/{status}', 'HotelController@updateroomstatus');
+Route::get('/hotel/room/delete/{id}', 'HotelController@deleteroom');
+Route::post('/hotel/room/update/{room_id?}', 'HotelController@saveroom');
+
+Route::post('/hotel/room/updateaminities/{room_id?}', 'HotelController@saveroomaminities');
+
+
+Route::get('/hotel/room/room-details/{room_id?}', 'HotelController@roomdetails');
+Route::get('/hotel/room/room-info/{room_id?}', 'HotelController@room_info');
+Route::get('/hotel/room/price-list/{room_id?}', 'HotelController@roompricelistaddedit');
+Route::post('/hotel/room/price-list/update/{room_id?}', 'HotelController@savepricelist');
+Route::get('/hotel/room/amenities/{room_id}', 'HotelController@room_amenities');
+
+Route::get('/hotel/room/media/{room_id}', 'HotelController@room_media');
+Route::post('/room/media/uploadfiles/{code}', 'HotelController@fileuploadroom');
+Route::get('/room/media/getfiles/{code}/{master_id?}', 'HotelController@filegetroom');
+Route::get('/room/media/deletefiles/{id}', 'HotelController@filedeleteroom');
+Route::post('/room/media/updatefiletype/{typeid}/{fileid}', 'HotelController@filetypeupdateroom');
+Route::get('/room/media/getdefaultfiles/{quote_id}', 'HotelController@filegetroom');
+Route::post('/room/media/comment/{code}', 'HotelController@updatemediaCommentroom');
+
+/*Room Section*/
+
+
+
+Route::post('/hotel/media/uploadfiles/{code}', 'HotelController@fileupload');
+Route::get('/hotel/media/getfiles/{code}/{master_id?}', 'HotelController@fileget');
+Route::get('/hotel/media/deletefiles/{id}', 'HotelController@filedelete');
+Route::post('/hotel/media/updatefiletype/{typeid}/{fileid}', 'HotelController@filetypeupdate');
+Route::get('/hotel/media/getdefaultfiles/{quote_id}', 'HotelController@fileget');
+Route::post('/hotel/media/comment/{code}', 'HotelController@updatemediaComment');
+
+
+/* ===================================== Hotel Section End ========================================================= */
+
+/*===================================== Wizard Section Start ========================================================= */
+// Category
+Route::get('/wizard/category', 'WizardController@categorylist');
+Route::get('/wizard/category/edit/{category_id?}', 'WizardController@categoryaddedit');
+Route::post('/wizard/update/category/{category_id?}', 'WizardController@savecategory');
+Route::get('/wizard/category/property/json', 'WizardController@getjsoncategoryproperty');
+Route::get('/wizard/category/changeactivestatus/{id}/{status}', 'WizardController@updatecategorystatus');
+Route::get('/wizard/category/delete/{id}', 'WizardController@deletecategory');
+
+//Options
+//Route::get('/wizard/options', 'WizardController@optionslist');
+//Route::get('/wizard/options/edit/{category_id?}', 'WizardController@optionslist');
+Route::get('/wizard/options/{category_id}', 'WizardController@optionslist');
+Route::get('/wizard/options/{category_id}/{id}', 'WizardController@optionslist');
+Route::get('/wizard/optionsjson/{category_id}', 'WizardController@getjsonoptions');
+
+Route::get('/wizard/option/addedit/{category_id}/{id?}', 'WizardController@optionsaddedit');
+Route::post('/wizard/update/options/{id?}', 'WizardController@saveoptions');
+
+Route::get('/wizard/options/changeactivestatus/{id}/{status}', 'WizardController@updateoptionsstatus');
+Route::get('/wizard/options/delete/{id}', 'WizardController@deleteoptions');
+/*===================================== Wizard Section End ========================================================= */
+
+Route::get('/language-chooser', 'LanguageController@changeLanguage');
+Route::get('/languagechange/', array('before'=> 'csrf','as'=>'language-chooser','uses'=>'LanguageController@changeLanguage'));
+
+
+/*===================================== Location Section Start ========================================================= */
+// show taxation 
+Route::get('/location', 'AdminController@showlocation');
+// add taxation
+Route::get('/location/add/{id?}', 'AdminController@addeditlocation');
+// store taxation
+Route::post('/location/store', 'AdminController@storelocation');
+// delete taxation
+Route::get('/location/delete/{id}', 'AdminController@deletelocation');
+// get taxation
+Route::get('location/json', 'AdminController@getjsonlocation');
+Route::get('/location/changestatus/{id}/{status}', 'AdminController@updatelocationstatus');
+
+/*===================================== Currency Section End ========================================================= */

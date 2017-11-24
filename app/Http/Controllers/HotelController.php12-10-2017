@@ -1,0 +1,1123 @@
+<?php
+
+namespace App\Http\Controllers;
+use App\User;
+use Illuminate\Http\Request;
+use DB;
+use Storage;
+use Redirect;
+use Validator;
+use Mail;
+use File;
+use Hash;
+use Auth;
+use DateTime;
+use Cookie;
+
+use Illuminate\Support\Facades\Schema;
+
+
+class HotelController extends Controller
+{	
+	public function __construct(Request $request){ 
+        $this->middleware('auth');
+    }
+	public function index(Request $request) {		
+         return view('hotel_property');
+    }
+
+    public function getjsonhotelproperty(Request $request) {
+    	$hotelDetails = array();
+		$hotel_main = DB::table('hotel_main')->select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0)->get();            
+		foreach($hotel_main as $data) {							
+			$checked = ($data->is_active==0) ? 'checked' : '';
+			$data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';   	
+
+			$categorydetails = DB::table('hotel_category')->where('id',$data->category_id)->first(); 
+			$data->category = isset($categorydetails->title) ? $categorydetails->title : '*'; 
+			/*if($data->icon != ""){					
+				$data->icon = '<img src="'.url('storage/app/images/languageicon').'/'.$data->icon.'" height="100px" width="100px">';			
+			}*/
+			$hotelDetails[] = $data;	
+		}
+		return json_encode($hotelDetails);    
+    }   
+    public function updatehotelstatus(Request $request) {						
+		$update = DB::table('hotel_main')->where('id', $request->id)->update(array('is_active' => $request->status));
+		return ($update) ? 'true' : 'false';		
+	}
+	public function hoteledit(Request $request){
+		$type = isset($request->type) ? $request->type : 'basic';
+		if($type == 'basic'){
+			return $this->basicinforedit($request);
+		}
+		else if($type == 'detail'){
+			return $this->detailedit($request);
+		}
+		else if($type == 'billinginfo') {
+			return $this->billinginfo($request);
+		}
+		else if($type == 'contactdetail'){
+			return $this->contactdetail($request);
+		}
+		else if($type == 'media')
+        {
+            return $this->media($request);
+        }
+		else if($type == 'amenities')
+        {
+            return $this->amenities($request);
+        }
+        else if($type == 'policies')
+        {
+            return $this->hotelpolicies($request);
+        }
+		else if($type == 'other') {
+			return $this->otherdetail($request);
+		}	
+		
+		else if($type == 'room-details')
+        {        	
+            return $this->roomdetails($request);
+        }
+        else if($type == 'room-options')
+        {
+            return $this->roomoptions($request);
+        }       
+        else if($type == 'extra')
+        {
+            return $this->extra($request);
+        }
+        else if($type == 'media')
+        {
+            return $this->media($request);
+        }
+        else if($type == 'policies')
+        {
+            return $this->paymentpolicies($request);
+        }
+        else if($type == 'agreement')
+        {
+            return $this->agreement($request);
+        }
+	}
+	
+	/* add/edit form details */
+	public function basicinforedit(Request $request) {    
+        $action = 'add';
+        $arrDetails = array();
+        /*$hotelstatus = array('0'=>'Off, unavailable','1'=>'Hidden, not sold','2'=>'Viewed, sold');*/
+        $hotelstatus = getTaxonomies('emotional_status');
+        $hotel_category = DB::table('hotel_category')->where('is_deleted','0')->orderby('hotel_star','asc')->get()->toArray();
+        $arrRecords = [
+			'action'=>'add',
+			'hotelstatus'=>$hotelstatus,
+			'hotel_category'=>$hotel_category];
+		
+        if(isset($request->hotelid)){
+			$action = 'edit';			
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
+			
+			$billing_address = DB::table('billing_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'0'])->first();
+			$operator_billing_address = DB::table('billing_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'1'])->first();
+			$invoice_address = DB::table('invoice_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'0'])->first();
+			$operator_invoice_address = DB::table('invoice_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'1'])->first();
+
+			$text_information = DB::table('text_information')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
+			$languagetranslations = DB::table('language_transalation')->get();
+			$arrtextlanguageval = array();
+			foreach ($languagetranslations as $key => $value) {
+				$arrtextlanguageval[$value->code][$value->language_key] = $value->language_value;
+			}
+			/*print_r($arrtextlanguageval);
+			exit;*/
+			$arrRecords['action'] = 'edit';
+			$arrRecords['hoteldetails'] = $arrDetails;
+			$arrRecords['billing_address'] = $billing_address;
+			$arrRecords['invoice_address'] = $invoice_address;
+			$arrRecords['operator_billing_address'] = $operator_billing_address;
+			$arrRecords['operator_invoice_address'] = $operator_invoice_address;
+			$arrRecords['text_information'] = $text_information;
+			$arrRecords['text_information_language'] = $arrtextlanguageval;
+        }
+
+		return view('hotelbasicinfoedit',$arrRecords);        
+    }
+
+    /* add/edit form details */
+		public function detailedit(Request $request) {    
+        $action = 'add';
+        $arrDetails = array();
+        //$hotelstatus = getTaxonomies('emotional_status');
+        $hotelstatus = getTaxonomies('emotional_status');
+        $hotel_category = DB::table('hotel_category')->where('is_deleted','0')->orderby('hotel_star','asc')->get()->toArray();
+		$currency=DB::table('currency')->get();
+        $arrRecords = [
+			'action'=>'add',
+			'hotelstatus'=>$hotelstatus,
+			'hotel_category'=>$hotel_category,
+			'currency'=>$currency
+			];
+
+        if(isset($request->hotelid)){
+			$action = 'edit';			
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
+			
+			$hotel_detail = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
+			$userdetail = DB::table('users')->where(['hotel_id'=>$arrDetails->id,'is_delete'=>'0'])->first();
+			
+			$arrRecords['action'] = 'edit';
+			$arrRecords['hoteldetails'] = $arrDetails;
+			$arrRecords['hotel_detail'] = $hotel_detail;
+			$arrRecords['userdetail'] = $userdetail;
+			
+        }
+		return view('hoteldetailedit',$arrRecords);        
+    }
+
+
+    /* add/edit form Contact Details */
+	public function contactdetail(Request $request) {    
+        $action = 'add';
+        $arrDetails = array();                        
+		$arrcontactdetail = array();
+        if(isset($request->hotelid)) {
+			$action = 'edit';			
+			$arrcontactdetail = DB::table('hotel_conatct_details')->where('hotel_id',$request->hotelid)->first();
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();			
+        }
+        $arrRecords['action'] = $action;
+		$arrRecords['hoteldetails'] = $arrDetails;			
+		$arrRecords['contactdetail'] = $arrcontactdetail;
+		return view('hotelcontactedit',$arrRecords);        
+    }
+
+     /* === Save the Hotel second Detail Step === */
+    public function savehoteldetail(Request $request) {
+		if(isset($request->hotel_id)) {
+			$userdetail=User::where('email',$request->email)->first();
+			$userrecord=[
+							'name'=>$request->contact_person,
+							'email'=>$request->email,
+							'username'=>$request->username,
+							'hotel_id'=>$request->hotel_id,
+							'department'=>1,
+							'updated_at'=>date('Y-m-d H:i:s'),
+						];
+			if(isset($userdetail))
+			{
+				if(isset($request->password))
+				$userrecord['password']=bcrypt($request->password);
+				User::where('email',$request->email)->update($userrecord);
+			}
+			else
+			{
+				$userrecord['password']=bcrypt($request->password_required);
+				$userrecord['created_at']=date('Y-m-d H:i:s');
+				User::create($userrecord);
+			}
+		  $locations = isset($request->locations) ? implode(",", $request->locations) : ""; 	
+			$arrhotelmail = array(
+			'name' => $request->name,
+			'category_id' => $request->hotel_category,
+			'status' => $request->status,
+			'saved_level' => '1',
+			'contact_person'=>$request->contact_person,
+			'address'=>isset($request->address) ? $request->address : '',
+			'zip_code'=>isset($request->zip_code) ? $request->zip_code : '',
+			'contact_person'=>isset($request->contact_person) ? $request->contact_person : '',
+			'phone'=>isset($request->contract_number) ? $request->contract_number : '',
+			'is_extarnal_login'=>isset($request->is_extarnal_login) ? $request->is_extarnal_login : '0',
+			'general_email'=>isset($request->general_email) ? $request->general_email : '',
+			'email'=>isset($request->email) ? $request->email : '',
+			'min_price'=>isset($request->min_price) ? $request->min_price : '',
+			'commission'=>isset($request->commission) ? $request->commission : '',
+			'standard_reserve'=>isset($request->standard_reserve) ? $request->standard_reserve : 0,
+			'refundable'=>isset($request->refundable) ? $request->refundable :0,
+			'check_in'=>isset($request->check_in) ? $request->check_in : '',
+			'check_out'=>isset($request->check_out) ? $request->check_out : '',
+			'is_vat'=>isset($request->is_vat) ? $request->is_vat : '',
+			'vat_number'=>isset($request->vat_number) ? $request->vat_number : '',
+			'location_ids'=>$locations
+			);
+			DB::table('hotel_main')->where('id', $request->hotel_id)->update($arrhotelmail);	
+			$updateData['user_id']=$request->user()->id;
+			//$updateData['currency_id']=$request->currency;
+		
+			$updateData['portal_commision']=$request->commission;
+			$updateData['price_increase']=$request->min_price;
+			$updateData['currency_id']=$request->currency;
+			$updateData['vat_invoicing']=$request->vat_number;
+			$updateData['billing_language']=$request->billing_language;
+			$updateData['contract_number']=$request->contract_number;
+			$updateData['sale_reservation']=isset($request->standard_reserve) ? $request->standard_reserve : 0;
+			$updateData['resale_non_refund_boking']=isset($request->refundable) ? $request->refundable :0;
+			$updateData['is_vat']=$request->is_vat;
+			$updateData['work_with_credit_card']=$request->work_with_credit_card;
+			$updateData['credit_card_amount']=$request->credit_card_amount;			
+			$updateData['credit_card_options'] = isset($request->credit_cards) ? implode(",", $request->credit_cards) : "";
+			$updateData['created_date'] = date('Y-m-d H:i:s');
+			$updateData['hotel_id'] = $request->hotel_id;
+			$counter=DB::table('hotel_detail')->where('hotel_id',$request->hotel_id)->count();
+			if($counter!=0)
+			DB::table('hotel_detail')->where('hotel_id',$request->hotel_id)->update($updateData);
+			else
+			DB::table('hotel_detail')->where('hotel_id',$request->hotel_id)->insertGetId($updateData);	
+			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Detail Saved successfully!</div>';
+			$logs = 'Hotel Detail Info Updated -> (ID:'.$request->hotel_id.')';
+			storelogs($request->user()->id,$logs);
+			return redirect('hotel/edit/billinginfo/'.$request->hotel_id)->with('msg', $msg);  
+		}
+			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_ooops!_there_is_something_wrong!').'</div>';
+			return redirect('hotel/edit/room-details/'.$request->hotel_id)->with('msg', $msg);  
+    }
+
+
+
+    /* Save the Hotel Basic Details */
+	public function savehotelbasicinfo(Request $request) {
+			$nome='';
+			if ($request->logo != null) {
+			// Memorizzo l'immagine nella cartella public/imagesavealpha
+			Storage::put('images/hotel/' .(time().$request->file('logo')->getClientOriginalName()), file_get_contents($request->file('logo')->getRealPath()));
+			$nome = (time().$request->file('logo')->getClientOriginalName());
+				}
+			$arrhotelmail = array(
+			'name' => $request->name,
+			
+			'description'=>isset($request->description) ? $request->description : '',
+			'summary'=>isset($request->summary) ? $request->summary : '',
+			'updated_user_id'=>$request->user()->id,
+			'updated_dt'=>date('Y-m-d H:i:s'),
+			);
+		if(isset($request->hotel_id)) {
+			if($nome!=='')
+			$arrhotelmail['logo']=$nome;
+			$hotelid=DB::table('hotel_main')->where('id',$request->hotel_id)->first()->id;
+			DB::table('hotel_main')->where('id',$request->hotel_id)->update($arrhotelmail);
+			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_hotel_info_saved_sucessfully').'</div>';
+			
+			
+			}
+			else
+			{
+				$arrhotelmail['created_user_id']=$request->user()->id;
+				$arrhotelmail['created_dt']=date('Y-m-d H:i:s');
+				$arrhotelmail['saved_level']= '0';
+				$arrhotelmail['logo']=$nome;
+				$hotelid=DB::table('hotel_main')->insertGetId($arrhotelmail);
+				$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.	keyword_hotel_info_inserted_sucessfully').'</div>';
+				
+			}
+			$logs = 'Hotel Info Updated -> (ID:'.$hotelid.')';
+			storelogs($request->user()->id,$logs);
+			return redirect('hotel/edit/detail/'.$hotelid)->with('msg', $msg); 
+			
+    }
+
+    /* === Save the Hotel Contact Details === */
+    public function savehotelcontactdetail(Request $request) {
+		if(isset($request->hotel_id)) {
+			$oldDetails = DB::table('hotel_conatct_details')->where('id',$request->contactid)->get();
+
+			$updateData['hotel_id']=$request->hotel_id;
+			$updateData['hotel_name']=$request->contact_hotel_name;
+			$updateData['phone']=$request->hotel_phone;
+			$updateData['fax']=$request->hotel_fax;
+			$updateData['zip_code']=$request->zip_code;
+			$updateData['web']=$request->hotel_weburl;
+			$updateData['identifications']=$request->identifications;
+			$updateData['vat_id']=$request->vat_id;
+			$updateData['address']=isset($request->address) ? $request->address : "";
+			$updateData['contact_person']=$request->contact_person;
+
+			if(count($oldDetails) > 0) {				
+				DB::table('hotel_conatct_details')->where('id',$request->contactid)->update($updateData);	
+			}
+			else {								
+				DB::table('hotel_conatct_details')->insertGetId($updateData);		
+			}		
+			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contact Detail Saved successfully!</div>';
+			return redirect('hotel/edit/amenities/'.$request->hotel_id)->with('msg', $msg);     
+		}
+    }
+
+    /* === Save the Hotel Policy Details === */
+   
+
+    
+    /* === Save the Hotel Contract Agreement Details === */
+    public function savehotelcontract(Request $request) {
+		if(isset($request->hotel_id)) {
+			$oldDetails = DB::table('hotel_contract_details')->where('hotel_id',$request->hotel_id)->get();
+
+			$updateData['contact_person'] = $request->contact_person;
+			$updateData['bussiness_name'] = $request->bussiness_name;
+			$updateData['address'] = $request->office_address;
+			$updateData['is_terms_agreed'] = isset($request->is_terms_agreed) ? $request->is_terms_agreed : "0";
+
+			if(count($oldDetails) > 0) {				
+				DB::table('hotel_contract_details')->where('hotel_id',$request->hotel_id)->update($updateData);	
+			}
+			else {
+				$updateData['hotel_id']=$request->hotel_id;								
+				DB::table('hotel_contract_details')->insertGetId($updateData);		
+			}		
+			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contract Saved successfully!</div>';
+			return redirect('hotel/edit/agreement/'.$request->hotel_id)->with('msg', $msg);     
+		}
+    }
+
+
+    /* This function is used to delete languages */
+	public function deletehotel(Request $request) {
+        $countRec = DB::table('hotel_main')->select('*')->where('id', $request->id)->count();
+		if($countRec > 0){
+			DB::table('hotel_main')->where('id',$request->id)->update(array('is_deleted' =>'1'));
+			return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel deleted successfully</div>');			
+		}
+		else {        
+        	return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel not Exist!</div>');
+		}        
+    }
+	
+	/* this function is used to write the lanague file/dir */
+	public function writelanguagefile($type=''){
+		$arrLanguages =  DB::table('languages')
+                        ->select('*')
+                        ->where('id', '!=', 0)                        
+                        ->get();		
+		$collection = collect($arrLanguages);		
+		$arrLanguages = $collection->toArray();		
+		/*$numItems = count($arrLanguages);
+		$i = 0;*/
+		foreach($arrLanguages as $key => $val){
+			$path = './resources/lang/'.$val->code;
+			if(!is_dir($path)) {
+				mkdir($path, 0775, true);				
+			}
+			$file = $path.'/messages.php';
+			if(is_file($file)){
+				unlink($file);				
+			}
+			if(!is_file($file)){
+				$content = "<?php return [";
+				$phases =  DB::table('language_transalation')
+                        ->select('*')
+                        ->where('code', $val->code)                        
+                        ->get();		
+				$numItems = count($phases);
+				$i = 0;
+				foreach($phases as $phase){
+					if($phase->language_value != "" && !empty($phase->language_value)) {
+						if(++$i === $numItems) {
+							$content .= '
+							"'.$phase->language_key.'" => "'.htmlspecialchars($phase->language_value).'"';
+						}
+						else {
+							$content .= '
+							"'.$phase->language_key.'" => "'.htmlspecialchars($phase->language_value).'",';
+						}					
+					}
+				}
+				$content .= "]; ?>";
+				$fp = fopen($file,"wb");
+				fwrite($fp,$content);
+				fclose($fp);		
+			}			
+		}
+		/* Write the php file for the js variables  */	
+		$jsfile = './resources/views/common/languagesjs.blade.php';
+		if(is_file($jsfile)){
+			unlink($jsfile);				
+		}
+		if(!is_file($jsfile)){
+			$jscontent = "<script> ";
+			$jsphases =  DB::table('language_transalation')->select('*')->where('is_cmspage', 0)->whereNotNull('language_value')->groupBy('language_key')->get();		
+			$jsnumItems = count($jsphases);			
+			foreach($jsphases as $jsphase) {				
+				$jskey = preg_replace('/[^A-Za-z0-9\_]/', '', $jsphase->language_key);
+				$jscontent .= ' var jslang_'.$jskey.' = "<?php echo nl2br(trans("messages.'.$jsphase->language_key.'")); ?>";'. PHP_EOL;
+			}
+			$jscontent .= "</script>";
+			
+			$jsfp = fopen($jsfile,"wb");
+			fwrite($jsfp,$jscontent);
+			fclose($jsfp);	
+			
+		}
+	}
+
+/*================================================================= ROOM SECTION ================================================================= */
+	/* Hotel Room Options */
+    public function roomdetails(Request $request) {
+        return view('room_details');
+    }
+
+    public function roomdetailsaddedit(Request $request)
+    {
+        $action = 'add';        
+        if(isset($request->room_id)) {
+            $action = 'edit';
+            $arrDetails = DB::table('room_details')->where(['id'=>$request->room_id,'is_deleted'=>'0'])->first();            
+            $arrRecords['room_details'] = $arrDetails;
+        }
+        $arrRecords['action'] = $action;
+
+        //return view('room_details_add_edit', $arrRecords);
+        return view('room_info', $arrRecords);
+    }
+
+    public function saveroom(Request $request)
+    {
+    	$room_data = [
+                'type_of_rooms' => $request->select_room,
+                'hotelid' => $request->select_hotel,
+                'personal_name' => $request->personal_name,
+                'qt_same_name' => $request->how_many_room,
+                'unit_of_measurement' => $request->unit,
+                'weight' => $request->weight,
+                'height' => $request->height];
+        if(isset($request->room_id) && !empty($request->room_id) && $request->action == 'edit') {            
+            $room_data['updated_user_id'] = $request->user()->id;
+            $room_data['updated_at'] = date('Y-m-d H:i:s');
+
+            DB::table('room_details')->where('id', $request->room_id)->update($room_data);
+            $last_added_id = $request->room_id;
+            $sub_cat = getWizardSubCategory(54);            
+            /* Store the log details */
+            $logs = 'Room Updated -> (ID:'.$request->room_id.')';
+            storelogs($request->user()->id,$logs);
+            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
+            //update in language table
+            $lang_data = ['personal_name' => $request->personal_name];            
+        }
+        else {
+        	$room_data['user_id'] = $request->user()->id;
+        	$room_data['created_at'] = date('Y-m-d H:i:s');
+            $last_added_id = DB::table('room_details')->insertGetId($room_data);
+
+            /* Store the log details */
+            $logs = 'Room Added -> (ID:'.$last_added_id.')';
+            storelogs($request->user()->id,$logs);
+            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room information added successfully!</div>';
+            $lang_data = ['personal_name' => $request->personal_name];
+            
+        }
+        language_keyword_add($lang_data);
+        return Redirect('hotel/room/price-list/'.$last_added_id)->with('msg',$msg);
+
+    }
+
+    public function getjsonroomdetail(Request $request) {
+        $roomDetails = array();
+        $room_main = DB::table('room_details')->select('room_details.*')
+        	->Join('hotel_main', 'hotel_main.id', '=', 'room_details.hotelid')
+        	->where('room_details.id', '!=', 0)
+        	->where('room_details.is_deleted', '=', 0)
+        	->get();
+        foreach($room_main as $data) {
+            $checked = ($data->is_active==0) ? 'checked' : '';
+
+            $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateRoomStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';
+            $hotel = DB::table('hotel_main')->where('id',$data->hotelid)->first();
+            $data->hotel = isset($hotel->name) ? $hotel->name : '-';
+            $data->size = (isset($data->height) && $data->height != "0") ? ($data->height.'X'.$data->weight.' '.$data->unit_of_measurement) : '-';
+            /*if($data->icon != ""){
+                $data->icon = '<img src="'.url('storage/app/images/languageicon').'/'.$data->icon.'" height="100px" width="100px">';
+            }*/
+            $roomDetails[] = $data;
+        }
+        return json_encode($roomDetails);
+    }
+
+    public function updateroomstatus(Request $request) {
+        $update = DB::table('room_details')->where('id', $request->id)->update(array('is_active' => $request->status));
+        return ($update) ? 'true' : 'false';
+    }
+    public function deleteroom(Request $request) {
+        $countRec = DB::table('room_details')->select('*')->where('id', $request->id)->count();
+        if($countRec > 0) {
+            DB::table('room_details')->where('id',$request->id)->update(array('is_deleted' =>'1'));
+            return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room deleted successfully</div>');
+        }
+        else {
+            return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room not Exist!</div>');
+        }
+    }    
+    /* End : Hotel Room Options */
+
+
+    /* Hotel Room Options */
+    public function roomoptions(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        return view('hotel_room_options', compact('hotelid'));
+    }
+    /* End : Hotel Room Options */
+	
+	public function roompricelistaddedit(Request $request)
+    {
+
+        $arrDetails = DB::table('room_details')->where(['id'=>$request->room_id,'is_deleted'=>'0'])->first();
+
+
+        $arrRecords['room_details'] = $arrDetails;
+        return view('price_listing', $arrRecords);
+    }
+	 public function savepricelist(Request $request)
+    {
+        if(isset($request->room_id) && !empty($request->room_id)) {
+
+            $room_data = [
+                'price_per_night' => $request->at_night,
+                'is_fare_lower' => $request->fare_lower,
+                'discount' => $request->discount,
+                'can_sleep' => $request->can_sleep,
+                'user_id' => $request->user()->id,
+                'fare_amount' => $request->total_price,
+                'updated_user_id' => $request->user()->id,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+            DB::table('room_details')->where('id', $request->room_id)->update($room_data);
+            /* Store the log details */
+            $logs = 'Room Updated -> (ID:'.$request->room_id.')';
+            storelogs($request->user()->id,$logs);
+            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
+            //update in language table
+            $lang_data = ['personal_name' => $request->personal_name];
+            language_keyword_add($lang_data);
+        }
+        return Redirect('hotel/room/amenities/'.$request->room_id);
+
+    }
+	function room_amenities(Request $request) {			
+		if(isset($request->room_id)){
+			$arrData['room_details'] = DB::table('room_details')->where(['id'=>$request->room_id])->first();
+	    	return view('room_amenities',$arrData);
+		}
+    }
+	 /* media */    
+    public function room_media(Request $request) {        
+        $arrdata['roomid'] = $request->room_id;         
+        $arrdata['roomdetail'] = DB::table('room_details')->where(['id'=>$request->room_id,'is_deleted'=>'0'])->first();		
+       	$query = "SELECT * FROM media_files WHERE master_id = $request->room_id AND master_type=1 order by id desc";		
+		$arrdata['roommedia'] = DB::select($query);
+
+        $arrdata['users']=DB::table('users')->where(['id'=>$request->user()->id])->first();
+        return view('room_media', $arrdata);
+    }
+
+     public function fileuploadroom(Request $request){		
+		 $nome = $request->file('file')->getClientOriginalName();	
+		Storage::put('images/room/'.$nome,file_get_contents($request->file('file')->getRealPath()));		
+			DB::table('media_files')->insert([
+			'name' => $nome,
+			'code' => $request->code,
+			'master_type' => 1,
+			'type'=>'0',
+			'master_id' => isset($request->master_id) ? $request->master_id : 0,
+			'user_id'=>$request->user()->id,
+			'date_time'=>time()
+		]);	
+	}
+		
+	public function filegetroom(Request $request){	
+		DB::enableQueryLog();
+		$where = 'code='.$request->code;
+		if(isset($request->master_id)){
+			$where .= ' or master_id ='.$request->master_id;
+		} 
+		$query = "SELECT * FROM media_files WHERE $where order by id desc";		
+		$mediadata = DB::select($query);
+		foreach($mediadata as $prev) {
+			$imagPath = url('/storage/app/images/room/'.$prev->name);
+			$downloadlink = url('/storage/app/images/room/'.$prev->name);
+			$filename = $prev->name;			
+			$arrcurrentextension = explode(".", $filename);
+			$extention = end($arrcurrentextension);
+							
+			$arrextension['docx'] = 'docx-file.jpg';
+			$arrextension['pdf'] = 'pdf-file.jpg';
+			$arrextension['xlsx'] = 'excel.jpg';
+			if(isset($arrextension[$extention])){
+				$imagPath = url('/storage/app/images/default/'.$arrextension[$extention]);			
+			}
+			$titleDescriptions = (!empty($prev->title)) ? '<div class="hey-content"><div class="hey-heading"><strong>'.$prev->title.'</strong></div><div class="hey-description"><p>'.$prev->description.'</p></div></div>' : "";
+			$title = (!empty($prev->title)) ? '<strong>'.$prev->title.'</strong>' : "";
+            $Descriptions = (!empty($prev->description)) ? '<p>'.$prev->description.'</p>' : "";
+			$html = '<div class="uploaded-img"><img src="'.$imagPath.'" height="100px;" width="100px;" alt="Upload Image"><h3>'.$prev->title.'<br>'.$prev->description.'</h3>';
+            echo $html .= '<div class="radio round-checkbox"><input id="radio'.$prev->id.'" type="radio"><label for="radio'.$prev->id.'"></label><div class="check"><div class="inside"></div></div></div></div>';            
+		}
+		exit;			
+	}
+	public function updatemediaCommentroom(Request $request){		 		
+		$updateData = DB::table('media_files')->where('code', $request->code)->orderBy('id', 'desc')->first();										
+		$title = $request->title;
+		$descriptions = $request->descriptions;		
+		$response = DB::table('media_files')->where('date_time', $updateData->date_time)->update(array('description' => $descriptions,'title'=>$title));	    
+		echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+		
+	public function filedeleteroom(Request $request){		
+	    $response = DB::table('media_files')->where('id', $request->id)->delete();
+	    echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+	
+	public function filetypeupdateroom(Request $request){		 
+		$request->ids = isset($request->ids) ? implode(",",$request->ids) : "";
+		$response = DB::table('media_files')->where('id', $request->fileid)->update(array('type' => $request->ids));	    
+		echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+
+    /*Save Room Aminities */
+    public function saveroomaminities(Request $request){
+    	$getSubHotelFeatures = getWizardSubCategory(16);
+		foreach ($getSubHotelFeatures as $keysubcat => $valuesubcat) {  
+			$Catewiseoptions = $request[trim($valuesubcat->language_key)];
+			//$hotelFeatures = getWizardOptionByCategory($valuesubcat->id);		    						
+			foreach((array)$Catewiseoptions as $keyHF => $valHF) {					
+				$arrdataam['category_id'] = $valuesubcat->id;
+				$arrdataam['room_id'] = $request->room_id;
+				$arrdataam['options_id'] = $valHF;
+				$checkfC = DB::table('room_amenities')->where(['room_id'=>$request->room_id,'category_id'=>$valuesubcat->id,'options_id'=>$valHF])->count();	
+				if($checkfC > 0) {
+					/*DB::table('room_amenities')->where(['room_id'=>$request->room_id,'category_id'=>$valuesubcat->id,'option_id'=>$keyHF])->update($arrdataam);*/
+				}
+				else {												
+					DB::table('room_amenities')->insertGetId($arrdataam);		
+				}
+			}				
+		}
+		$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room Amenities Saved successfully!</div>';
+		return redirect('hotel/room/media/'.$request->room_id)->with('msg', $msg);     	
+    }
+/*============================================ ROOM SECTION END ================================================================== */
+
+
+    /*  Amenities */
+    public function amenities(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        if(!isset($request->hotelid)) {
+			return redirect('hotel/edit/basic'); 
+		}
+        
+       // $hotelstatus = getTaxonomies('emotional_status');
+		$action = 'edit';			
+		$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();		
+		$defaultCurrency = DB::table('currency')->where('is_active','0')->first();		
+		$hotelDetails = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();		
+		$wizard_category = DB::table('wizard_categories')->where(['is_deleted'=>'0','is_active'=>'0','parent_id'=>1])->get();		
+		
+		$hotelFeatures = DB::table('hotel_feature')->where(['hotel_id'=>$arrDetails->id])->get();		
+		$arrOptionFt = array();
+		foreach ($hotelFeatures as $key => $value) {
+			$arrOptionFt[$key]=$value->option_id;
+		}
+
+		$arrRecords['action'] = 'edit';
+		$arrRecords['wizard_category'] = $wizard_category;
+		$arrRecords['defaultCurrency'] = $defaultCurrency;
+		//$arrRecords['hotelstatus'] = $hotelstatus;
+		//$arrRecords['hotel_category'] = $hotel_category;		
+		$arrRecords['hotelFeatures'] = $hotelFeatures;		
+		$arrRecords['hotelFeatureSelected'] = implode(",",$arrOptionFt);				
+
+        return view('amenities', $arrRecords);
+    }
+    /* End : Amenities */
+
+    /* extra */
+    public function extra(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        return view('extra', compact('hotelid'));
+    }
+    /* End : extra */
+
+    /* media */
+    public function media(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        $arrdata['hotelid'] = $request->hotelid;        
+        $arrdata['holetdetail'] = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();		
+       	$query = "SELECT * FROM media_files WHERE master_id=$request->hotelid AND master_type=0 order by id desc";		
+		$arrdata['holetmedia'] = DB::select($query);
+
+	
+        $arrdata['users']=DB::table('users')->where(['id'=>$request->user()->id])->first();
+        return view('media', $arrdata);
+    }
+
+    public function fileupload(Request $request){		
+		 $nome = $request->file('file')->getClientOriginalName();	
+		Storage::put('images/hotel/'.$nome,file_get_contents($request->file('file')->getRealPath()));		
+			DB::table('media_files')->insert([
+			'name' => $nome,
+			'code' => $request->code,
+			'master_type' => 0,
+			'type'=>'0',
+			'master_id' => isset($request->master_id) ? $request->master_id : 0,
+			'user_id'=>$request->user()->id,
+			'date_time'=>time()
+		]);	
+	}
+		
+	public function fileget(Request $request){	
+		DB::enableQueryLog();
+		$where = 'code='.$request->code;
+		if(isset($request->master_id)){
+			$where .= ' or master_id ='.$request->master_id;
+		} 
+		$query = "SELECT * FROM media_files WHERE $where order by id desc";		
+		$mediadata = DB::select($query);
+		foreach($mediadata as $prev) {
+			$imagPath = url('/storage/app/images/hotel/'.$prev->name);
+			$downloadlink = url('/storage/app/images/hotel/'.$prev->name);
+			$filename = $prev->name;			
+			$arrcurrentextension = explode(".", $filename);
+			$extention = end($arrcurrentextension);
+							
+			$arrextension['docx'] = 'docx-file.jpg';
+			$arrextension['pdf'] = 'pdf-file.jpg';
+			$arrextension['xlsx'] = 'excel.jpg';
+			if(isset($arrextension[$extention])){
+				$imagPath = url('/storage/app/images/default/'.$arrextension[$extention]);			
+			}
+			$titleDescriptions = (!empty($prev->title)) ? '<div class="hey-content"><div class="hey-heading"><strong>'.$prev->title.'</strong></div><div class="hey-description"><p>'.$prev->description.'</p></div></div>' : "";
+			$title = (!empty($prev->title)) ? '<strong>'.$prev->title.'</strong>' : "";
+            $Descriptions = (!empty($prev->description)) ? '<p>'.$prev->description.'</p>' : "";
+			$html = '<div class="uploaded-img"><img src="'.$imagPath.'" height="100px;" width="100px;" alt="Upload Image"><h3>'.$prev->title.'<br>'.$prev->description.'</h3>';
+            $html .= '<div class="radio round-checkbox"><input id="radio'.$prev->id.'" type="radio"><label for="radio'.$prev->id.'"></label><div class="check"><div class="inside"></div></div></div>';
+            echo $html .= '<div class="ryt-chk"><input id="a1" type="checkbox"><label for="a1">visione</label></div></div>';	
+		}
+		exit;			
+	}
+	public function updatemediaComment(Request $request){		 		
+		$updateData = DB::table('media_files')->where('code', $request->code)->orderBy('id', 'desc')->first();										
+		$title = $request->title;
+		$descriptions = $request->descriptions;		
+		$response = DB::table('media_files')->where('date_time', $updateData->date_time)->update(array('description' => $descriptions,'title'=>$title));	    
+		echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+		
+	public function filedelete(Request $request){		
+	    $response = DB::table('media_files')->where('id', $request->id)->delete();
+	    echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+	
+	public function filetypeupdate(Request $request){		 
+		$request->ids = isset($request->ids) ? implode(",",$request->ids) : "";
+		$response = DB::table('media_files')->where('id', $request->fileid)->update(array('type' => $request->ids));	    
+		echo ($response) ? 'success' :'fail';   				
+		exit;
+	}
+	
+	
+    /* End : media*/
+
+    /* media */
+    public function paymentpolicies(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        $arrdata['hotelid'] = $request->hotelid;
+        $arrdata['arrivaldays'] = array('1'=>'1','2'=>'2','3'=>'3','4'=>'4');
+        $arrdata['policy_details'] = DB::table('hotel_plolicies')->where('hotel_id',$hotelid)->first();
+        return view('payment_policy', $arrdata);
+    }
+    /* End : media*/
+
+    /* agreement */
+    public function agreement(Request $request)
+    {
+        $hotelid = $request->hotelid;        
+        $arrdata['hotelid'] = $request->hotelid;
+        
+        $arrdata['hoteldetails'] = DB::table('hotel_main')->where(['id'=>$request->hotelid])->first();		
+        $arrdata['contract_details'] = DB::table('hotel_contract_details')->where(['hotel_id'=>$request->hotelid,'is_deleted'=>'0'])->first();		
+        
+        $arrdata['users']=DB::table('users')->where(['id'=>$request->user()->id])->first();
+        return view('agreement', $arrdata);
+    }
+    /* End : agreement*/
+	
+	 public function billinginfo(Request $request) {            
+        if(isset($request->hotelid)){
+			$action = 'edit';			
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
+			
+			$billing_address = DB::table('billing_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'0'])->first();
+			$operator_billing_address = DB::table('billing_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'1'])->first();
+			$invoice_address = DB::table('invoice_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'0'])->first();
+			$operator_invoice_address = DB::table('invoice_address')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0','type'=>'1'])->first();
+
+			$text_information = DB::table('text_information')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
+			$languagetranslations = DB::table('language_transalation')->get();
+			$arrtextlanguageval = array();
+			foreach ($languagetranslations as $key => $value) {
+				$arrtextlanguageval[$value->code][$value->language_key] = $value->language_value;
+			}
+			/*print_r($arrtextlanguageval);
+			exit;*/
+			$arrRecords['action'] = 'edit';
+			$arrRecords['hoteldetails'] = $arrDetails;
+			$arrRecords['billing_address'] = $billing_address;
+			$arrRecords['invoice_address'] = $invoice_address;
+			$arrRecords['operator_billing_address'] = $operator_billing_address;
+			$arrRecords['operator_invoice_address'] = $operator_invoice_address;			        
+			return view('hotelbillinginfo',$arrRecords);        
+		}
+    }
+	 /* add/edit form details */
+	public function otherdetail(Request $request) {    
+        $action = 'add';
+        $arrDetails = array();
+        if(isset($request->hotelid)){
+			$action = 'edit';			
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();			
+			$text_information = DB::table('text_information')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
+
+			$languagetranslations = DB::table('language_transalation')->get();
+			$arrtextlanguageval = array();
+			foreach ($languagetranslations as $key => $value) {
+				$arrtextlanguageval[$value->code][$value->language_key] = $value->language_value;
+			}
+			$arrRecords['action'] = 'edit';
+			$arrRecords['hoteldetails'] = $arrDetails;			
+			$arrRecords['text_information'] = $text_information;
+			$arrRecords['text_information_language'] = $arrtextlanguageval;
+        }
+		return view('hotelotheredit',$arrRecords);        
+    }
+	 /* Save the Hotel Other Details */
+	public function savehotelotherinfo(Request $request) {		     		
+			/* Update Case */
+			if(isset($request->hotel_id) && !empty($request->hotel_id) && $request->hotel_id != null && $request->action == 'edit') {			
+				$hotelDetails = DB::table('hotel_main')->select('*')->where('id', $request->hotel_id)->first();								
+				/* Store the log details */
+				$logs = 'Hotel Other Detail Updated -> (ID:'.$request->hotel_id.')';
+				storelogs($request->user()->id,$logs);
+				$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Other Details saved successfully!</div>';
+			}			
+			$arrlanguages = getlanguages();			
+			$hotelnamelang = str_replace(" ", "_", $hotelDetails->name);
+			$name_key = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_name';
+						$language_name_key = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_language_name_key';
+						$lang_supplement_name = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_supplement_name';
+						$short_description = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_short_description';
+						$full_description = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_full_description';
+						$exceptionality_dec = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_exceptionality_dec';
+						$expert_evalution_desc = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_expert_evalution_desc';
+						$special_offer = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_special_offer';
+						$video_url = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_video_url';
+						$video_assement = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_video_assement';
+						$seo_title = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_title';
+						$seo_keywords = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_keywords';
+						$seo_desc = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_desc';						
+						$seo_title_ref = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_title_ref';
+						$seo_desc_ref = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_desc_ref';
+						$seo_keyword_ref = 'keyword_'.$hotelnamelang.$hotelDetails->id.'_seo_keyword_ref';
+
+				$text_information = array(
+							'name'=>$name_key,
+							'language_name'=>$language_name_key,
+							'supplement_name'=>$lang_supplement_name,
+							'short_description'=>$short_description,
+							'full_description'=>$full_description,
+							'exceptionality_dec'=>$exceptionality_dec,
+							'expert_evalution_desc'=>$expert_evalution_desc,
+							'special_offer'=>$special_offer,
+							'video_url'=>$video_url,
+							'video_assement'=>$video_assement,
+							'seo_title'=>$seo_title,
+							'seo_desc'=>$seo_desc,
+							'seo_keywords'=>$seo_keywords,
+							'seo_title_ref'=>$seo_title_ref,
+							'seo_desc_ref'=>$seo_desc_ref,
+							'seo_keyword_ref'=>$seo_keyword_ref);										
+				
+			$checkisExist = DB::table('text_information')->where(['hotel_id'=>$request->hotel_id])->count();	
+			if($checkisExist > 0) {			
+				/* Update Text Information with language translations */				
+				DB::table('text_information')->where(['hotel_id'=>$request->hotel_id])->update($text_information);	
+			}
+			else {
+				/* Insert Text Information with language translations */
+				$text_information['hotel_id']=$request->hotel_id;
+				DB::table('text_information')->insertGetId($text_information);
+			}			
+
+			foreach ($arrlanguages as $keylang => $valuelang) {
+				$arrResponsevalue = array('name'=>$request['text_name_'.$valuelang->code],
+					'language_name'=>$request['language_name_'.$valuelang->code],
+					'supplement_name'=>$request['supplement_name_'.$valuelang->code],
+					'short_description'=>$request['desc_short_'.$valuelang->code],
+					'full_description'=>$request['desc_full_'.$valuelang->code],
+					'exceptionality_dec'=>$request['desc_exception_'.$valuelang->code],
+					'expert_evalution_desc'=>$request['desc_experteval_'.$valuelang->code],
+					'special_offer'=>$request['special_offer_'.$valuelang->code],
+					'video_url'=>$request['videos_'.$valuelang->code],
+					'video_assement'=>$request['video_expert_'.$valuelang->code],
+					'seo_title'=>$request['seo_title_'.$valuelang->code],
+					'seo_desc'=>$request['seo_desc_'.$valuelang->code],
+					'seo_keywords'=>$request['seo_keywords_'.$valuelang->code],
+					'seo_title_ref'=>$request['seo_titleref_'.$valuelang->code],
+					'seo_desc_ref'=>$request['seo_descref_'.$valuelang->code],
+					'seo_keyword_ref'=>$request['seo_keywordsref_'.$valuelang->code]);
+				if(isset($text_information['hotel_id'])){
+					$removearr = array_pull($text_information, 'hotel_id');
+				}				
+				foreach ($text_information as $keyl => $valuel) {
+					$language_transalation = DB::table('language_transalation')
+					->where(['language_key'=>$valuel,'code'=>$valuelang->code])					
+					->first();
+					$label = str_replace("_", " ", $valuel);
+					$language_value = $arrResponsevalue[$keyl];
+					$arrlang=['language_label'=>$label,
+						'language_value' => $language_value,					
+						'code' => $valuelang->code];
+					/*if(strpos($language_value,"</div>")||strpos($language_value,"</p>")) {
+						$arrlang['is_cmspage']=1;
+					}*/
+					if(count($language_transalation) > 0) {
+						DB::table('language_transalation')
+							->where('language_key', $valuel)
+							->where('code', $valuelang->code)
+							->update($arrlang);
+							/*print_r($arrlang);
+							echo '<br>';*/
+					}
+					else {
+						$arrlang['language_key'] = $valuel;
+						DB::table('language_transalation')->insert($arrlang);
+					}
+				}						
+			}			
+		return redirect('hotel')->with('msg', $msg);     		
+    }
+	 public function savehotelpolicy(Request $request) {
+		if(isset($request->hotel_id)) {
+			if(isset($request->chk_policy) && $request->chk_policy){
+				foreach ($request->chk_policy as $key => $value) {
+					$oldDetails = DB::table('hotel_cancelation_policy')->where(['hotel_id'=>$request->hotel_id,'policy_id'=>$value])->count();
+					$updateData['percentage'] = isset($request->percentage[$value]) ? $request->percentage[$value] : '0';					
+					if($oldDetails > 0) {
+						DB::table('hotel_cancelation_policy')->where(['hotel_id'=>$request->hotel_id,'policy_id'=>$value])->update($updateData);	
+					}
+					else {
+						$updateData['policy_id'] = $value;
+						$updateData['hotel_id']= $request->hotel_id;					 	
+						DB::table('hotel_cancelation_policy')->insertGetId($updateData);		
+					}
+				}
+			}
+			$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Policy Detail Saved successfully!</div>';
+			return redirect('hotel/edit/other/'.$request->hotel_id)->with('msg', $msg);     
+		}
+    }
+	public function hotelpolicies(Request $request)
+    {
+        $hotelid = $request->hotelid;
+        $arrdata['hotelid'] = $request->hotelid;
+        /*$arrdata['arrivaldays'] = array('1'=>'1','2'=>'2','3'=>'3','4'=>'4');
+        $arrdata['policy_details'] = DB::table('hotel_plolicies')->where('hotel_id',$hotelid)->first();*/
+        $arrdata['cancelation_policy'] = DB::table('hotel_cancelation_policy')->where('hotel_id',$hotelid)->get();
+        return view('hotel_policy', $arrdata);
+    }
+	public function savehotelbillinfo(Request $request)
+	{
+		if(isset($request->hotel_id)) {
+		 $arrbilling_address = array(
+						'type'=>'0',
+						'company'=>$request->billing_company_name,						
+						'contact_person'=>isset($request->billing_contact_person) ? $request->billing_contact_person : '',
+						'address'=>isset($request->billing_address) ? $request->billing_address : '',
+						'zip_code'=>isset($request->billing_zipcode) ? $request->billing_zipcode : '',
+						'phone'=>isset($request->billing_phone) ? $request->billing_phone : '',
+						'fax'=>isset($request->billing_fax) ? $request->billing_fax : '',
+						'web'=>isset($request->billing_web_url) ? $request->billing_web_url : '',
+						'identification_id'=>isset($request->billing_identification_id) ? $request->billing_identification_id : '',
+						'vat_id'=>isset($request->billing_vat_id) ? $request->billing_vat_id : '',
+						'hotel_id'=>$request->hotel_id,
+						'bank_connetion'=>isset($request->billing_bank_detail) ? $request->billing_bank_detail : '');
+
+            $arrbilling_address_operator = array(
+						'type'=>'1',
+						'hotel_id'=>$request->hotel_id,
+						'company'=>$request->billing_opert_company_name,						
+						'contact_person'=>isset($request->billing_opert_contact_person) ? $request->billing_opert_contact_person : "",					
+						'address'=>isset($request->billing_opert_address) ? $request->billing_opert_address : '',
+						'zip_code'=>isset($request->billing_opert_zipcode) ? $request->billing_opert_zipcode : '');
+          	
+          	$arrinvoice_address = array(
+						'type'=>'0',
+						'hotel_id'=>$request->hotel_id,
+						'company'=>isset($request->invoice_hotel_name) ? $request->invoice_hotel_name : "",						
+						'address'=>isset($request->invoice_address) ? $request->invoice_address : '',
+						'zip_code'=>isset($request->invoice_zip_code) ? $request->invoice_zip_code : '',
+						'IBAN'=>isset($request->IBAN) ? $request->IBAN : '');
+
+          	$arrinvoice_address_operator = array(
+						'type'=>'1',
+						'hotel_id'=>$request->hotel_id,
+						'company'=>isset($request->invoice_hotel_name_op) ? $request->invoice_hotel_name_op : "",						
+						'address'=>isset($request->invoice_address_op) ? $request->invoice_address_op : '',
+						'zip_code'=>isset($request->invoice_opert_zip_code) ? $request->invoice_opert_zip_code : '',
+						'IBAN'=>isset($request->iban_op) ? $request->iban_op : '');	
+						
+			/* Update Billing Address */
+			$billaddress=DB::table('billing_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'0'])->first();
+			if(isset($billaddress))						
+			DB::table('billing_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'0'])->update($arrbilling_address);	
+			else
+			DB::table('billing_address')->insert($arrbilling_address);						
+			$billaddress=DB::table('billing_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'1'])->first();
+			if(isset($billaddress))							
+			DB::table('billing_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'1'])->update($arrbilling_address_operator);
+			else
+			DB::table('billing_address')->insert($arrbilling_address_operator);						
+			
+			$invoice=DB::table('invoice_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'0'])->first();
+			if(isset($invoice))			
+			DB::table('invoice_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'0'])->update($arrinvoice_address);
+			else
+			DB::table('invoice_address')->insert($arrinvoice_address);
+			$invoice=DB::table('invoice_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'1'])->first();
+			if(isset($invoice))			
+			DB::table('invoice_address')->where(['hotel_id'=>$request->hotel_id,'type'=>'1'])->update($arrinvoice_address_operator);
+			else
+			DB::table('invoice_address')->insert($arrinvoice_address_operator);
+			$logs = 'Hotel Billing Info Updated -> (ID:'.$request->hotel_id.')';
+			storelogs($request->user()->id,$logs);
+			$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Basic Info updated successfully!</div>';
+		}
+		return redirect('hotel/edit/contactdetail/'.$request->hotel_id)->with('msg', $msg);    
+	}
+	
+ public function savewizard(Request $request)
+    {
+		$name = $request->name;
+		$wizardoptions['user_id'] = $request->user()->id;
+		$wizardoptions['category_id'] = $request->catid;
+		$wizardoptions['title'] = $name;
+		$wizardoptions['is_active'] = 0;
+	
+		DB::table('wizard_options')->where('id',$request->options_id)->update($wizardoptions);
+	
+		$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options Updated successfully!</div>';
+	
+	
+	
+	return $msg;
+
+    }
+	
+
+
+}

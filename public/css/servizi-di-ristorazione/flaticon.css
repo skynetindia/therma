@@ -1,0 +1,43 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 18/11/2016 09:35
+  	*/
+
+@font-face {
+  font-family: Flaticon-servizi-di-ristorazione;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-servizi-di-ristorazione;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-servizi-di-ristorazione-"]:before, [class*=" flaticon-servizi-di-ristorazione-"]:before,
+[class^="flaticon-servizi-di-ristorazione-"]:after, [class*=" flaticon-servizi-di-ristorazione-"]:after {   
+  font-family: Flaticon-servizi-di-ristorazione;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-servizi-di-ristorazione-buffet:before { content: "\f100"; }
+.flaticon-servizi-di-ristorazione-covered-food-tray-on-a-hand-of-hotel-room-service:before { content: "\f101"; }
+.flaticon-servizi-di-ristorazione-dinner:before { content: "\f102"; }
+.flaticon-servizi-di-ristorazione-dinner-1:before { content: "\f103"; }
+.flaticon-servizi-di-ristorazione-food:before { content: "\f104"; }
+.flaticon-servizi-di-ristorazione-food-1:before { content: "\f105"; }
+.flaticon-servizi-di-ristorazione-food-2:before { content: "\f106"; }
+.flaticon-servizi-di-ristorazione-fruit:before { content: "\f107"; }
+.flaticon-servizi-di-ristorazione-menu:before { content: "\f108"; }
+.flaticon-servizi-di-ristorazione-night:before { content: "\f109"; }
+.flaticon-servizi-di-ristorazione-restaurant:before { content: "\f10a"; }
+.flaticon-servizi-di-ristorazione-table:before { content: "\f10b"; }

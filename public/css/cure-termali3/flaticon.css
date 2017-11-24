@@ -1,0 +1,43 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 09/02/2017 09:40
+  	*/
+
+@font-face {
+  font-family: Flaticon-cure-termali3;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-cure-termali3;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-cure-termali3-"]:before, [class*=" flaticon-cure-termali3-"]:before,
+[class^="flaticon-cure-termali3-"]:after, [class*=" flaticon-cure-termali3-"]:after {   
+  font-family: Flaticon-cure-termali3;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-cure-termali3-anatomic-spine:before { content: "\f100"; }
+.flaticon-cure-termali3-battery:before { content: "\f101"; }
+.flaticon-cure-termali3-black:before { content: "\f102"; }
+.flaticon-cure-termali3-fitness:before { content: "\f103"; }
+.flaticon-cure-termali3-flash:before { content: "\f104"; }
+.flaticon-cure-termali3-foot-massage:before { content: "\f105"; }
+.flaticon-cure-termali3-magnet:before { content: "\f106"; }
+.flaticon-cure-termali3-paint-bucket-with-stains:before { content: "\f107"; }
+.flaticon-cure-termali3-relaxing-massage:before { content: "\f108"; }
+.flaticon-cure-termali3-rethink:before { content: "\f109"; }
+.flaticon-cure-termali3-sound:before { content: "\f10a"; }
+.flaticon-cure-termali3-stomach:before { content: "\f10b"; }

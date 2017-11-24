@@ -1,0 +1,395 @@
+@extends('layouts.app')
+@section('content')
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/TableExport/3.3.13/css/tableexport.min.css">
+    <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
+    <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
+    <script src="{{ asset('public/js/xlsx.core.min.js') }}"></script>
+    <script src="{{ asset('public/js/tableExport.js') }}"></script>
+
+    {{--Content--}}
+
+    <div class="ssetting-wrap">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="table-btn">
+                    <a href="{{ url('/wizard/category/edit/') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
+                    <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
+                                class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                    <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
+                                class="fa fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="heading-search-dashboard">
+
+            {{ Form::open(array('url' => 'transfer/search', 'files' => true, 'id' => 'transfer_search_form')) }}
+            <div class="form-wrap">
+
+                <div class="reservation-list-widthcalc">
+                    <div class="input form-group">
+                        <label>@lang('messages.keyword_search')</label>
+                        <input type="text" class="form-control" name="search" placeholder="@lang('messages.keyword_transfer') @lang('messages.keyword_id')"/>
+                    </div>
+                    <div class="input form-group">
+                        <label>@lang('messages.keyword_client') @lang('messages.keyword_status')</label>
+                        <select class="form-control bg-arrow" name="client_status">
+                            <option value="">@lang('messages.keyword_--select--')</option>
+                            @forelse(getClientStatus() as $key => $status)
+                                <option value="{{ $key }}">{{ $status }}</option>
+                            @empty
+                            @endforelse
+                        </select>
+                    </div>
+
+                    <div class="input form-group">
+                        <div class="date-input ">
+                            <label>@lang('messages.keyword_start_date')</label>
+                            <input type="text" id="start_date" value="{{ old('start_date') }}" name="arrival" placeholder="YYYY-MM-DD" class="form-control" readonly/>
+                        </div>
+                        <div>-</div>
+                        <div class="date-input">
+                            <label>@lang('messages.keyword_end_date')</label>
+                            <input type="text" id="end_date" value="{{ old('end_date') }}" placeholder="YYYY-MM-DD" name="departure"
+                                   class="form-control" readonly/>
+                        </div>
+                    </div>
+
+                    <div class="input form-group">
+                        <label>@lang('messages.keyword_admin') @lang('messages.keyword_subject')</label>
+                        <select class="form-control bg-arrow" name="admin_subject">
+                            <option value="">@lang('messages.keyword_--select--')</option>
+                            <option value="0">@lang('messages.keyword_confirm')</option>
+                            <option value="1">@lang('messages.keyword_not_confirm')</option>
+                        </select>
+                    </div>
+
+                    <div class="input form-group">
+                        <label>@lang('messages.keyword_type')</label>
+                        <select class="form-control bg-arrow" name="type">
+                            <option value="">@lang('messages.keyword_--select--')</option>
+                            <option value="1">@lang('messages.keyword_group')</option>
+                            <option value="0">@lang('messages.keyword_individual')</option>
+                        </select>
+                    </div>
+
+
+
+                </div>
+
+                <div class="dashbord-filter inline-block pull-right">
+                    <button type="submit" class="btn btn-default">@lang('messages.keyword_filter')</button>
+                    <button type="reset" class="btn btn-default" ><i class="fa fa-times" aria-hidden="true"></i></button>
+                </div>
+
+            </div>
+            {{ Form::close() }}
+            <div class="clearfix"></div>
+
+        </div>
+        <div class="section-border">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="data-table">
+                        <div class="table-responsive">
+                            <h1 class="cst-datatable-heading">@lang('messages.keyword_transfer') @lang('messages.keyword_search')</h1><hr>
+                            <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
+                                   data-show-refresh="true" data-toolbar="#toolbar" data-show-columns="true"
+                                   data-classes="table table-bordered"  data-show-export="true" id="table">
+                                <thead>
+                                <th data-field="checkbox" >
+                                    <input type="checkbox" onchange="toggleCheck(this)" name="" id="checkall">
+                                </th>
+                                <th>{{trans('messages.keyword_id')}}</th>
+                                <th>{{trans('messages.keyword_confirm')}}</th>
+                                <th>{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_send_status')}}</th>
+                                <th>{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_id')}}</th>
+                                <th>{{trans('messages.keyword_client')}} {{trans('messages.keyword_name')}}</th>
+                                <th>{{trans('messages.keyword_client')}} {{trans('messages.keyword_phone')}}</th>
+                                <th>{{trans('messages.keyword_direction')}}</th>
+                                <th>{{trans('messages.keyword_type')}}</th>
+                                <th>{{trans('messages.keyword_pax')}}</th>
+                                <th>{{trans('messages.keyword_start')}}</th>
+                                <th>{{trans('messages.keyword_destination')}}</th>
+                                <th>{{trans('messages.keyword_flight')}} {{trans('messages.keyword_time')}}</th>
+                                <th>{{trans('messages.keyword_flight')}}</th>
+                                <th>{{trans('messages.keyword_pickup_time')}}</th>
+                                <th>{{trans('messages.keyword_notes')}}</th>
+                                <th>{{trans('messages.keyword_price')}}</th>
+                                </thead>
+                                <tbody>
+                                    @foreach($filtered_transfer as $transfer)
+                                        <tr>
+                                            <td>
+                                                <?php echo "<input type='checkbox' data-id='{{ $transfer->id }}' onchange='clearCheckall(this)' class='checkbox-inline child_checkbox'>"; ?>
+                                            </td>
+                                            <td>{{ $transfer->id }}</td>
+                                            <td>
+                                                <?php
+                                                    if($transfer->is_active == '0')
+                                                    {
+                                                        echo '<i class="fa fa-check" style="color:green;"></i>';
+                                                    }else{
+                                                        echo '<i class="fa fa-times" style="color:red;"></i>';
+                                                    }
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                if($transfer->send_info_status == '0'){
+                                                    echo '<i class="fa fa-envelope-o" style="color:red;"></i>';
+                                                }else{
+                                                    echo '<i class="fa fa-envelope-o" style="color:green;"></i>';
+                                                }
+                                                ?>
+                                            </td>
+                                            <td>{{ $transfer->unique_transfer_id }}</td>
+                                            <td>{{ $transfer->username }}</td>
+                                            <td>{{ $transfer->user_phone }}</td>
+                                            <td>{{ $transfer->direction }}</td>
+                                            <td>{{ ($transfer->type == '1') ? trans('messages.keyword_group') : trans('messages.keyword_individual') }}</td>
+                                            <td>{{ $transfer->pax }}</td>
+                                            <td>{{ $transfer->start }}</td>
+                                            <td>{{ $transfer->destination }}</td>
+                                            <td>{{ $transfer->flight_time }}</td>
+                                            <td>{{ $transfer->flight }}</td>
+                                            <td>{{ $transfer->pickup_time }}</td>
+                                            <td>{{ $transfer->notes }}</td>
+                                            <td>
+                                                <?php $cur = getActiveCurrency(); ?>
+                                                {{ $transfer->price }} {{ $cur['symbol'] }}
+                                            </td>
+
+
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="transfer-list-btn">
+                            <button class="btn btn-default btn-6-12" onclick="checkNotEmptyReservations(this);">Confirm reservations</button>
+                            <button class="btn btn-info btn-6-12" type="button" onclick="checkNotEmptySendInfo(this)">Send info to Hotel</button>
+                            <button class="btn btn-success btn-6-12 text-right" id="exportCSV">Export (CSV)</button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    {{--Content--}}
+
+    <script>
+
+        function updateTransferStatus(id) {
+            var url = "{{ url('transfer/changeactivestatus') }}" + '/';
+            var status = '1';
+            if ($("#activestatus_" + id).is(':checked')) {
+                status = '0';
+            }
+            $.ajax({
+                type: "GET",
+                url: url + id + '/' + status,
+                error: function (url) {
+                },
+                success: function (data) {
+                    /*$(".currencytogal").prop('checked',false);
+                    $(".currencytogal").prop('disabled',false);*/
+                    //$("#activestatus_"+id).prop('checked',true);
+                    /*$("#activestatus_"+id).prop('disabled',true);*/
+                }
+            });
+        }
+
+
+        var selezione = [];
+        var indici = [];
+        var n = 0;
+
+        $('#table').on('click-row.bs.table', function (row, tr, el) {
+            var cod = /\d+/.exec($(el[0]).children()[0].innerHTML);
+            if (!selezione[cod]) {
+                // $('#table tr.selected').removeClass("selected");
+                $(el[0]).addClass("selected");
+                selezione[cod] = cod;
+                indici[n] = cod;
+                n++;
+            } else {
+                //$(el[0]).removeClass("selected");
+                selezione[cod] = undefined;
+                for(var i = 0; i < n; i++) {
+                    if(indici[i] == cod) {
+                        for(var x = i; x < indici.length - 1; x++)
+                            indici[x] = indici[x + 1];
+                        break;
+                    }
+                }
+                /*n--;
+                $('#table tr.selected').removeClass("selected");
+                $(el[0]).addClass("selected");
+                selezione[cod] = cod;
+                indici[n] = cod;*/
+                n++;
+            }
+        });
+
+        function check_confirm() {
+
+            return confirm("{{trans('messages.keyword_are_you_sure_want_to_confirm_selected_reservations?')}}");
+        }
+
+
+        function multipleAction(act) {
+            var error = false;
+            var link = document.createElement("a");
+            var clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            switch(act) {
+                case 'confirm':
+
+                    link.href = "{{ url('transfer/confirm-reservations') }}" + '/';
+                    if( check_confirm() && n!=0) {
+                        for(var i = 0; i < n; i++) {
+                            $.ajax({
+                                type: "GET",
+                                url : link.href + indici[i],
+                                error: function(url) {
+                                    if(url.status==403) {
+                                        link.href = "{{ url('transfer/confirm-reservations') }}" + '/' + indici[i];
+                                        link.dispatchEvent(clickEvent);
+                                    }
+                                }
+                            });
+                            if(i==n){
+                                setTimeout(function(){location.reload();},100*n);
+                                n = 0;
+                            }
+                        }
+                        selezione = undefined;
+                        setTimeout(function(){location.reload();},100*n);
+                        n = 0;
+                    }
+                    break;
+                case 'send':
+                    link.href = "{{ url('transfer/send-info-to-hotel') }}";
+                    if(n!=0) {
+                        for(var i = 0; i < n; i++) {
+                            var description = $("#description").val();
+                            $.ajax({
+                                type: "POST",
+                                data: {"_token": "{{ csrf_token() }}", description: description, id: indici[i]},
+                                url : link.href,
+                                error: function(url) {
+                                    if(url.status==403) {
+                                        link.href = "{{ url('transfer/send-info-to-hotel') }}";
+                                        link.dispatchEvent(clickEvent);
+                                    }
+                                }
+                            });
+                            if(i==n){
+                                setTimeout(function(){location.reload();},100*n);
+                                n = 0;
+                            }
+                        }
+                        selezione = undefined;
+                        setTimeout(function(){location.reload();},100*n);
+                        n = 0;
+                    }
+                    break;
+            }
+        }
+    </script>
+
+    <script>
+        $("#exportCSV").on("click", function(){
+            $('#table').tableExport({type:'csv', fileName: 'Transfer List'});
+        });
+
+        function toggleCheck(e)
+        {
+            if($(e).prop('checked'))
+            {
+                $(".child_checkbox").prop('checked', true);
+            }else{
+                $(".child_checkbox").prop('checked', false);
+            }
+        }
+
+        function checkNotEmptyReservations(e)
+        {
+            var checkedLength = $(".child_checkbox:checked").length;
+            if(checkedLength == '0')
+            {
+                alert('Please select atleast one record to send information');
+
+            }else{
+                multipleAction('confirm');
+            }
+        }
+
+        function checkNotEmptySendInfo(e)
+        {
+            var checkedLength = $(".child_checkbox:checked").length;
+            if(checkedLength == '0')
+            {
+                alert('Please select atleast one record to send information');
+            }else{
+                $("#info_to_hotel").modal('show');
+            }
+        }
+
+        $(document).ready(function () {
+
+            $('#departure_date, #arrival_date, #end_date, #start_date').datepicker({
+                format: "yyyy-mm-dd",
+                startDate: "18-07-2015",//'-30d',
+                endDate: '+30d',
+            }).datepicker();
+
+        });
+    </script>
+@endsection
+
+@section('modals')
+    <!-- Modal -->
+    <div id="info_to_hotel" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">@lang('messages.keyword_send_info_to_hotel')</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="description">@lang('messages.keyword_description')</label>
+                        <textarea name="description" id="description" cols="30" rows="3" style="resize: vertical;" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" onclick="multipleAction('send');">@lang('messages.keyword_send')</button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+@endsection

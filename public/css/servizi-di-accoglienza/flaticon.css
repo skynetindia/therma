@@ -1,0 +1,38 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 18/11/2016 09:59
+  	*/
+
+@font-face {
+  font-family: Flaticon-servizi-di-accoglienza;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-servizi-di-accoglienza;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-servizi-di-accoglienza-"]:before, [class*=" flaticon-servizi-di-accoglienza-"]:before,
+[class^="flaticon-servizi-di-accoglienza-"]:after, [class*=" flaticon-servizi-di-accoglienza-"]:after {   
+  font-family: Flaticon-servizi-di-accoglienza;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-servizi-di-accoglienza-backpack:before { content: "\f100"; }
+.flaticon-servizi-di-accoglienza-desk-bell:before { content: "\f101"; }
+.flaticon-servizi-di-accoglienza-money:before { content: "\f102"; }
+.flaticon-servizi-di-accoglienza-suitcase:before { content: "\f103"; }
+.flaticon-servizi-di-accoglienza-ticket:before { content: "\f104"; }
+.flaticon-servizi-di-accoglienza-tool:before { content: "\f105"; }
+.flaticon-servizi-di-accoglienza-waiter:before { content: "\f106"; }

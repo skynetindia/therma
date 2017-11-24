@@ -1,0 +1,61 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+
+/*===================================== Language section routes START =============================== */
+// Lanauge
+Route::get('/language', 'AdminController@language');
+Route::get('/language/json', 'AdminController@getjsonlanguage');
+Route::get('/modify/language/{languageid?}', 'AdminController@modifylanguage');
+Route::post('/update/language/{languageid?}', 'AdminController@saveLanguage');
+Route::get('/destroy/language/{languageid}', 'AdminController@destroylanguage');
+
+// Language Translations
+Route::get('/language/translation/{code?}', 'AdminController@translation');
+Route::get('/language/translation/json/{code?}', 'AdminController@getjsontranslation');
+Route::get('/language/translation/delete/{id}', 'AdminController@destroytranslation');
+Route::get('/language/writelanguage', 'AdminController@writelanguagefile');
+
+Route::any('/language/add/translation', 'AdminController@addedittranslation');
+Route::get('/language/modify/translation/{id}', 'AdminController@addedittranslation');
+Route::post('language/translation/store', 'AdminController@savetranslation');
+Route::post('language/translation/update/{key}', 'AdminController@updatetranslation');
+Route::any('/language/searchtranslation', 'AdminController@getpharses');
+
+/*Route::get('/language-chooser', 'LanguageController@changeLanguage');
+Route::get('/language/', array('before'=> 'csrf','as'=>'language-chooser','uses'=>'LanguageController@changeLanguage'));*/
+/*===================================== Language section routes END =============================== */
+
+/*===================================== Currency Section Start ========================================================= */
+// show taxation 
+Route::get('/currency', 'AdminController@showcurrency');
+// add taxation
+Route::get('/currency/add/{id?}', 'AdminController@addeditcurrency');
+// store taxation
+Route::post('/currency/store', 'AdminController@storecurrency');
+// delete taxation
+Route::get('/currency/delete/{id}', 'AdminController@deletecurrency');
+// get taxation
+Route::get('currency/json', 'AdminController@getjsoncurrency');
+
+Route::get('/currency/changestatus/{id}/{status}', 'AdminController@updatecurrencystatus');
+
+/*===================================== Currency Section End ========================================================= */

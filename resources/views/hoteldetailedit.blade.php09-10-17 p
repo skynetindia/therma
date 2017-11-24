@@ -1,0 +1,493 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+    <div class="step-page">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="navigation-root">
+                    <ul class="navigation-list">
+                        <li class="navigation-item " id="firstst"></li>
+                        <li class="navigation-item navigation-previous-item  navigation-active-item" id="secondst"></li>
+                        <li class="navigation-item" id="thirdst"></li>
+                        <li class="navigation-item" id="fourthst"></li>
+                        <li class="navigation-item" id="fifthst"></li>
+                        <li class="navigation-item" id="sixthst"></li>
+                        <li class="navigation-item" id="seven"></li>
+                        <li class="navigation-item" id="eight"></li>
+                        <li class="navigation-item" id="nine"></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div><?php
+    if (isset($hoteldetails) && !empty($hoteldetails) && $action == 'edit') {
+        echo Form::open(array('url' => '/update/hoteldetail' . "/" . $hoteldetails->id, 'files' => true, 'id' => 'frmHotelBasicInfo'));
+    } else {
+        echo Form::open(array('url' => '/update/hoteldetail', 'files' => true, 'id' => 'frmHotelBasicInfo'));
+    }
+    ?><input type="hidden" name="hotel_id" value="{{isset($hoteldetails->id) ? $hoteldetails->id : ''}}">
+    <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+    {{ csrf_field() }}
+    <div class="hotel-detail-wrap">
+        <div class="row">
+            <div class="col-md-7 col-sm-12 col-xs-12">
+                <div class="hotel-detail-lft">
+                    <div class="business-setting-hotel">
+                        <div class="section-border">
+                            <p class="bold blue-head">business setting of the hotel</p>
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">The currency of the hotel</label>
+                                        <div class="block">{{isset($defaultCurrency->symbol) ? $defaultCurrency->symbol : '€'}}</div>
+                                        <input type="hidden" name="currency" id="currency" value="{{isset($defaultCurrency->id) ? $defaultCurrency->id : '0'}}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Preference hotel</label>
+                                        <input class="form-control" id="preference" name="preference"
+                                               placeholder="Preference hotel" type="text" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Portal Commission (%)</label>
+                                        <input class="form-control" id="portal_commision" name="portal_commision"
+                                               placeholder="Portal Commission (%)" type="text" value="" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Price increase (%)</label>
+                                        <input class="form-control" id="price_increase" placeholder="" type="text"
+                                               value="0" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            <label for="">Vat Invoicing</label>
+                                            <select class="form-control" name="vat_invoicing" id="vat_invoicing">
+                                                <option value="0">VAT is added to the calculated commission</option>
+                                                <option value="1">Calculated commission is already including VAT
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Billing language</label>
+                                        <select class="form-control" name="billing_language" id="billing_language">
+                                            @foreach(getlanguages() as $keylan => $vallang)
+                                                <option value="{{$vallang->id}}">{{$vallang->code}}
+                                                    / {{$vallang->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Contract number</label>
+                                        <input class="form-control" id="contract_number" name="contract_number"
+                                               placeholder="Enter Contact Number" type="text" value="">
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Sale - Standard Reservation</label>
+                                        <select class="form-control" name="sale_standard_reservation"
+                                                id="sale_standard_reservation">
+                                            <option value="1">No</option>
+                                            <option value="0">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Resale - non-refundable booking</label>
+                                        <select class="form-control" name="resel_non_refundable"
+                                                id="resel_non_refundable">
+                                            <option value="1">No</option>
+                                            <option value="0">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row vat-chk">
+                                <div class="col-md-2 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">VAT</label>
+                                        <div class="border-vat-chk">
+                                            <div class="ryt-chk">
+                                                <input type="checkbox" value="1" id="is_vat" name="is_vat"><label
+                                                        for="is_vat"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-10 col-sm-12 col-xs-12">
+                                    <div class="form-group">
+                                        <label for="">Spa fee</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+                                                <div class="ryt-chk">
+                                                    <input id="is_spa_fee" name="is_spa_fee" type="checkbox" value="1">
+                                                    <label for="chk-without-info1"></label>
+                                                </div>
+                                            </div>
+                                            <input class="form-control" id="spa_fee" name="spa_fee"
+                                                   placeholder="Spa fee" type="text">
+                                            <div class="input-group-addon">{{isset($defaultCurrency->symbol) ? $defaultCurrency->symbol : '€'}}
+                                                per person per day
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{--Set Options--}}
+                    <div class="set-option">
+                        <div class="section-border"><?php
+                            $categoryoptions = getWizardOptionByCategory(10);
+                            //pre($categoryoptions);
+                            ?>
+                            @if(isset($categoryoptions[0]->cat_lang_key))
+                                <p class="bold blue-head">{{trans('messages.keyword_'.$categoryoptions[0]->cat_lang_key)}}</p>
+                                <div class="row">
+                                    @foreach($categoryoptions as $keycat => $valcat)
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="form-group"><?php
+                                                if (isset($valcat->id) && $valcat->id != null) {
+                                                    if ($valcat->is_language == 1) {
+                                                        echo createwizard($valcat, '2');
+                                                    } else {
+                                                        echo createwizard($valcat, '1');
+                                                    }
+                                                }
+                                                ?></div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    {{--Set Options--}}
+                    {{--Medical Settings--}}
+                    <div class="medical-settings">
+                        <div class="section-border">
+                            <p class="bold blue-head">Medical settings</p>
+                            <?php
+                            $categoryoptionsProcedures1 = getWizardOptionByCategory(6);
+                            ?>
+                            @if(isset($categoryoptionsProcedures1[0]->cat_lang_key))
+                                <div class="head-to-sub-heading">{{trans('messages.keyword_'.$categoryoptionsProcedures1[0]->cat_lang_key)}}</div>
+                                <div class="row">
+                                    @foreach($categoryoptionsProcedures1 as $keypro => $valpro)
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="form-group"><?php
+                                                if (isset($valpro->id) && $valpro->id != null) {
+                                                    if ($valpro->is_language == 1) {
+                                                        echo createwizard($valpro, '2');
+                                                    } else {
+                                                        echo createwizard($valpro, '1');
+                                                    }
+                                                }
+                                                ?></div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                        {{--Indication--}}
+                        <div class="section-border">
+                            <div class="head-sub-heading">Indication</div>
+                            <div class="head-to-sub-heading">Not included in the group</div>
+                            <div class="row"><?php
+                                $notingroup = getWizardOptionByCategory(16);
+                                ?>
+                                @foreach($notingroup as $keynoind => $valnoind)
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="form-group"><?php
+                                            if (isset($valnoind->id) && $valnoind->id != null) {
+                                                if ($valpro->is_language == 1) {
+                                                    echo createwizard($valnoind, '2');
+                                                } else {
+                                                    echo createwizard($valnoind, '1');
+                                                }
+                                            }
+                                            ?></div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        {{--In--}}
+                    </div>
+                    {{--Medical Settings--}}
+                </div>
+            </div>
+            {{--Credit Cards--}}
+            <div class="col-md-5 col-sm-12 col-xs-12">
+                <div class="hotel-detail-lft">
+                    <div class="credit-card-box">
+                        <div class="section-border">
+                            <p class="bold blue-head">credit cards</p>
+                            <div class="row">
+                                <div class="form-group">
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                            <label for="">How to work with a card</label>
+                                            <select class="form-control" name="work_with_credit_card"
+                                                    id="work_with_credit_card">
+                                                <option value="0">hotel pulls out of the card before arrival</option>
+                                                <option value="1">The hotel is blocked on the card before arrival
+                                                </option>
+                                                <option value="2">hotel pulls out of the card on the day of booking
+                                                </option>
+                                                <option value="3">The hotel is blocked on the card on the day of
+                                                    booking
+                                                </option>
+                                                <option value="4">Cancellation tab only</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                            <label for="">Amount (%)</label>
+                                            <input type="text" class="form-control" id="credit_card_amount"
+                                                   placeholder="" name="credit_card_amount">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><?php
+                            $notingroup = getWizardOptionByCategory(17);
+                            ?>
+                            @foreach($notingroup as $keynoind => $valnoind)
+
+                                <div class="row">
+                                    <div class="form-group">
+                                        <?php
+                                        if (isset($valnoind->id) && $valnoind->id != null) {
+                                            echo createwizard($valnoind, '1');
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="ryt-side-menu-collapse">
+                            <div class="rytside-menu">
+                                <h3>hotel Features</h3>
+                            </div>
+
+                            <div class="height20"></div>
+
+                            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true"><?php
+                                $getSubcategories = getWizardSubCategory(53);
+                                foreach ($getSubcategories as $keysubcat => $valuesubcat) {
+                                ?>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <h4 class="panel-title">
+                                            <a role="button" data-toggle="collapse" data-parent="#accordion"
+                                               href="#collapse{{$keysubcat}}" aria-expanded="false"
+                                               aria-controls="collapse{{$keysubcat}}" class="collapsed">
+                                                <i class="more-less fa-chevron-down fa" aria-hidden="true"></i>
+                                                {{trans('messages.keyword_'.$valuesubcat->language_key)}}
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapse{{$keysubcat}}" class="panel-collapse collapse" role="tabpanel"
+                                         aria-labelledby="headingOne" aria-expanded="false" style="height: 0px;">
+                                        <div class="panel-body"><?php
+                                            $optionsCategories = getWizardOptionByCategory($valuesubcat->id);
+
+                                            ?>
+                                            @foreach($optionsCategories as $keynoind => $valnoind)
+                                                <div class="room-hotel-innr-form"><?php
+                                                    if (isset($valnoind->id) && $valnoind->id != null) {
+                                                        if ($valnoind->is_language == 1) {
+                                                            echo createwizard($valnoind, '2');
+                                                        } else {
+                                                            echo createwizard($valnoind, '1');
+                                                        }
+                                                    }
+                                                    ?></div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div><?php
+                                }
+                                ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{--Credit Cards--}}
+        </div>
+        <div class="btn-shape">
+            <div class="row">
+                {{--<div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left"><a href="{{url('hotel/edit/basic').'/'.$hoteldetails->id}}" class="btn btn-default">Previous</a></div>--}}
+                <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left"><a
+                            href="{{url('hotel/edit/basic') }}" class="btn btn-default">Previous</a></div>
+                <div class="col-md-6 col-sm-12 col-xs-12 btn-right-shape text-right">
+                    <button type="submit" class="btn btn-default">{{trans('messages.keyword_next')}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php echo Form::close(); ?>
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // validate signup form on keyup and submit
+            $("#frmHotelBasicInfo").validate({
+                rules: {
+                    status: {
+                        required: true,
+                    },
+                    name: {
+                        required: true,
+                        maxlength: 50
+                    },
+                    address: {
+                        required: true,
+                        maxlength: 255
+                    },
+                    hotel_phone: {
+                        required: true
+                    },
+                    hotel_fax: {
+                        required: true
+                    },
+                    hotel_weburl: {
+                        required: true,
+                        url: true
+                    },
+                    general_email: {
+                        required: true,
+                        email: true
+                    },
+                    invoice_company_name: {
+                        required: true,
+                    },
+                    invoice_address: {
+                        required: true,
+                    },
+                    billing_company_name: {
+                        required: true,
+                    },
+                    billing_hotel_name: {
+                        required: true
+                    }
+                },
+                messages: {
+                    status: {
+                        required: "{{trans('messages.keyword_please_select_a_hotel_status')}}",
+                    },
+                    name: {
+                        required: "{{trans('messages.keyword_please_enter_a_hotel_name')}}",
+                        maxlength: "{{trans('messages.keyword_hotel_name_must_be_less_than_50_characters')}}"
+                    },
+                    address: {
+                        required: "{{trans('messages.keyword_please_enter_a_address')}}",
+                        maxlength: "{{trans('messages.keyword_address_name_must_be_less_than_255_characters')}}"
+                    },
+                    hotel_phone: {
+                        required: "{{trans('messages.keyword_enter_phone')}}"
+                    },
+                    hotel_fax: {
+                        required: "{{trans('messages.keyword_please_enter_a_fax')}}"
+                    },
+                    hotel_weburl: {
+                        required: "{{trans('messages.keyword_please_enter_a_web_url')}}",
+                        url: "{{trans('messages.keyword_please_enter_a_valid_ur')}}"
+                    },
+                    general_email: {
+                        required: "{{trans('messages.keyword_please_enter_a_general_email')}}",
+                        email: "{{trans('messages.keyword_please_enter_a_valid_general_email')}}"
+                    },
+                    invoice_company_name: {
+                        required: "{{trans('messages.keyword_please_enter_a_company')}}",
+                    },
+                    invoice_address: {
+                        required: "{{trans('messages.keyword_please_enter_a_address')}}",
+                    },
+                    billing_company_name: {
+                        required: "{{trans('messages.keyword_please_enter_a_company')}}"
+                    },
+                    billing_hotel_name: {
+                        required: "{{trans('messages.keyword_please_enter_a_name')}}"
+                    }
+                }
+            });
+            $.validator.setDefaults({
+                ignore: []
+            });
+            var phones = [{"mask": "(###) ###-####"}, {"mask": "(###) ###-####"}];
+            $('.inputmask-formate').inputmask({
+                mask: phones,
+                greedy: false,
+                definitions: {'#': {validator: "[0-9]", cardinality: 1}}
+            });
+        });
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBPyPHd-CTp9Nh_Jqe1NwJiX6WKQYpVEtI&sensor=false&libraries=places"></script>
+    <!--<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBPyPHd-CTp9Nh_Jqe1NwJiX6WKQYpVEtI&sensor=false&libraries=places">-->
+    <script type="text/javascript">
+        /* Google Autocomplete for address */
+        google.maps.event.addDomListener(window, 'load', function () {
+            var options = {
+                types: ['(cities)'],
+                componentRestrictions: {country: ['it', 'us', 'gr', 'pr', 'vi', 'gu', 'mp', 'in']}
+            };
+
+            /*var places = new google.maps.places.Autocomplete(document.getElementById('citta'),options);
+            google.maps.event.addListener(places, 'place_changed', function () {
+                var place = places.getPlace();
+                var address = place.formatted_address;
+                var latitude = place.geometry.location.lat();
+                var longitude = place.geometry.location.lng();
+                var mesg = "Address: " + address;
+                mesg += "\nLatitude: " + latitude;
+                mesg += "\nLongitude: " + longitude;
+               //alert(place);
+            });*/
+
+            /*For the Edit all the text box give autocomplete */
+            var acInputs = document.getElementsByClassName("addressautocomplete");
+            for (var i = 0; i < acInputs.length; i++) {
+                /*var autocomplete = new google.maps.places.Autocomplete(acInputs[i],options);*/
+                var autocomplete = new google.maps.places.Autocomplete(acInputs[i]);
+                autocomplete.inputId = acInputs[i].id;
+                google.maps.event.addListener(autocomplete, 'place_changed', function () {
+                    //document.getElementById("log").innerHTML = 'You used input with id ' + this.inputId;
+                });
+            }
+        });
+    </script>
+
+
+
+
+@endsection	

@@ -1,0 +1,40 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 18/11/2016 11:38
+  	*/
+
+@font-face {
+  font-family: Flaticon-servizi-termali1;
+  src: url("./Flaticon.eot");
+  src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("./Flaticon.woff") format("woff"),
+       url("./Flaticon.ttf") format("truetype"),
+       url("./Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: Flaticon-servizi-termali1;
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-servizi-termali1-"]:before, [class*=" flaticon-servizi-termali1-"]:before,
+[class^="flaticon-servizi-termali1-"]:after, [class*=" flaticon-servizi-termali1-"]:after {   
+  font-family: Flaticon-servizi-termali1;
+        font-size: 18px;
+font-style: normal;
+margin-left: 0px;
+}
+
+.flaticon-servizi-termali1-examination:before { content: "\f100"; }
+.flaticon-servizi-termali1-medical:before { content: "\f101"; }
+.flaticon-servizi-termali1-meteor-shower:before { content: "\f102"; }
+.flaticon-servizi-termali1-mountain-formation:before { content: "\f103"; }
+.flaticon-servizi-termali1-music:before { content: "\f104"; }
+.flaticon-servizi-termali1-person-silhouette-in-sauna:before { content: "\f105"; }
+.flaticon-servizi-termali1-sauna:before { content: "\f106"; }
+.flaticon-servizi-termali1-shower-with-water-droplets:before { content: "\f107"; }
+.flaticon-servizi-termali1-sonography:before { content: "\f108"; }

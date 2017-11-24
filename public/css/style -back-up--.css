@@ -1,0 +1,274 @@
+
+@import url('https://fonts.googleapis.com/css?family=Playfair+Display');
+@import url('https://fonts.googleapis.com/css?family=Questrial');
+@import url('https://fonts.googleapis.com/css?family=Oswald:700');
+
+
+h1,h2,h3,h4,h5,h6{font-family: 'Playfair Display', serif;}
+
+body{font-size:16px;font-family:"Questrial",sans-serif;}
+
+.sidebar-wrapper .sidebar-brand a h1 {
+  font-size: 26px;
+}
+.toggled .sidebar-wrapper {
+  width: 250px;
+}
+
+.toggled .page-content-wrapper {
+  margin-right: 0;
+  position: relative; width:100%; /*padding:20px;*/
+}
+
+.toggled .sidebar-wrapper {
+  width: 300px;
+}
+.sidebar-wrapper {
+  background:#00abbb none repeat scroll 0 0;
+  height: 100%;
+  left: 250px;
+  margin-left: -250px;
+  overflow-y: auto;
+  position: fixed;
+  transition: all 0.5s ease 0s;
+  width: 0;
+  z-index: 1000;
+}
+.sidebar-nav {
+  list-style: outside none none;
+  margin:0;
+  padding: 0;
+  
+  top: 0;
+  width: 300px;
+}
+.toggled {
+  padding-left: 300px;
+}
+.sidebar-nav > .sidebar-brand {
+  font-size: 18px;
+  height: 65px;
+  line-height: 60px;
+  margin-bottom:59px;
+}
+.sidebar-nav li {
+  line-height: 40px;
+  text-indent: 20px;
+}
+.sidebar-nav li a {
+  color: #fff;
+  display: block;
+  text-decoration: none;
+}
+.top-header .logo {
+  display: inline-block;
+}
+
+.float-right {
+  float: right;
+}
+
+.top-header .float-right > .search-box-top {
+  display: inline-block;
+  vertical-align: top; padding:23px;
+}
+
+.top-header .tab-menu {
+  display: inline-block;
+}
+
+.top-header {
+  background: #333333 none repeat scroll 0 0;
+}
+
+.top-header .tab-menu .nav-tabs li.active > a {
+  background: #00909e none repeat scroll 0 0;
+  border-radius: 0;
+  border-top: 0 none; border-bottom:0px; 
+}
+
+.top-header .tab-menu .nav.nav-tabs li:nth-child(2) a {
+  border-left: 1px solid #fff;
+  border-radius: 0;
+  border-right: 1px solid #fff;
+}
+.top-header .tab-menu .nav.nav-tabs li:nth-child(1) a {
+  border-left: 1px solid #fff;
+}
+.top-header .tab-menu .nav.nav-tabs a:hover {
+  background: #00909e none repeat scroll 0 0;
+
+  border-radius: 0;
+
+}
+.top-header .tab-menu .nav-tabs li a span {
+  color: #fff;
+  font-size: 14px;
+  margin-left: 8px;
+}
+.top-header .tab-menu .nav-tabs li a p {
+  color: #fff;
+  font-size: 21px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+}
+.top-header .tab-menu .nav.nav-tabs a {
+  padding: 9px 23px; border-bottom:0px;
+}
+.top-header .tab-menu .nav.nav-tabs li:last-child a {
+  padding:27px 10px;
+}
+
+
+.navigation-wrap , .navbar-default{
+  background: #00abbb none repeat scroll 0 0; border-color:#00abbd;
+}
+
+.top-header .tab-menu .tab-content {
+  position: relative;
+}
+.top-header .tab-menu .tab-content > div {
+  background: #00909e none repeat scroll 0 0;
+  position: absolute;
+  width: 100%;
+  z-index: 1; min-height:122px; padding-left:12px;
+}
+
+.top-header .tab-menu .tab-content > div:nth-child(2) {
+  margin: 0 auto;
+  padding-top: 22px;
+  text-align: center;
+}
+.top-header .tab-menu .tab-content > div:nth-child(3) {
+  padding-top: 45px;
+  text-align: center;
+}
+.tab-menu .tab-content .add-new-hotel > input { 
+  width: 220px; background:transparent url("../images/plus.png") repeat scroll 0 0; background-repeat:no-repeat; background-position:top 6px right 6px;  border: 2px solid #fff;
+  height: 33px; padding:0 30px 0 9px; color:#fff;
+}  
+.tab-menu .tab-content .search-box-top {
+  margin-bottom: 13px;
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:hover {
+  background-color: #00909e;
+  color: #fff;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: #fff;
+  margin-bottom: -9px;
+  padding: 16px 30px;
+  text-align: center;
+  top: -8px;
+}
+.navigation-wrap .navbar {
+  margin-bottom: 0;
+  min-height: auto;
+  padding-bottom: 0;
+}
+.navigation-wrap .nav.navbar-nav > li {
+  margin: 0 5px;
+}
+
+.navigation-wrap .nav.navbar-nav a p {
+  margin-bottom: -2px;
+  margin-top: 10px; font-weight:bold;
+}
+.sidebar-wrapper .sidebar-nav .sidebar-brand > a {
+  background: #00909e none repeat scroll 0 0;
+  color: #fff;
+  padding: 32px 1px;
+}
+.tab-menu .nav.nav-tabs {
+  margin-bottom: -2px;
+}
+
+.navbar-default .navbar-nav > li > a:focus, .navbar-default .navbar-nav > li > a:hover {
+  background-color: #00909e;
+  color: #fff;
+}
+
+.navigation-wrap .collapse.navbar-collapse {
+  padding: 0;
+}
+
+.search-box-top > input {
+  background:transparent url("../images/search.png") repeat scroll 0 0;
+  border: 2px solid #fff;
+  height: 33px;
+  width: 220px; position:relative; padding:0 30px 0 9px; background-repeat:no-repeat; background-position:top 6px right 6px; color:#fff;
+}
+
+.round-checkbox .check {
+  border: 1px solid #fff;
+  border-radius: 100%;
+  display: block;
+  height: 15px;
+  left: 9px;
+  position: absolute;
+  top:4px;
+  transition: border 0.25s linear 0s;
+  width: 15px;
+  z-index: 5;
+}
+
+.round-checkbox input[type="radio"]:checked ~ .check {
+  border: 2px solid #fff;
+}
+.round-checkbox .check::before {
+  border-radius: 100%;
+  content: "";
+  display: block;
+  height: 5px;
+  left: 3px;
+  margin: auto;
+  position: absolute;
+  top: 3px;
+  transition: background 0.25s linear 0s;
+  width: 5px;
+}
+.round-checkbox input[type="radio"]:checked ~ .check::before {
+  background: #fff none repeat scroll 0 0;
+}
+.round-checkbox input[type="radio"]:checked ~ label {
+  font-weight: bold;
+}
+.radio.round-checkbox > input {
+  display: none;
+}
+
+.radio.round-checkbox label {
+  color: #fff;
+  margin-left: 17px;
+  text-transform: capitalize;
+  vertical-align: middle;
+}
+.tab-menu .radio.round-checkbox {
+  margin-bottom: 8.5px;
+}
+
+
+.main-wrap {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100%;
+}
+
+.side-heading{background:#00909E;       min-height: 125px;
+    padding: 41px 16px; color:#fff;
+    vertical-align: middle;}
+.side-heading h1 {
+  margin: 0;
+}
+
+
+.content {
+  display: block;
+  height: 100vh;
+  overflow: auto;
+  padding: 20px 26px;
+  width: 100%;
+}
