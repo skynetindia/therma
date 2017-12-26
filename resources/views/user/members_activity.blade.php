@@ -6,6 +6,7 @@
             document.write(msg);
         </script>
     @endif
+    
     @include('common.errors')
     <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
@@ -13,12 +14,15 @@
     <div class="ssetting-wrap">
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
+    
+                @if(checkpermission($module_id,$parent_id, 1))
                 <div class="col-md-4">
                     <div class="table-btn">
                         <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
                                     class="fa fa-trash"></i></a>
                     </div>
                 </div>
+                @endif
 {{--                {{ Form::open(array('url' => 'activity/list', 'files' => true, 'id' => 'change_log_form')) }}--}}
                 <div class="col-md-8">
                         <div class="form-group">

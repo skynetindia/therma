@@ -1,0 +1,485 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    <link rel="stylesheet" href="{{asset('public/css/lightslider.css')}}">
+  	<script src="{{asset('public/js/lightslider.js')}}"></script>
+    <link href="{{asset('public/css/dropzone.css')}}" rel="stylesheet" />
+	<script type="text/javascript" src="{{asset('public/js/dropzone.js')}}"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+    <?php $currency = getActiveCurrency();
+		  $arrlanguages = getlanguages();
+         
+    ?>
+    <?php $mediaCode = date('dmyhis');?>
+
+    {{--@if($action == 'edit')--}}
+         {{--{{ pre($room_details) }}--}}
+        {{--@endif--}}
+
+    <div class="room-id room-id-rel">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="navigation-root">
+                    <ul class="navigation-list">
+                        <li class="navigation-item navigation-previous-item  navigation-active-item" id="firstst"></li>
+                        <li class="navigation-item " id="secondst"></li>
+                        <li class="navigation-item" id="thirdst"></li>
+                        <li class="navigation-item" id="fourthst"></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+                    
+
+
+        <div class="row">
+		
+          <?php
+            if (isset($room_details) && !empty($room_details) && $action == 'edit') {
+                echo Form::open(array('url' => '/hotel/room/update' . "/" . $room_details->id, 'files' => true, 'id' => 'room_info_form'));
+            } else {
+                echo Form::open(array('url' => '/hotel/room/update'."/", 'files' => true, 'id' => 'room_info_form'));
+            }
+			  $selectvaluesetop = isset($roomFeatures->set_option) ? explode(',',$roomFeatures->set_option) : array();
+              $languagearry = isset($roomFeatures->language_key) ? explode(',',$roomFeatures->language_key) : array();
+			  //dd($selectvaluesetop);
+            ?>
+            <input type="hidden" name="room_id" value="{{isset($room_details->id) ? $room_details->id : ''}}">
+            <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+            
+            {{ csrf_field() }}
+        
+            <div class="col-md-8 col-sm-12 col-xs-12">
+          
+                <div class="edit-room-lft-side">
+                    <div class="section-border">
+                        <p class="bold blue-head">{{trans('messages.keyword_basic_information')}}</p>
+                        <div class="row">
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                            @if(Auth::user()->profile_id==0)
+                                <div class="form-group">
+                                    <label for="">@lang('messages.keyword_select_hotel')<span class="required">*</span></label>
+                                    <select class="form-control" name="select_hotel" id="select_hotel">
+                                        <option value="">-- Select --</option>
+                                        @forelse(getHotels() as $key => $valhotel)
+                                            <option value="{{ $valhotel->id }}" {{(isset($room_details->hotelid) && $room_details->hotelid == $valhotel->id) ? 'selected' : ''}} >{{ $valhotel->name }}</option>
+                                        @empty
+                                            <options>-- No Room Available</options>
+                                        @endforelse
+                                    </select>
+                                </div>
+                                @else
+                                <input type="hidden" name="select_hotel" value="{{Auth::user()->hotel_id}}">
+                                @endif
+                           
+                                <div class="form-group">
+                                    <label for="">@lang('messages.keyword_what_kind_of_room_do_you_want_to_add')<span class="required">*</span></label>
+                                    <select class="form-control" name="select_room">
+                                        <option value="">-- Select --</option>
+                                        @forelse(fetch_room_type() as $key => $roomty)
+                                            <option value="{{ $roomty->id }}" {{(isset($room_details->type_of_rooms) && $room_details->type_of_rooms == $roomty->id) ? 'selected' : ''}} >   {{ $roomty->name }}</option>
+                                        @empty
+                                            <options>-- No Room Available</options>
+                                        @endforelse
+                                    </select>
+                                </div>
+                           
+                                <div class="form-group">
+                                    <label>@lang('messages.keyword_personal_name_optional')<span class="required">*</span></label>
+                                    <input class="form-control" placeholder="personal name" name="personal_name" value="{{ isset($room_details->personal_name) ? $room_details->personal_name : '' }}"
+                                           type="text">
+                                </div>
+                                <div class="form-group">
+                                    <label>@lang('messages.keyword_number_of_standard_bed')<span class="required">*</span></label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_number_of_standard_bed')" name="standard_bed" value="{{ isset($room_details->standard_bed) ? $room_details->standard_bed : '' }}"
+                                           type="number">
+                                </div>
+								 <div class="form-group">
+                                    <label>@lang('messages.keyword_number_of_extra_bed')</label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_number_of_extra_bed')" name="extra_bed" value="{{ isset($room_details->extra_bed) ? $room_details->extra_bed : '' }}"
+                                           type="number">
+                                </div>
+                          
+                                <div class="form-group">
+                                    <label>@lang('messages.keyword_how_many_rooms_do_you_have_with_this_name')<span class="required">*</span></label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_enter_room')" name="how_many_room" value="{{ isset($room_details->qt_same_name) ? $room_details->qt_same_name : '' }}"
+                                           type="number">
+                                </div>
+                               
+                               
+                           <div class="row">
+                           <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="">@lang('messages.keyword_from') mq</label>
+                                    <div class="input-group">
+                                        <input class="form-control" id="height" placeholder="@lang('messages.keyword_height')" value="{{ isset($room_details->height) ? $room_details->height : '' }}" name="height" type="text">
+                                        
+                                    </div>
+                                </div>
+                                </div>
+                           		  <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="">@lang('messages.keyword_to') mq</label>
+                                    <div class="input-group">
+                                        <input class="form-control" id="weight" placeholder="@lang('messages.keyword_weight')" value="{{ isset($room_details->weight) ? $room_details->weight : '' }}" name="weight" type="text">
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+                          
+                                <div class="textbox-with-icon-user">
+                                    <label>@lang('messages.keyword_how_many_guests_can_sleep_in_this_unit')<span class="required">*</span></label>
+                                    <div class="form-group">
+                                        <input class="form-control" placeholder="" name="can_sleep" value="{{ isset($room_details->can_sleep) ? $room_details->can_sleep : '1' }}" type="number" required>
+                                    </div>
+                                    <div class="user-blue"><i class="fa fa-user" aria-hidden="true"></i></div>
+                                </div>
+                                 <div class="form-group">
+                                    <label>@lang('messages.keyword_size_of_standard_bed')</label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_size_of_standard_bed') 120X120" name="size_standard" value="{{ isset($room_details->size_standard) ? $room_details->size_standard : '' }}"
+                                           type="text">
+                                </div>
+                                 <div class="form-group">
+                                    <label>@lang('messages.keyword_size_of_extra_bed')</label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_enter_room') 120X120" name="size_extra" value="{{ isset($room_details->size_extra) ? $room_details->size_extra : '' }}"
+                                           type="text">
+                                </div>
+                            </div>
+                            <div class="col-md-8 col-sm-12 col-xs-12">
+                              <div class="row">
+                              @php $getSubcategories = getWizardSubCategory(16)@endphp
+								
+								@foreach ($getSubcategories as $keysubcat => $valuesubcat)
+								<div class="col-md-6">
+                                <div class="hotel-amenties">
+                                @php $optionsCategories = getWizardOptionByCategory($valuesubcat->id);@endphp
+                                @if(isset($optionsCategories[0]->cat_lang_key))
+                                	<p class="blue bold">{{trans('messages.keyword_'.$optionsCategories[0]->cat_lang_key)}}</p>
+                                    <div class="hotel-amenties-chk">
+                                    @foreach($optionsCategories as $keynoind => $valnoind)
+                                        <div class="ryt-chk-content">
+                                            <div class="ryt-chk">
+                                            <?php if (isset($valnoind->id) && $valnoind->id != null) {
+												  		$language = preg_grep('~'.$valnoind->id.'->~', $languagearry);
+                                                   		$key=key($language);
+                                                   		$lang=isset($language[$key])?str_replace($valnoind->id."->",'',$language[$key]):null;
+														if ($valnoind->is_language == 1) {
+															echo createwizard($valnoind, '2', 'set_option', $selectvaluesetop,$lang);
+														} else {
+																echo createwizard($valnoind, '1', 'set_option', $selectvaluesetop,$lang);
+														}
+													}?>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                       
+                                       
+                                    </div>
+                                    @endif
+                                    
+                                    <div class="hotel-amenties-add">
+                                    	<button class="btn btn-default btn-6-12">Add New</button>
+                                    </div>
+                                    
+                                </div>
+									
+							</div>
+								@endforeach
+                            </div>
+                            </div>
+                            <script>
+							function fun_checkbox(id){
+							
+								$('.'+id).prop('checked',true);
+							}
+							</script>
+                        </div>
+                     
+                    </div>
+                      
+                </div>
+              
+            </div>
+            
+            <div class="room-id-summary-pos-abs">
+            <div class="section-border">
+               <div class="row">
+                    				<div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="textarea">
+                                            <div class="form-group">
+                                            <label class="">Summary <span class="required">(*)</span></label>
+                                            <textarea class="form-control" name="summary" id="summary" rows="20" cols="8">{{ isset($room_details->summary) ? $room_details->summary : '' }}</textarea>
+                                            </div>
+                                        </div>
+                                     </div>
+                                 
+                                <div class="col-md-8 col-sm-12 col-xs-12">
+                           
+                            	<div class="textarea">
+                                	<div class="form-group">
+                                	<label class="">{{trans('messages.keyword_description')}} <span class="required">(*)</span></label>
+                                	<textarea class="form-control"  placeholder="{{trans('messages.keyword_description')}}" name="description" id="description" required>{{ isset($room_details->description) ? $room_details->description : '' }}</textarea>
+                                    </div>
+                                </div>
+                           
+                        	</div>
+                            </div>
+            </div>
+            </div>
+            
+            <input type="hidden" name="mediaCode" id="mediaCode" value="{{$mediaCode}}" />
+           <div class="btn-shape">
+            <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left">
+                <a href="{{ url('hotel/room/room-details') }}" class="btn btn-default">Back</a>
+            </div>
+            <div class="col-md-6 col-sm-12 col-xs-12 btn-right-shape text-right">
+                <button type="submit" class="btn btn-default">{{trans('messages.keyword_proceeds')}}</button>
+            </div>
+            <?php echo Form::close(); ?>
+        </div>
+             
+            <div class="col-md-4 col-sm-12 col-xs-12">
+                 <div class="section-border">	
+                    <div class="slider-hotel-information">
+                         <ul id="imageGallery" class="slider-hotel-booking-detail">
+							 <?php 
+                             if(isset($roommedia)){
+                                foreach($roommedia as $prev) {
+                                   $imagPath = url('/storage/app/images/room/'.$prev->name);
+                                    $downloadlink = url('/storage/app/images/room/'.$prev->name);
+                                    $filename = $prev->name;            
+                                    $arrcurrentextension = explode(".", $filename);
+                                    $extention = end($arrcurrentextension);
+                                                    
+                                    $arrextension['docx'] = 'docx-file.jpg';
+                                    $arrextension['pdf'] = 'pdf-file.jpg';
+                                    $arrextension['xlsx'] = 'excel.jpg';
+                                    if(isset($arrextension[$extention])){
+                                        $imagPath = url('/storage/app/images/default/'.$arrextension[$extention]);          
+                                    }
+                                    ?><li data-thumb="{{$imagPath}}">
+                                        <img src="{{$imagPath}}" />
+                                    </li>
+                                    
+                                    <?php
+                                }}
+                                ?>
+                            
+                        </ul>
+                    </div>
+                    <div class="upload-file">
+                            
+                            <input type="hidden" name="mediaCode" id="mediaCode" value="{{$mediaCode}}" />
+                             <div class="upload-file-form">
+                                <?php echo Form::open(array('url' => '/room/media/uploadfiles/'. $mediaCode, 'files' => true,'class'=>'dropzone')) ?>
+                                {{ csrf_field() }}
+                                <input type="hidden" name="master_id" value="{{ isset($room_details->id)?$room_details->id:'' }}">
+                                </form>           
+                             </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+       
+        
+    </div>
+    </div>
+
+   
+
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script src="{{ url('public/js/additional-methods.min.js')}}"></script>
+    <script src="{{url('/public/js/ckeditor.js')}}"></script>
+    <script type="text/javascript">
+		 CKEDITOR.replace( 'description' );
+
+        $(document).ready(function () {
+            // validate signup form on keyup and submit
+            $("#room_info_form").validate({
+                rules: {
+					select_hotel:{
+						required: true
+					},
+                    select_room: {
+                        required: true
+                    },
+                    
+                    personal_name: {
+                        required: true
+                    },
+					standard_bed: {
+                        required: true,
+						number:true
+                    },
+                    how_many_room: {
+                        required: true,
+						number:true
+                    },
+                  
+                    can_sleep: {
+                        required: true,
+                        number: true
+                    },
+                   summary:{
+					   required:true,
+				   },
+				    description:{
+					   required:true,
+				   },
+				   "set_option[]":{
+					    required:true,
+						
+				   }
+                },
+                messages: {
+					select_hotel:{
+						required: "@lang('messages.keyword_please_select_hotel')"
+					},
+                    select_room: {
+                        required: "@lang('messages.keyword_please_select_room_category')"
+                    },
+                   
+                    personal_name: {
+                        required: "@lang('messages.keyword_please_enter_room_name')"
+                    },
+					standard_bed: {
+                        required: "@lang('messages.keyword_please_enter_no_of_standard_bed')",
+						number:"@lang('messages.keyword_please_enter_valid_number')"
+                    },
+                    how_many_room: {
+                        required: "@lang('messages.keyword_please_enter_total_no_of_room')"
+                    },
+                     can_sleep: {
+                        required: "@lang('messages.keyword_please_select_minimum_individual')",
+                        number: "@lang('messages.keyword_please_enter_valid_number')"
+                    },
+                   summary:{
+					   required:"@lang('messages.keyword_please_enter_room_summary')",
+				   },
+				    description:{
+					   required:"@lang('messages.keyword_please_enter_room_description')",
+				   },
+				   "set_option[]":{
+					   required:"@lang('messages.keyword_please_select')"
+				   }
+                }
+
+            });
+            $.validator.setDefaults({
+                ignore: []
+            });
+            var phones = [{"mask": "(###) ###-####"}, {"mask": "(###) ###-####"}];
+            $('.inputmask-formate').inputmask({
+                mask: phones,
+                greedy: false,
+                definitions: {'#': {validator: "[0-9]", cardinality: 1}}
+            });
+        });
+		 var sliderfun=$('#imageGallery').lightSlider({
+            gallery:true,
+            item:1,
+            loop:true,
+            thumbItem:9,
+            slideMargin:0,
+            enableTouch:true,
+        enableDrag:true,
+        freeMove:true,
+        swipeThreshold: 40,
+       // autoWidth: true,
+		verticalHeight:100,
+		mode: "slide",
+        useCSS: true,
+        cssEasing: 'ease', //'cubic-bezier(0.25, 0, 0.25, 1)',//
+        easing: 'linear', //'for jquery animation',////
+ 
+        speed: 400, //ms'
+        auto: true,
+        loop: true,
+        slideEndAnimation: true,
+        pause: 2000,
+		
+        gallery: true,
+        galleryMargin: 5,
+        thumbMargin: 5,
+ 		currentPagerPosition: 'middle',
+        onSliderLoad: function() {
+              selector: '#imageGallery .lslide'
+                
+            }   
+        });  
+     
+
+    </script>
+
+<script>
+@php $roomid=isset($room_details->id)?$room_details->id:null; @endphp
+    var urlgetfile = '<?php echo url('/room/media/getfiles/'.$mediaCode.'/'.$roomid) ?>';
+    Dropzone.autoDiscover = false;
+    $(".dropzone").each(function() {
+      $(this).dropzone({
+        complete: function(file) {
+          if (file.status == "success") {
+             $.ajax({url: urlgetfile, success: function(result){
+				 sliderfun.destroy();
+                $("#imageGallery").html(result);
+				setTimeout(function(){
+					$('#imageGallery').lightSlider({
+							gallery:true,
+							item:1,
+							loop:true,
+							thumbItem:9,
+							slideMargin:0,
+							enableTouch:true,
+							enableDrag:true,
+							freeMove:true,
+							swipeThreshold: 40,
+						   // autoWidth: true,
+							verticalHeight:100,
+							mode: "slide",
+							useCSS: true,
+							cssEasing: 'ease', //'cubic-bezier(0.25, 0, 0.25, 1)',//
+							easing: 'linear', //'for jquery animation',////
+					 
+							speed: 400, //ms'
+							auto: true,
+							loop: true,
+							slideEndAnimation: true,
+							pause: 2000,
+							
+							gallery: true,
+							galleryMargin: 5,
+							thumbMargin: 5,
+							currentPagerPosition: 'middle',
+							onSliderLoad: function() {
+							  selector: '#imageGallery .lslide'
+								
+							}   
+						});  
+     
+				},200);
+				 
+				//sliderfun();
+                $(".dz-preview").remove();
+                $(".dz-message").show();
+            }});
+          }
+		  if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+               $( "#addMediacommnetmodal" ).modal();
+               $('#addMediacommnetmodal').on('shown.bs.modal', function(){});
+          }
+        }
+      });
+    });
+    </script>
+
+@endsection
+

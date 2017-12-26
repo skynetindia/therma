@@ -11,9 +11,13 @@
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('public/js/jqColorPicker.min.js')}}"></script>
-
+    @php
+        $inputReadyOnlyOnReadPermission = (checkpermission($module_id,$parent_id, 1) == false) ? 'disabled' : '';
+    @endphp
+    
     <!-- ======================================================= Emotional Status ========================================== -->
     <div class="taxonomies-wrap">
+        @if(checkpermission($module_id,$parent_id, 1))
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="middle-head-add">
@@ -41,11 +45,13 @@
                 </div>
             </div>
         </div>
+        @endif
         <div class="section-border">
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <h1 class="cst-datatable-heading">@lang('messages.keyword_alert') : {{trans('messages.keyword_edit')}}</h1>
                     <div class="select-all">
+                        @if(checkpermission($module_id,$parent_id, 1))
                         <div class="row">
                             <div class="col-md-6 col-sm-6 col-xs-12"><div class="ryt-chk">
                                     <input id="chktasalertall" name="chktasalertall" type="checkbox"><label for="chktasalertall">select all</label></div></div>
@@ -54,6 +60,7 @@
                                 <input type="button" onclick="AllalertAction('delete')" class="btn btn-default btn-reject btn-6-12" value="{{trans('messages.keyword_delete_selected')}}">
                             </div>
                         </div>
+                            @endif
                     </div>
                     <form action="{{url('/taxonomies/alert/update')}}" method="post" id="frmeditalert">
                         <input type="hidden" id="actionalert" name="action" value="update">
@@ -63,28 +70,32 @@
                                     {{ csrf_field() }}
                                     <input type="hidden" name="id[]" value="{{$types->id}}">
                                     <tr>
+                                        @if(checkpermission($module_id,$parent_id, 1))
                                         <td>
                                             <div class="ryt-chk">
                                                 <input class="chkalert" type="checkbox" name="chkalert[{{$types->id}}]" id="chkalert_{{$types->id}}" value="{{$types->id}}">
                                                 <label for="chkalert_{{$types->id}}"></label>
                                             </div>
                                         </td>
+                                        @endif
                                         <td>
                                             <div class="form-group">
-                                                <input type="text" class="form-control" placeholder="{{trans('messages.keyword_name')}}" name="name[{{$types->id}}]" id="name" value="<?php echo $types->name; ?>"/>
+                                                <input type="text" {{ $inputReadyOnlyOnReadPermission }} class="form-control" placeholder="{{trans('messages.keyword_name')}}" name="name[{{$types->id}}]" id="name" value="<?php echo $types->name; ?>"/>
                                                 <input type="hidden" name="langkey[{{$types->id}}]" value="{{$types->language_key}}">
                                             </div>
                                         </td>
 
                                         <td>
                                             <div class="form-group">
-                                                <input type="text" class="form-control color no-alpha" name="color[{{$types->id}}]" value="{{$types->color}}"/>
+                                                <input type="text" {{ $inputReadyOnlyOnReadPermission }} class="form-control color no-alpha" name="color[{{$types->id}}]" value="{{$types->color}}"/>
                                             </div>
                                         </td>
+                                            @if(checkpermission($module_id,$parent_id, 1))
                                         <td>
                                             <button class="btn btn-default btn-6-12" type="button" onclick="SinglealertTaxonomiesAction('{{$types->id}}','update')">{{trans('messages.keyword_save')}}</button>
                                             <a onclick="conferma(event);" type="button" href="javascript:SinglealertTaxonomiesAction('{{$types->id}}','delete')" class="btn btn-default btn-reject btn-6-12"> {{trans('messages.keyword_delete')}}</a>
                                         </td>
+                                                @endif
                                     </tr>
                                 @endforeach
                             </table>

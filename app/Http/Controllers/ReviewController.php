@@ -16,25 +16,28 @@ use Cookie;
 
 class ReviewController extends Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('auth');
+    }
+    
     public function reviews()
     {
-//        $array = [
-//            '1' => '5',
-//            '2' => '5',
-//            '3' => '5',
-//            '4' => '5',
-//            '5' => '5',
-//            '7' => '5'
-//        ];
-//
-//        dd(json_encode($array));
-
-
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
         return view('review.index');
     }
 
     public function review_add_edit(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $action = 'add';
         $arrRecords = [
             'action' => 'add',
@@ -55,40 +58,34 @@ class ReviewController extends Controller
     public function get_reviews_json(Request $request)
     {
         $review_options = array();
-        $options = DB::table('reviews as r')->select('r.*', 'u.name as guest_name', 'hm.name as hotel_name')
+        $options = DB::table('reviews as r')->select('r.*', 'u.name as user_name', 'hm.name as hotel_name')
                     ->leftJoin('users as u', 'r.user_id' , '=', 'u.id')
                     ->leftJoin('hotel_main as hm', 'hm.id', '=', 'r.hotel_id')
                     ->where('r.id', '!=', 0)->where('r.is_deleted', '=', 0)->get();
         $user_type = getUserTypeByUserID(Auth::user()->id);
+        
+        
+        
         foreach ($options as $data) {
-
-            if($user_type == 'Super Admin' || $user_type == 'Hotel Manager')
-            {
-                $checked_status = ($data->status == 0) ? 'checked' : '';
-                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateReviewConfirm(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activeconfirm_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked_status . ' value="1"  type="checkbox"><label for="activeconfirm_' . $data->id . '"></label></div>';
+            
+            $hotel_id = $data->hotel_id;
+            $booking_id = $data->booking_id;
+            
+            $checked_active = ($data->is_active == 0) ? 'checked' : '';
+    
+            if(checkpermission($this->module_id,$this->parent_id, 1)) {
+                $data->is_active = '<div class="switch"><input name="status" class="currencytogal" onchange="updateReviewStatus(' . (!empty($data->id) ? $data->id : '0') . ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0') . '" ' . $checked_active . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }else{
+                $data->is_active = '<div class="switch"><input disabled="disabled" name="status" class="currencytogal" onchange="updateReviewStatus(' . (!empty($data->id) ? $data->id : '0') . ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0') . '" ' . $checked_active . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
             }
 
 
-            $checked_active = ($data->is_active == 0) ? 'checked' : '';
-            $data->is_active = '<div class="switch"><input name="status" class="currencytogal" onchange="updateReviewStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked_active . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
 
 
-            $data->guest_name = $data->guest_name;
+            $data->edit_review = '<div class="table-btn"><a href="#" data-toggle="modal" data-target="#editReviewModal"  data-hotel-id="'.$hotel_id.'" data-booking-id="'.$booking_id.'" onclick="getHotelAndBookingId(this)" class="btn btn-edit""><i class="fa fa-pencil"></i></a></div>';
+            $data->client_name = $data->user_name;
 
             $data->hotel_id = $data->hotel_id." | ".$data->hotel_name;
-
-            $rates = json_decode($data->reviews, true);
-
-            if(count(getReviewsTaxonomies()) >0)
-            {
-                $total = 0;
-                foreach(getReviewsTaxonomies() as $review)
-                {
-                    $data->{$review->id} = (isset($rates[$review->id]) && !empty($rates[$review->id]) ? number_format($rates[$review->id], 1) : '') ;
-                    $total += $rates[$review->id];
-                }
-                $data->total = number_format($total / count(getReviewsTaxonomies()) , 1);
-            }
 
 
             $review_options[] = $data;
@@ -96,6 +93,17 @@ class ReviewController extends Controller
         return json_encode($review_options);
     }
 
+    public function getAjaxHotelAndBookingId(Request $request)
+    {
+        $review = DB::table('reviews')->where('id', $request->id)->first();
+        $booking_id = $review->booking_id;
+        $hotel_id = $review->hotel_id;
+    
+        //$data = array('booking_id' => $booking_id, 'hotel_id' => $hotel_id);
+        $data = array($booking_id, $hotel_id);
+        return json_encode($data);
+    }
+    
     public function reviews_update(Request $request)
     {
         if (isset($request->review_id) && !empty($request->review_id) && $request->action == 'edit')
@@ -122,7 +130,7 @@ class ReviewController extends Controller
             $logs = 'reviews updated -> (ID:'.$request->review_id.')';
             storelogs($request->user()->id,$logs);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_updated_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_updated_successfully').'</div>';
             return Redirect::back()->with('msg', $msg);
         }
         else
@@ -151,29 +159,37 @@ class ReviewController extends Controller
             $logs = 'reviews added -> (ID:'.$request->review_id.')';
             storelogs($request->user()->id,$logs);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_added_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_added_successfully').'</div>';
             return Redirect::back()->with('msg', $msg);
         }
     }
 
     public function reviews_changeactivestatus(Request $request)
     {
-        $update = DB::table('reviews')->where('id', $request->id)->update(array('is_active' => $request->status));
-        return ($update) ? 'true' : 'false';
+        $update = DB::table('reviews_non_json')->where('id', $request->id)->first();
+        $booking_id = $update->booking_id;
+        
+        $u = DB::table('reviews_non_json')->where('booking_id', $booking_id)->update(array('is_active' => $request->status));
+        return ($u) ? 'true' : 'false';
     }
 
     public function reviews_changeconfirmation(Request $request)
     {
-        $update = DB::table('reviews')->where('id', $request->id)->update(array('status' => $request->status));
-        return ($update) ? 'true' : 'false';
+        $update = DB::table('reviews_non_json')->where('id', $request->id)->first();
+        $booking_id = $update->booking_id;
+    
+        $u = DB::table('reviews_non_json')->where('booking_id', $booking_id)->update(array('is_active' => $request->status));
+        return ($u) ? 'true' : 'false';
     }
 
     public function reviews_delete(Request $request)
     {
-        $countRec = DB::table('reviews')->select('*')->where('id', $request->id)->count();
+        $countRec = DB::table('reviews_non_json')->select('*')->where('id', $request->id)->first();
+        $booking_id = $countRec->booking_id;
+        
         //dd($countRec);
-        if ($countRec > 0) {
-            DB::table('reviews')->where('id', $request->id)->update(array('is_deleted' => '1'));
+        if (isset($booking_id)) {
+            DB::table('reviews_non_json')->where('booking_id', $booking_id)->update(array('is_deleted' => '1'));
             return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_removed_successfully').'</div>');
         } else {
             return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_review_not_exist').'</div>');

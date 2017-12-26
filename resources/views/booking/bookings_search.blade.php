@@ -10,7 +10,10 @@
     <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
+    
+    <div class="booking-wrap booking-search reservations-list">
     <div class="ssetting-wrap">
+        @if(checkpermission($module_id,$parent_id, 1))
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="table-btn">
@@ -22,8 +25,8 @@
                 </div>
             </div>
         </div>
-
-
+        @endif
+		
 
         <div class="section-border">
 
@@ -31,23 +34,25 @@
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="data-table">
-                        <h1 class="cst-datatable-heading">@lang('messages.keyword_bookings') @lang('messages.keyword_search')</h1>
+                        <!--<h1 class="cst-datatable-heading">@lang('messages.keyword_bookings') @lang('messages.keyword_search')</h1>-->
+                         <h1 class="cst-datatable-heading">@lang('messages.keyword_bookings')</h1>
                         <div class="panel panel-default">
                             <div class="panel-heading">
-
                                 <div class="heading-search-dashboard">
                                     {{ Form::open(array('url' => 'bookings/search', 'files' => true, 'id' => 'booking_search_form')) }}
-                                    <div class="form-wrap">
+                                    <div class="form-wrap">                                    
+                                    		<div class="booking-width-calc">                                    
                                         <div class="input form-group">
-                                            <label>search</label>
-                                            <input type="text" class="form-control"/>
+                                           <label>@lang('messages.keyword_search')</label>
+                                           <input type="text" class="form-control" name="general_search" value="{{isset($post_data->general_search) ? $post_data->general_search : ''}}" placeholder="@lang('messages.keyword_search')"/>
                                         </div>
                                         <div class="input form-group">
-                                            <label>@lang('messages.keyword_client_status')</label>
+                                            <label>@lang('messages.keyword_order_status')</label>
                                             <select class="form-control bg-arrow" name="client_status">
-                                                <option value="">@lang('messages.keyword_--select--')</option>
+                                                
+                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getClientStatus() as $key => $status)
-                                                    <option value="{{ $key }}">{{ $status }}</option>
+                                                    <option value="{{ $key }}" {{(isset($post_data->client_status) && $post_data->client_status == $key) ? 'selected' : ''}}>{{ $status }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -56,22 +61,30 @@
                                         <div class="input form-group">
                                             <div class="date-input ">
                                                 <label>@lang('messages.keyword_start_date')</label>
-                                                <input type="text" id="start_date" value="{{ old('start_date') }}" name="arrival" placeholder="YYYY-MM-DD" class="form-control" readonly/>
+                                                <input type="text" id="start_date" value="{{isset($post_data->arrival) ? date('m/d/Y', strtotime($post_data->arrival)) : old('arrival')}} " name="arrival" class="form-control startdate"/>
                                             </div>
                                             <div>-</div>
                                             <div class="date-input">
                                                 <label>@lang('messages.keyword_end_date')</label>
-                                                <input type="text" id="end_date" value="{{ old('end_date') }}" placeholder="YYYY-MM-DD" name="departure"
-                                                       class="form-control" readonly/>
+                                                <input type="text" id="end_date" value="{{isset($post_data->departure) ? date('m/d/Y', strtotime($post_data->departure))  : old('departure')}}" placeholder="mm/dd/yyyy" name="departure" class="form-control enddate"/>
                                             </div>
                                         </div>
-
+                                         <div class="input form-group">
+                                            <label>@lang('messages.keyword_booking') @lang('messages.keyword_status')</label>
+                                            <select class="form-control bg-arrow" name="booking_status">
+                                                <option value="">@lang('messages.keyword_--select--')</option>
+                                                 @forelse(getStatus() as $key => $bookingStatus)
+                                                	<option value="{{ $key}}" {{(isset($post_data->booking_status) && $post_data->booking_status == $key) ? 'selected' : ''}}>{{ ucfirst($bookingStatus) }}</option>
+                                                 @empty
+                                                @endforelse
+                                            </select>
+                                        </div>
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_hotel') @lang('messages.keyword_status')</label>
                                             <select class="form-control bg-arrow" name="hotel_status">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getEmotionalStatus() as $key => $emotionalStatus)
-                                                    <option value="{{ $emotionalStatus->id }}">{{ $emotionalStatus->name }}</option>
+                                                    <option value="{{ $emotionalStatus->id }}" <?php echo (isset($post_data->hotel_status) && $post_data->hotel_status == $emotionalStatus->id) ? 'selected' : ''; ?>>{{ $emotionalStatus->name }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -79,14 +92,13 @@
 
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_country') / @lang('messages.keyword_location')</label>
-                                            <input type="text" name="hotel_country" id="hotel_country" value="" class="input form-control" onKeyup="//getHotelList(this)">
+                                            <input type="text" name="hotel_country" id="hotel_country" value="{{isset($post_data->hotel_country) ? $post_data->hotel_country : old('hotel_country')}}" class="input form-control hotel-country" onKeyup="//getHotelList(this)">
                                         </div>
 
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_hotel_list')</label>
                                             <select class="form-control bg-arrow" id="getHotelList" name="hotel_list">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
-
                                             </select>
                                         </div>
 
@@ -95,7 +107,7 @@
                                             <select class="form-control bg-arrow" name="booking_country">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getBookingsCountries() as $key => $country)
-                                                    <option value="{{ $country->country }}">{{ $country->country }}</option>
+                                                    <option value="{{ $country->i_id }}" <?php echo (isset($post_data->booking_country) && $post_data->booking_country == $country->i_id ) ? 'selected' : ''; ?>>{{ $country->v_name }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -106,19 +118,17 @@
                                             <select class="form-control bg-arrow" name="transfer">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getStatus() as $key => $status)
-                                                    <option value="{{ $key }}">{{ $status }}</option>
+                                                    <option value="{{ $key }}" <?php echo (isset($post_data->transfer) && $post_data->transfer == $key ) ? 'selected' : ''; ?>>{{ $status }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
                                         </div>
-
-
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_currencies')</label>
                                             <select class="form-control bg-arrow" name="currency">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getCurrencies() as $key => $currency)
-                                                    <option value="{{ $currency->id }}">{{ $currency->name }} - {{ $currency->symbol }}</option>
+                                                    <option value="{{ $currency->code }}" <?php echo (isset($post_data->currency) && $post_data->currency == $currency->code ) ? 'selected' : ''; ?>>{{ $currency->name }} - {{ $currency->symbol }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -129,7 +139,7 @@
                                             <select class="form-control bg-arrow" name="cart_guarantee">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getCardStatus() as $key => $status)
-                                                    <option value="{{ $key }}">{{ $status }}</option>
+                                                    <option value="{{ $key }}" <?php echo (isset($post_data->cart_guarantee) && $post_data->cart_guarantee ==  $key ) ? 'selected' : ''; ?>>{{ $status }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -139,17 +149,20 @@
                                             <label>@lang('messages.keyword_who_has_booked')</label>
                                             <select class="form-control bg-arrow" name="user_type">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
+                                                <option value="0" <?php echo (isset($post_data->user_type) && $post_data->user_type ==  '0') ? 'selected' : ''; ?>>Super Admin</option>
                                                 @forelse(getUserTypes() as $userType)
-                                                    <option value="{{ $userType->id }}">{{ $userType->type }}</option>
+                                                    <option value="{{ $userType->id }}" <?php echo (isset($post_data->user_type) && $post_data->user_type ==  $userType->id ) ? 'selected' : ''; ?>>{{ $userType->type }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
                                         </div>
-
+											
+                                            </div>
+                                            
                                         <div class="clearfix"></div>
                                         <div class="dashbord-filter inline-block pull-right">
-                                            <button type="submit" href="#" class="btn btn-default">@lang('messages.keyword_filter')</button>
-                                            <a href="#" class="btn btn-default"><i class="fa fa-times"
+                                            <button type="submit" id="booking_filtes_button" href="#" class="btn btn-default">@lang('messages.keyword_filter')</button>
+                                            <a href="{{url('bookings')}}" class="btn btn-default"><i class="fa fa-times"
                                                                                    aria-hidden="true"></i></a>
                                         </div>
                                         <div class="clearfix"></div>
@@ -168,95 +181,68 @@
                             <div class="panel-body">
 
                                 <div class="table-responsive">
-                                    <h1 class="cst-datatable-heading">@lang('messages.keyword_bookings')</h1>
+
                                     <table data-toggle="table" id="table"  data-search="true" data-pagination="true"  data-show-refresh="true"  data-show-columns="true" data-classes="table table-bordered" >
-
                                         <thead>
-                                        <th>{{trans('messages.keyword_client_status')}}</th>
-                                        <th>{{trans('messages.keyword_booking_id')}}</th>
-                                        <th>{{trans('messages.keyword_date_and_hour')}}</th>
-                                        <th>{{trans('messages.keyword_hotel_status')}}</th>
-                                        <th>{{trans('messages.keyword_clientname_country')}}</th>
-                                        <th>{{trans('messages.keyword_client_email')}}</th>
-                                        <th>{{trans('messages.keyword_client_phone')}}</th>
-                                        <th>{{trans('messages.keyword_hotel')}}</th>
-                                        <th>{{trans('messages.keyword_city')}} / {{trans('messages.keyword_country')}}</th>
-                                        <th>{{trans('messages.keyword_check_in')}}</th>
-                                        <th>{{trans('messages.keyword_check_out')}}</th>
-                                        <th>{{trans('messages.keyword_cart')}}</th>
-                                        <th>{{trans('messages.keyword_amount')}}</th>
-                                        <th>{{trans('messages.keyword_commission')}}</th>
-                                        <th>{{trans('messages.keyword_transfer')}}</th>
-                                        <th>{{trans('messages.keyword_who_has_booked')}}</th>
-                                        <th>{{trans('messages.keyword_reviews')}}</th>
-                                        <th>{{trans('messages.keyword_checked')}}</th>
-                                        <th>{{trans('messages.keyword_note')}}</th>
+                                            <th class="none">{{trans('messages.keyword_id')}}</th>
+                                             <th>{{trans('messages.keyword_id')}}</th>
+                                            <th>{{trans('messages.keyword_order_status')}}</th>
+                                          
+                                            <th>{{trans('messages.keyword_date_and_hour')}}</th>
+                                            @if(checkpermission($module_id,$parent_id, 1))
+                                            <th>{{trans('messages.keyword_hotel_status')}}</th>
+                                            @endif
+                                            <th>{{trans('messages.keyword_clientname_country')}}</th>
+                                            <th>{{trans('messages.keyword_client_email')}}</th>
+                                            <th>{{trans('messages.keyword_client_phone')}}</th>
+                                            <th>{{trans('messages.keyword_hotel')}}</th>
+                                            <!--<th>{{trans('messages.keyword_city')}} / {{trans('messages.keyword_country')}}</th>-->
+                                            <th>{{trans('messages.keyword_check_in')}}</th>
+                                            <th>{{trans('messages.keyword_check_out')}}</th>
+                                            <th>{{trans('messages.keyword_cart')}}</th>
+                                            <th>{{trans('messages.keyword_amount')}}</th>
+                                            <th>{{trans('messages.keyword_commission')}}</th>
+                                            <th>{{trans('messages.keyword_transfer')}}</th>
+                                            <th>{{trans('messages.keyword_who_has_booked')}}</th>
+                                            @if(checkpermission($module_id,$parent_id, 1))
+                                            <th>{{trans('messages.keyword_reviews')}}</th>
+                                            <th>{{trans('messages.keyword_checked')}}</th>
+                                            <th>{{trans('messages.keyword_note')}}</th>
+                                            @endif
                                         </thead>
-
                                         <tbody>
                                         @forelse($filtered_booking as $booking)
+                                      
                                             <tr>
-                                                <td>
-                                                    @if($booking->client_status == '1' || $booking->client_status == '2')
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck1" name="radio-group" type="radio">
-                                                            <label for="logincheck1"></label>
-                                                        </div>
-                                                    @else
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck2" name="radio-group" type="radio">
-                                                            <label for="logincheck2" class="red"></label>
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td><a href="{{ url('booking/detail')."/".$booking->id }}" style="cursor:pointer">{{ $booking->unique_booking_id }}</a></td>
-                                                <td>{{ $booking->created_at }}</td>
-                                                <td>{{ $booking->hotel_status }} | {{ $booking->hotel_status_name }}</td>
-                                                <td>{{ $booking->client_name}} ( {{ $booking->country }})</td>
-
-
+                                            
+                                            
+											<td class="none">{{$booking->id}}</td>
+                                        
+                                             <td>{!! $booking->temp_booking_id !!}</td>
+                                                <td>{!! $booking->order_status !!}</td>
+                                               
+                                                <td>{{ $booking->create_date }}</td>
+                                                @if(checkpermission($module_id,$parent_id, 1))
+                                                <td>{!! $booking->hotel_status !!}</td>
+                                                @endif
+                                                <td>{{ $booking->name}} ( {{ $booking->country }})</td>
                                                 <td>{{ $booking->email }}</td>
                                                 <td>{{ $booking->phone}}</td>
-                                                <td>{{ $booking->hotel_name }} <br> {{ $booking->category_title }}</td>
-                                                <td>{{ $booking->city }}, {{ $booking->country }}</td>
+                                                <td>{{ $booking->hotel_name }} <br> {{ $booking->category_title }}</td>                                                
                                                 <td>{{ $booking->arrival }}</td>
                                                 <td>{{ $booking->departure }}</td>
-                                                <td>
-                                                    @if($booking->cart == '0')
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck1" name="radio-group" type="radio">
-                                                            <label for="logincheck1"></label>
-                                                        </div>
-                                                    @else
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck2" name="radio-group" type="radio">
-                                                            <label for="logincheck2" class="red"></label>
-                                                        </div>
-                                                    @endif
-                                                </td>
+                                                <td>{!! $booking->cart !!}</td>
                                                 <?php $cur = getActiveCurrency(); ?>
-                                                <td>{{ $booking->price }} {{ $cur['symbol'] }}</td>
+                                                <td>{{ $booking->total_fare }} {{ $cur['symbol'] }}</td>
                                                 <td>{{ $booking->commission }} {{ $cur['symbol'] }}</td>
-                                                <td>
-                                                    @if($booking->transfer == '0')
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck1" name="radio-group" type="radio">
-                                                            <label for="logincheck1"></label>
-                                                        </div>
-                                                    @else
-                                                        <div class="radio-btn-custom">
-                                                            <input id="logincheck2" name="radio-group" type="radio">
-                                                            <label for="logincheck2" class="red"></label>
-                                                        </div>
-                                                    @endif
-                                                </td>
+                                                <td>{!! $booking->transfer !!}</td>
                                                 <td>{{ getUserTypesById($booking->who_booked) }}</td>
-                                                <td><a class="" href="#" data-toggle="modal" data-target="#reviewModal">@lang('messages.keyword_reviews')</a></td>
-                                                <?php $checked = ($booking->confirm == 1) ? 'checked' : ''; ?>
-                                                <td><input name="confirm" class="currencytogal" onchange="updateBookingConfirmStatus({{ $booking->booking_id }})" id="confirmstatus_{{ $booking->booking_id }}"  {{ $checked }} value="1"  type="checkbox"><label for="confirmstatus_{{  $booking->booking_id }}"></label></td>
-                                                <td>
-                                                    <a class="" href="#" onclick="getNotesIdToModal(this)" data-unique-id="{{ $booking->unique_booking_id }}" data-id="{{ $booking->id }}" data-toggle="modal" data-target="#notesModal">@lang('messages.keyword_views')</a>
-                                                </td>
+    
+                                                @if(checkpermission($module_id,$parent_id, 1))
+                                                <td>{!! $booking->reviews !!}</td>
+                                                <td>{!! $booking->checked !!}</td>
+                                                <td>{!! $booking->notes !!}</td>
+                                                @endif
                                             </tr>
                                         @empty
                                             <tr>
@@ -280,9 +266,7 @@
 
 
     </div>
-    </div>
-
-
+  
 
 
 
@@ -330,7 +314,7 @@
         var selezione = [];
         var indici = [];
         var n = 0;
-
+		
         $('#table').on('click-row.bs.table', function (row, tr, el) {
             var cod = $(el[0]).children()[0].innerHTML;
             if (!selezione[cod]) {
@@ -339,7 +323,7 @@
                 selezione[cod] = cod;
                 indici[n] = cod;
                 n++;
-
+				
             } else {
                 $(el[0]).removeClass("selected");
                 selezione[cod] = undefined;
@@ -359,11 +343,9 @@
 
             }
         });
-
         function check() {
             return confirm("{{trans('messages.keyword_are_you_sure_want_to_delete_booking')}}");
         }
-
         function multipleAction(act) {
             var link = document.createElement("a");
             var clickEvent = new MouseEvent("click", {
@@ -402,7 +384,7 @@
                 case 'modify':
                     if (n != 0) {
                         n--;
-                        link.href = "{{ url('package/edit') }}" + '/' + indici[n];
+                        link.href = "{{ url('booking/managedetail') }}" + '/' + indici[n];
                         n = 0;
                         selezione = undefined;
                         link.dispatchEvent(clickEvent);
@@ -423,6 +405,10 @@
 
 
     <script>
+		$('#booking_filtes_button').click(function(e) {
+		$("#preloaderdiv").show();
+	});
+
 
         function getNotesIdToModal(e)
         {
@@ -476,23 +462,14 @@
             else{
                 $("#descriptionValidation").html("Please enter note");
             };
-
-
-
         });
-
-
         $(document).ready(function () {
-
             $('#departure_date, #arrival_date, #end_date, #start_date').datepicker({
                 format: "yyyy-mm-dd",
                 startDate: "18-07-2015",//'-30d',
                 endDate: '+30d',
             }).datepicker();
-
         });
-
-
         $("#hotel_country").on("blur", function(){
             var location = $(this).val();
             if(location != '')

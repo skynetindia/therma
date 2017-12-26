@@ -6,23 +6,32 @@
             document.write(msg);
         </script>
     @endif
+    
+    
+    
     @include('common.errors')
     <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
     <div class="ssetting-wrap">
-        <div class="row">
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="table-btn">
-                    <!--<a class="btn btn-add" data-backdrop="static" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i></a>-->
-                    <a href="<?php  echo isset($typeid) ? (url('user/add')."/".$typeid) : url('user/add');?>" class="btn btn-add"><i class="fa fa-plus"></i></a>
-                    <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
-                                class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
-                    <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
-                                class="fa fa-trash"></i></a>
+    
+        
+        @if(checkpermission($module_id,$parent_id, 1))
+        
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="table-btn">
+                        <!--<a class="btn btn-add" data-backdrop="static" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i></a>-->
+                        <a href="<?php  echo isset($typeid) ? (url('user/add')."/".$typeid) : url('user/add');?>" class="btn btn-add"><i class="fa fa-plus"></i></a>
+                        <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
+                                    class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                        <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
+                                    class="fa fa-trash"></i></a>
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
+       
         <div class="section-border">
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
@@ -45,7 +54,11 @@
                                 <th data-field="profile_id" data-sortable="true">{{trans('messages.keyword_type')}}</th>
                                 <th data-field="email" data-sortable="true">{{trans('messages.keyword_email')}}</th>
                                 <th data-field="image" data-sortable="true">{{trans('messages.keyword_image')}}</th>
-                                <th data-field="access" data-sortable="true">{{trans('messages.keyword_extranet')}}</th>
+                                
+
+                                @if(checkpermission($module_id,$parent_id, 1))
+                                    <th data-field="access" data-sortable="true">{{trans('messages.keyword_extranet')}}</th>
+                                @endif
                                 <th data-field="status" data-sortable="true">{{trans('messages.keyword_active')}}</th>
                                 </thead>
                             </table>

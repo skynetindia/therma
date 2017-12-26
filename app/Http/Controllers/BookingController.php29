@@ -1,0 +1,997 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use DB;
+use Storage;
+use Redirect;
+use Validator;
+use Mail;
+use File;
+use Hash;
+use Auth;
+use DateInterval;
+use DatePeriod;
+use DateTime;
+use Cookie;
+use Carbon\Carbon;
+
+class BookingController extends Controller
+{
+	private $minstay=0;
+	private $release=0;
+    public function __construct(Request $request){
+        $this->middleware('auth');
+    }
+/* ======================================  Bookings Section ==========================================================*/
+    public function bookings(Request $request)
+    {
+        return view('booking.bookings');
+    }
+
+    public function bookingdetail(Request $request)
+    {
+        $booking  = DB::table('bookings as b')->select('b.*', 'h_m.name as hotel_name', 'h_c.title as category_title', 'e_s.name as hotel_status_name', 'c.symbol as symbol', 't.unique_transfer_id as transfer_id')
+            ->leftJoin('hotel_main as h_m', 'h_m.id', '=', 'b.hotel_id')
+            ->leftJoin('currency as c', 'b.currency_id', '=', 'c.id')
+            ->leftJoin('transfer as t', 'b.id', '=', 't.booking_id')
+            ->leftJoin('emotional_status as e_s', 'e_s.id', '=', 'b.hotel_status')
+            ->leftJoin('hotel_category as h_c', 'h_m.category_id', '=', 'h_c.id')
+            ->where('b.id', '=', $request->booking_id)->where('b.is_deleted', '=', 0)->first();
+
+        $arrayData['booking'] = $booking;
+
+        return view('booking.booking_detail', $arrayData);
+    }
+
+    public function getjsonbookingsproperty(Request $request)
+    {
+        $bookingDetails = array();
+        $booking  = DB::table('bookings as b')->select('b.*', 'h_m.name as hotel_name', 'h_c.title as category_title', 'e_s.name as hotel_status_name')
+            ->leftJoin('hotel_main as h_m', 'h_m.id', '=', 'b.hotel_id')
+            ->leftJoin('emotional_status as e_s', 'e_s.id', '=', 'b.hotel_status')
+            ->leftJoin('hotel_category as h_c', 'h_m.category_id', '=', 'h_c.id')
+            ->where('b.id', '!=', 0)->where('b.is_deleted', '=', 0)->get();
+
+
+        foreach ($booking as $data) {
+            $cur = getActiveCurrency();
+
+            $uniqueToSendInModal = $data->unique_booking_id;
+            $data->unique_booking_id = '<a href="'.url('booking/detail').'/'.$data->id.'" style="cursor: pointer">'.$data->unique_booking_id.'</a>';
+            $data->hotel_status = $data->hotel_status." | ".$data->hotel_status_name;
+            $data->hotel_id = $data->hotel_name." <br> ".$data->category_title;
+            $data->client_name = $data->client_name." (".$data->country.")";
+            $data->city = $data->city.", ".$data->country;
+
+
+            if($data->cart == '0')
+            {
+                $data->cart = '<div class="radio-btn-custom">
+                            <input id="logincheck1" name="radio-group" type="radio">
+						    <label for="logincheck1"></label>                     
+                    	</div>';
+            }
+            else{
+                $data->cart = '<div class="radio-btn-custom">
+                            <input id="logincheck2" name="radio-group" type="radio">
+						    <label for="logincheck2" class="red"></label>                     
+                    	</div>';
+            }
+
+            if($data->transfer == '0')
+            {
+                $data->transfer = '<div class="radio-btn-custom">
+                            <input id="logincheck1" name="radio-group" type="radio">
+						    <label for="logincheck1"></label>                     
+                    	</div>';
+            }
+            else{
+                $data->transfer = '<div class="radio-btn-custom">
+                            <input id="logincheck2" name="radio-group" type="radio">
+						    <label for="logincheck2" class="red"></label>                     
+                    	</div>';
+            }
+
+
+            if($data->client_status == '1' || $data->client_status == '2')
+            {
+                $data->client_status = '<div class="radio-btn-custom">
+                            <input id="logincheck1" name="radio-group" type="radio">
+						    <label for="logincheck1"></label>                     
+                    	</div>';
+            }
+            else{
+                $data->client_status = '<div class="radio-btn-custom">
+                            <input id="logincheck2" name="radio-group" type="radio">
+						    <label for="logincheck2" class="red"></label>                     
+                    	</div>';
+            }
+
+
+            $data->who_booked = getUserTypesById($data->who_booked);
+
+            /*Notes*/
+            $data->notes = '<a class="" href="#" onclick="getNotesIdToModal(this)" data-unique-id="'.$uniqueToSendInModal.'" data-id="'.$data->id.'" data-toggle="modal" data-target="#notesModal">'.trans('messages.keyword_views').'</a>';
+            /*Notes*/
+
+            /*Reviews*/
+            $data->reviews = '<a class="" href="#" data-toggle="modal" data-target="#reviewModal">'.trans('messages.keyword_reviews').'</a>';
+            /*Reviews*/
+
+
+            $data->price = $data->price." ".$cur['symbol'];
+            $checked = ($data->confirm == 1) ? 'checked' : '';
+            //$data->confirm = '<div class="switch"><input name="confirm" class="currencytogal" onchange="updateBookingConfirmStatus(' . $data->id . ')" id="confirmstatus_' . $data->id . '" ' . $checked . ' value="1"  type="checkbox"><label for="confirmstatus_' . $data->id . '"></label></div>';
+            $data->confirm = '<input name="confirm" class="currencytogal" onchange="updateBookingConfirmStatus(' . $data->id . ')" id="confirmstatus_' . $data->id . '" ' . $checked . ' value="1"  type="checkbox"><label for="confirmstatus_' . $data->id . '"></label>';
+            $bookingDetails[] = $data;
+        }
+        return json_encode($bookingDetails);
+    }
+
+    public function updatebookingconfirmstatus(Request $request)
+    {
+        $update = DB::table('bookings')->where('id', $request->id)->update(array('confirm' => $request->status));
+        return ($update) ? 'true' : 'false';
+    }
+
+    public function bookingdelete(Request $request)
+    {
+        $countRec = DB::table('bookings')->select('*')->where('id', $request->id)->count();
+        if ($countRec > 0) {
+            DB::table('bookings')->where('id', $request->id)->update(array('is_deleted' => '1'));
+            DB::table('bookings_notes')->where('booking_id', $request->id)->delete();
+            return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_booking_removed_successfully').'</div>');
+        } else {
+            return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_booking_not_exist').'</div>');
+        }
+    }
+
+    public function bookings_search(Request $request)
+    {
+
+        $booking  = DB::table('bookings as b')->select('b.*','b.id as booking_id','h_m.name as hotel_name', 'h_c.title as category_title', 'e_s.name as hotel_status_name')
+            ->leftJoin('hotel_main as h_m', 'h_m.id', '=', 'b.hotel_id')
+            ->leftJoin('hotel_category as h_c', 'h_m.category_id', '=', 'h_c.id')
+            ->leftJoin('currency as c', 'b.currency_id', '=', 'c.id')
+            ->leftJoin('emotional_status as e_s', 'e_s.id', '=', 'h_m.status')
+            ->where('b.id', '!=', '0')->where('b.is_deleted', '=', '0');
+
+
+        if(isset($request->client_status))
+        {
+            $booking->where('b.client_status', '=' ,$request->client_status);
+        }
+
+
+        if(isset($request->hotel_status))
+        {
+            $booking->where('b.hotel_status', '=' ,$request->hotel_status);
+        }
+
+        if(isset($request->arrival) && isset($request->departure))
+        {
+            $booking->where('b.arrival','>=', $request->arrival);
+            $booking->where('b.departure','<=', $request->departure);
+        }
+
+        if(isset($request->booking_country))
+        {
+            $booking->where('b.country', '=' ,$request->booking_country);
+        }
+
+        if(isset($request->transfer))
+        {
+            $booking->where('b.transfer', '=' ,$request->transfer);
+        }
+
+
+        if(isset($request->currency))
+        {
+            $booking->where('c.id', '=' ,$request->currency);
+        }
+
+
+
+
+        if(isset($request->cart_guarantee))
+        {
+            $booking->where('b.cart', '=' ,$request->cart_guarantee);
+        }
+
+        if(isset($request->user_type))
+        {
+            $booking->where('b.who_booked', '=' ,$request->user_type);
+        }
+
+        if(isset($request->hotel_list))
+        {
+            $booking->where('b.hotel_id', '=' ,$request->hotel_list);
+        }
+
+
+
+//        if(isset($request->hotel_name)){
+//            $booking->where('h_m.name', 'like', '%'.$request->hotel_name.'%' );
+//        }
+//
+//        if(isset($request->status_filter)){
+//            $booking->where('h_m.status', $request->status_filter);
+//        }
+        $arrayData['filtered_booking'] = $booking->get();
+
+
+
+
+        //dd($arrayData);
+        return view('booking.bookings_search', $arrayData);
+    }
+
+    public function getNotes(Request $request)
+    {
+        $notes = DB::table('bookings_notes as bn')->select('bn.*', 'u.name as username', 'b.unique_booking_id as unique_booking_id')
+            ->leftJoin('users as u', 'bn.user_id', '=', 'u.id')
+            ->leftJoin('bookings as b', 'bn.booking_id', '=', 'b.id')
+            ->where('bn.booking_id', $request->booking_id)->get();
+
+        if(count($notes) > 0)
+        {
+            foreach($notes as $note) {
+
+                $time = Carbon::parse($note->created_at)->diffForHumans();
+                echo "<div class=''>";
+                    echo "<p><b>".$note->username."</b><span class='pull-right'>".$time."</span></p>";
+                    echo "<p>".$note->description."</p>";
+                echo "</div>";
+            }
+        }else{
+            echo trans('messages.keyword_no_notes_found');
+        }
+
+
+    }
+
+    public function submitNote(Request $request)
+    {
+
+        $data = [
+           'booking_id' => $request->booking_id,
+            'user_id' => Auth::user()->id,
+           'description' => $request->description,
+           'created_at' => date('Y-m-d H:i:s'),
+           'updated_at' => date('Y-m-d H:i:s'),
+        ];
+
+        DB::table('bookings_notes')->insert($data);
+
+        $notes = DB::table('bookings_notes as bn')->select('bn.*', 'u.name as username', 'b.unique_booking_id as unique_booking_id')
+            ->leftJoin('users as u', 'bn.user_id', '=', 'u.id')
+            ->leftJoin('bookings as b', 'bn.booking_id', '=', 'b.id')
+            ->where('bn.booking_id', $request->booking_id)->get();
+
+        if(count($notes) > 0)
+        {
+            foreach($notes as $note) {
+
+                $time = Carbon::parse($note->created_at)->diffForHumans();
+                echo "<div class=''>";
+                echo "<p><b>".$note->username."</b><span class='pull-right'>".$time."</span></p>";
+                echo "<p>".$note->description."</p>";
+                echo "</div>";
+            }
+        }else{
+            echo trans('messages.keyword_no_notes_found');
+        }
+    }
+
+    public function getHotelList(Request $request)
+    {
+
+        $hotels = DB::table('hotel_main')->select('name', 'id')->where('address', 'like', '%'.$request->location.'%')->get();
+
+
+        if(count($hotels) > 0)
+        {
+            echo "<option>".trans('messages.keyword_--select--')."</option>";
+            foreach($hotels as $hotel)
+            {
+                echo '<option value="'.$hotel->id.'">'.$hotel->name.'</option>';
+            }
+        }
+        else{
+            echo "<option>".trans('messages.keyword_--select--')."</option>";
+        }
+
+    }
+
+    public function booking_conversations_update(Request $request)
+    {
+        if(isset($request->booking_id) && !empty($request->booking_id))
+        {
+
+            $reply_table_data = [
+                'reply_by_admin' => '1',
+                'description' => $request->description,
+                'booking_id' => $request->booking_id,
+                'user_id' => $request->user()->id,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            $last_inserted_id = DB::table('bookings_conversations')->insertGetId($reply_table_data);
+
+            /*Update support table updated at field when updating replies*/
+            DB::table('bookings')->where('id', $request->bookings_id)->update(['updated_at' => date('Y-m-d H:i:s')]);
+
+
+            $logs = 'Replied in Booking Conversations -> (ID:'.$last_inserted_id.')';
+            storelogs($request->user()->id,$logs);
+        }
+
+        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_you_replied_successfully').'</div>';
+        return Redirect::back()->with('msg', $msg);
+    }
+
+    public function sendBookingEmail($message,$subject,$toEmail) {
+        /*echo $message;
+        echo '<br>';
+        echo $subject;
+        echo '<br>';*/
+        $toEmail = array_unique($toEmail);
+        //print_r($toEmail);
+        $toEmail = array('developer3@skynettechnologies.com');
+        //echo "======================================================================================";
+        //return true;
+        $fromemail = config('mail.from.address');
+        $fromename = config('mail.from.name');
+
+        Mail::send(['html' => 'layouts.mail_content'], ['content' => $message], function ($m) use ($subject,$toEmail,$fromemail,$fromename) {
+            $m->from($fromemail, $fromename);
+            $m->to($toEmail)->subject($subject);
+        });
+        return (count(Mail::failures()) > 0) ? false : true;
+    }
+
+    public function send_confirmation_email(Request $request)
+    {
+
+        $emailtemplate = DB::table('email_template')->where(['is_active'=>0,'id'=>1])->first();
+
+        //dd($emailtemplate);
+
+    //        $otheruser = isset($entity->user_id) ? (DB::table('users')->where('id', $entity->user_id)->first()):array();
+    //        if(isset($otheruser->email)){
+    //            array_push($toEmail,$otheruser->email);
+    //        }
+    //        if(isset($supperadmindetails->email)){
+    //            array_push($toEmail,$supperadmindetails->email);
+    //        }
+
+
+        if(isset($emailtemplate->language_key)){
+            //$name = isset($otheruser->name) ? $otheruser->name : $entity->nomereferente;
+            //$link ='<a href="'.url('progetti/modify/project/'.$valp->id).'">'.url('progetti/modify/project/'.$valp->id).'</a>';
+
+            $tags = [];
+            foreach(getEmailTags() as $tag)
+            {
+                $tags[] = "[".$tag->tag."]";
+            }
+            pre($tags);
+            /* Array
+            (
+                [0] => [Name]
+                [1] => [UserEmail]
+                [2] => [Content]
+                [3] => [AlertTitle]
+                [4] => [FirstName]
+                [5] => [LastName]
+                [6] => [SiteUrl]
+                [7] => [Email]
+                [8] => [Signature]
+                [9] => [Link]
+                [10] => [Title]
+            ) */
+
+            $name = 'Test';
+            $useremail = 'test@gmail.com';
+
+            $findReplace = [ $tags[0] => $name, $tags[1] => $useremail, $tags[3] => '', $tags[4] => '', $tags[5] => '', $tags[6] => '', $tags[7] => '',$tags[8] => '',$tags[9] => '',$tags[10] => '' ];
+//            $findReplace = array("[Name]"=>$name,"[Module]"=>'Project',"[ModuleTitle]"=>$valp->nomeprogetto,"[ModuleId]"=>$valp->id,"[UserName]"=>$createruser->name,
+//                "[UserEmail]"=>$createruser->email,"[Content]"=>'',"[AlertTitle]"=>'',"[FirstName]"=>$createruser->name,"[LastName]"=>$createruser->name,
+//                "[SiteUrl]"=>url('/'),"[Email]"=>$createruser->email,"[Signature]"=>'Regards, Langa Team',"[Link]"=>$link,"[Title]"=>'',"[SiteTitle]"=>'Easy Langa');
+
+            $subject = trans('messages.'.$emailtemplate->subject_language_key);
+            $message = trans('messages.'.$emailtemplate->language_key);
+            $subject = replace_charcter($findReplace,$subject);
+            $message = replace_charcter($findReplace,$message);
+
+            $message = html_entity_decode($message);
+            $mailResponse=$this->sendBookingEmail($message,$subject,$request->email);
+
+            if($mailResponse)
+            {
+                echo "working";
+            }
+
+        }
+    }
+
+   public function bookingaddedit(Request $request) {
+        $action = 'add';
+        $bookings = DB::table('bookings')->where('is_deleted', '0')->get()->toArray();
+        
+
+        $arrRecords = [
+            'action' => 'add'
+        ];
+        $country = DB::table('countries')->where('e_status', 1)->get();
+        $states=DB::table('states')->where('e_status',1)->offset(0)->limit(1000)->get();
+        if (isset($request->booking_id)) {
+
+            $action = 'edit';
+            $arrDetails = DB::table('bookings')->where(['id' => $request->booking_id, 'is_deleted' => '0'])->first();
+
+
+            $arrRecords['action'] = 'edit';
+            $arrRecords['booking'] = $arrDetails;
+        }
+        $arrRecords['country'] = $country;
+        $arrRecords['states'] = $states;
+        return view('booking.booking_add_edit', $arrRecords);
+    }
+
+    public function bookingupdate(Request $request)
+    {
+        if(isset($request->booking_id) && !empty($request->booking_id) && $request->action == 'edit'){
+            dd('update');
+        }
+        else{
+
+            pre($request->all());
+
+            $data = [
+
+            ];
+
+
+        }
+    }
+
+    public function getHotelWiseRooms(Request $request) {
+		DB::enableQueryLog();
+        if(empty($request->extra_bed))
+               $request->extra_bed = 0;
+        if(isset($request->start_date))
+			$startdate=Carbon::parse($request->start_date)->toDateTimeString();
+		if(isset($request->end_date))
+			$enddate=Carbon::parse($request->end_date)->toDateTimeString();
+		/***********************search Booking Result query*************************************/
+		$roomdetail=DB::table('room_details as r')->select('r.*',DB::raw('(r.standard_bed + r.extra_bed) as total_bed'))
+					->join('hotel_main as h','h.id','r.hotelid')
+					->join('allotment_detail as a',function($join) use($request,$startdate,$enddate){
+						$join->on('a.room_id','r.id')
+						->on('a.hotel_id','r.hotelid')
+						->where('a.open','1');
+						if(isset($request->start_date) && isset($request->end_date))
+						$join->whereBetween('a.date',array(
+															$startdate,
+															$enddate
+															));
+					})
+					->join('hotel_season as s', function($join) use($request,$startdate,$enddate){
+								$join->on('s.hotel_id','r.hotelid');
+							if(isset($request->start_date) && isset($request->end_date)){
+								$join->where('s.season_from','>=',$startdate)
+									->where('s.season_to','>=',$enddate)
+									->where('s.is_deleted',0)
+									->whereBetween('a.date',array(
+																DB::raw('s.season_from'),
+																DB::raw('s.season_to')
+															));
+							}
+								
+						})
+					->join('room_sale_prices as p', function($join){
+							$join->on('p.room_id','r.id')
+								 ->on('p.hotel_id','h.id')
+								 ->on('p.season_id','s.id');
+					});
+			$roomdetail=$roomdetail->groupBy('p.room_id')
+    							 ->havingRaw('total_bed >='.($request->extra_bed+$request->standard_bed))->get();
+			dd(DB::getQueryLog());	
+        //$hotelids = DB::table('room_details')->select('hotelid')->distinct()->where('standard_bed',">=",$request->standard_bed)->where('standard_bed',">=",$request->extra_bed)->pluck('hotelid')->toArray();
+        //$hotels = DB::select("select distinct hotelid from room_details rm  where (rm.standard_bed + rm.extra_bed) >= ".($request->extra_bed+$request->standard_bed));
+        //echo "select hotelid from room_details rm  where (rm.standard_bed + rm.extra_bed) >= ".($request->extra_bed+$request->standard_bed);
+        $hotelids = "";
+        foreach($hotels as $h)
+        {
+            $hotelids .= $h->hotelid.",";
+        }
+        //die($hotelids);
+        
+       if(!empty($hotelids))
+        {
+                $hotelids = trim($hotelids,",");
+          //$rooms = DB::table('room_details as rm')->select("rm.*","hm.name as hotelname")->leftJoin("hotel_main as hm","hm.id","=","rm.hotelid")->where([['rm.standard_bed',">=",$request->standard_bed],['rm.extra_bed',">=",$request->extra_bed]])->whereIn('hm.id', $hotelids)->where("hm.country",$request->country)->where("hm.state",$request->state)->get();
+           
+           
+           $rooms = DB::select("select rm.*,hm.name as hotelname from room_details rm left join hotel_main hm on hm.id = rm.hotelid where (rm.standard_bed + rm.extra_bed) >= ".($request->extra_bed+$request->standard_bed)." and hm.id in (".$hotelids.") and hm.country = ".$request->country."  and hm.state = ".$request->state);
+           //echo "select * from room_details rm left join hotel_main hm on hm.id = rm.hotelid where (rm.standard_bed + rm.extra_bed) >= ".($request->extra_bed+$request->standard_bed)." and hm.id in (".$hotelids.") and hm.country = ".$request->country."  and hm.state = ".$request->state;
+          //die();
+        }
+		$html='';
+        if (isset($rooms) && count($rooms)) {
+            $currency = getActiveCurrency();
+            $symbol = $currency['symbol'];
+            $html.="<table class='table table-striped table-bordered'>";
+            $html.="<thead><tr>";
+            $html.= "<th>" . trans('messages.keyword_hotel_name') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_room_type') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_price_per_night') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_discount') . "(%)</th>";
+            $html.= "<th>" . trans('messages.keyword_fare_amount') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_booking') . "</th>";
+            $html.= "<tr></thead><tbody>";
+            foreach ($rooms as $room) {
+						
+								
+								
+                $html.= "<tr>";
+                $html.= "<td>" . $room->hotelid." | ".$room->hotelname . "</td>";
+                $html.= "<td>" . $room->personal_name . "</td>";
+                $html.= "<td>" . "</td>"; //number_format($room->price_per_night, 2) . $symbol 
+                $html.= "<td></td>";  //$room->discount . "%
+                $html.= "<td>"."</td>"; // . number_format($room->fare_amount, 2) . $symbol . 
+                $html.= "<td><button type='button' class='btn'>Select Room</button></td>";
+                $html.= "<tr>";
+            }
+            $html.= "</tbody></table>";
+        } else {
+              $html.= "<table class='table table-striped table-bordered'>";
+            $html.= "<tr>";
+            $html.= "<th>" . trans('messages.keyword_hotel_name') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_room_type') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_price_per_night') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_discount') . "(%)</th>";
+            $html.= "<th>" . trans('messages.keyword_fare_amount') . "</th>";
+            $html.= "<th>" . trans('messages.keyword_booking') . "</th>";
+            $html.= "<tr>";
+               $html.= "<tr>";
+            $html.= "<td colspan='6'>" . trans('messages.keyword_no_hotel_records') . "</th>";
+            $html.= "<tr>";
+        }
+		return $html;
+    }
+
+
+/* ======================================  Bookings Section End ======================================================*/
+
+/* ======================================  Calendar Section ======================================================*/
+    
+
+    /*price closing*/
+    public function price_closing()
+    {
+        return view('booking.price_closing');
+    }
+
+    public function getBookings(Request $request)
+    {
+        $booking = DB::table('bookings')->select('arrival', 'departure', 'client')->where('is_deleted','0')->get()->toArray();
+
+        $calendar_json = array();
+
+        foreach($booking as $k=> $value)
+        {
+            $calendar_json[] = ['start' => $value->arrival, 'end'=> $value->departure, 'title' => $value->client, 'url' => url('bookings')];
+        }
+
+        return json_encode($calendar_json);
+    }
+
+    public function price_closing_search(Request $request)
+    {
+        $booking = DB::table('bookings as b')->select('b.*', 'b.id as booking_id', 'h_m.room_id as room_ids', 'r_d.type_of_rooms as rooms')
+                    ->leftJoin('hotel_main as h_m', 'h_m.id', '=', 'b.hotel_id')
+                    ->leftJoin('room_details as r_d', 'b.hotel_id', '=', 'r_d.hotelid')
+                    ->whereBetween('b.created_at',array($request->start_date,$request->end_date));
+
+        if(isset($request->price))
+        {
+            $booking->where('b.price', '<=', $request->price);
+        }
+
+        if(isset($request->discount))
+        {
+            $booking->where('b.discount', '>=', $request->discount);
+        }
+
+//        if(isset($request->room_type))
+//        {
+
+//            $booking->whereIn('r_d.type_of_rooms', $request->room_type);
+//            foreach($request->room_type as $type)
+//            {
+//                    $booking->whereIn($type, 'h_m.room_id');
+////                //$booking->where('r_d.type_of_rooms', $type);
+////                //$booking->orWhere('r_d.type_of_rooms', $type);
+////
+//            }
+//
+//        }
+
+
+//        $test = $booking->toSql();
+//        echo $test;
+
+        $booking_filtered_data = $booking->get()->toArray();
+
+        //pre($booking_filtered_data); exit;
+
+        $calendar_json = array();
+
+        foreach($booking_filtered_data as $k=> $value)
+        {
+            $calendar_json[] = ['start' => $value->arrival, 'end'=> $value->departure, 'title' => $value->client, 'url' => url('bookings')];
+        }
+
+        $calendar_json = json_encode($calendar_json);
+        return view('booking.price_closing_search', ['filter_calendar'=> $calendar_json, 'start_date' => $request->start_date, 'end_date' => $request->end_date]);
+    }
+
+
+    public function backup_price_closing_search(Request $request)
+    {
+
+        $booking = DB::table('bookings as b')->select('b.*', 'b.id as booking_id', 'h_m.room_id as room_ids', 'r_d.type_of_rooms as rooms')
+            ->leftJoin('hotel_main as h_m', 'h_m.id', '=', 'b.hotel_id')
+            ->leftJoin('room_details as r_d', 'b.hotel_id', '=', 'r_d.hotelid')
+            ->whereBetween('b.created_at',array($request->start_date,$request->end_date));
+
+        if(isset($request->price))
+        {
+            $booking->where('b.price', '<=', $request->price);
+        }
+
+        if(isset($request->discount))
+        {
+            $booking->where('b.discount', '>=', $request->discount);
+        }
+
+        if(isset($request->room_type))
+        {
+            $booking->whereIn('r_d.type_of_rooms', $request->room_type);
+        }
+
+
+        $booking_filtered_data = $booking->get()->toArray();
+
+        //pre($booking_filtered_data); exit;
+
+        $calendar_json = array();
+
+        foreach($booking_filtered_data as $k=> $value)
+        {
+            $calendar_json[] = ['start' => $value->arrival, 'end'=> $value->departure, 'title' => $value->client, 'url' => url('bookings')];
+        }
+
+        $calendar_json = json_encode($calendar_json);
+        return view('booking.price_closing_search', ['filter_calendar'=> $calendar_json, 'start_date' => $request->start_date, 'end_date' => $request->end_date]);
+    }
+    /*price closing*/
+
+/* ======================================  Calendar Section End======================================================*/
+
+#########################################  Allotment Section Start####################################################	
+    public function availability()
+    {
+        return view('booking.availability');
+    }
+	public function allotment(Request $request)
+    {
+		$allotment_status = DB::table('taxinomies_allotment_status')->where('is_delete','0')->get();
+        if(Auth::user()->profile_id==0) {
+			$country=DB::table('countries')->where('e_status',1)->get();
+			$hotel=DB::table('hotel_main')->where('is_deleted',0)->where('is_active',0)->get();
+			$hotel_category = DB::table('hotel_category')->where('is_deleted','0')->orderby('hotel_star','asc')->get();
+			$arrsend=['hotel'=>$hotel,'category'=>$hotel_category,'country'=>$country,'allotment_status'=>$allotment_status];            
+			return view('booking.allotment-admin',$arrsend);
+		}
+        else{
+			$room=DB::table('room_details')->where(['hotelid'=>Auth::user()->hotel_id,'is_deleted'=>0,'is_active'=>0])->get();			
+			$arrsend=['roomvalue'=>$room,'allotment_status'=>$allotment_status];
+		    return view('booking.allotment',$arrsend);
+		}
+    }
+	
+	public function allotmentlist(Request $request)
+    {
+		//$request->from=date('Y-m-d H:i:s',strtotime($request->from));
+		//$request->to=date('Y-m-d H:i:s',strtotime($request->to));
+		$from = Carbon::parse($request->from);
+		$to = Carbon::parse($request->to);
+		//$startdate=$from;
+		$interval =$this->generateDateRange($from,$to);
+		
+		$startdate = Carbon::parse($request->from);
+		$month =$this->generateMonthRange($startdate,$to);
+		
+		$wherecondition=['is_deleted'=>0,'is_active'=>0];
+		if(isset($request->country))
+		{
+			$wherecondition['country']=$request->country;
+		}
+		if(isset($request->hotel))
+		{
+			$wherecondition['id']=$request->hotel;
+		}
+		if(isset($request->category))
+		{
+			$wherecondition['category_id']=$request->category;
+		}
+		$hotel_detail=DB::table('hotel_main')->where($wherecondition)->get();
+		$html='';
+		/*Hotel Section */
+		foreach($hotel_detail as $hkey=>$hval){
+			$html.='<h1 class="cst-datatable-heading">'.ucwords($hval->name).'</h1>';
+			$html.='<div class="table-responsive"><table id="" class="table table-striped table-bordered" width="100%" cellspacing="0"><thead><tr><th rowspan="2"></th>';
+			/*Month Section */
+			foreach($month as $mkey=>$mval):
+				$result = preg_grep('~' . $mval . '~', $interval);
+				$tdcolspan=count($result);
+				$html.='<th colspan="'.$tdcolspan.'">'.$mval.'</th>';
+			endforeach;
+			$html.='</tr><tr>';
+			/*Days Section */
+			foreach($interval as $ikey=>$ival):
+				$html.='<th>'.date('d',strtotime($ival)).'</th>';
+			endforeach;
+			$html.='</tr></thead><tbody>';
+			$room_detail=DB::table('room_details')->where('hotelid',$hval->id)->where(['is_deleted'=>0,'is_active'=>0])->get();
+			/*Room Section */
+			foreach($room_detail as $rkey=>$rval){
+				/*Two tr required in room Section */
+				for($i=1;$i<=2;$i++){
+					$html.='<tr>';
+					if($i==1)
+					$html.='<th rowspan="2">'.ucwords($rval->personal_name).'</th>';
+					/*Days Section with room section*/
+					foreach($interval as $ikey=>$ival):
+					$arrayelement=['hotel_id'=>$hval->id,'room_id'=>$rval->id,'date'=>$ival];
+					$allotmentcount=DB::table('allotment_detail')->where($arrayelement)->get();
+					if($allotmentcount->count()==0){
+						$arrayelement['open']=1;
+						$arrayelement['room']=(isset($rval->qt_same_name))?$rval->qt_same_name:0;
+						$arrayelement['user_id']=Auth::user()->id;
+						DB::table('allotment_detail')->insertGetId($arrayelement);
+						$typeselected='1';
+						$colorclass='green-bg';
+					}
+					else
+					{
+						$allotment=$allotmentcount[0];
+						$typeselected=$allotment->open;
+						$rval->qt_same_name=$allotment->room;
+						$colorclass=($typeselected==3)?'red-bg':(($typeselected==2)?"yellow-bg":"green-bg");
+					}
+					$allowselected=($typeselected==1)?"selected":"";
+					$closelected=($typeselected==3)?"selected":"";
+						if($i==1)
+						
+							$html.='<td class="'.$colorclass.' type_'.$rval->id.'_'.$ival.'">
+									<select name="type['.$rval->id.']['.$ival.']" id="type_'.$rval->id.'_'.$ival.'" data-value="'.$rval->id.'_'.$ival.'" class="allow form-control" onchange="fun_typechange(this);fun_allotment(this)">
+									<option value="1" '.$allowselected.'><i class="fa fa-check" aria-hidden="true"></i>
+</option>
+									<option value="3" '.$closelected.'><i class="fa fa-times" aria-hidden="true"></i>
+</option>
+									</select>
+									<input type="hidden" name="room_id[]" value="'.$rval->id.'" id="roomid_'.$rval->id.'_'.$ival.'">
+									<input id="hotelid_'.$rval->id.'_'.$ival.'" type="hidden" name="hotel_id[]" value="'.$hval->id.'">
+									<input id="date_'.$rval->id.'_'.$ival.'" type="hidden" name="date[]" value="'.$ival.'">
+									</td>';
+						else
+						$html.='<td class="'.$colorclass.' type_'.$rval->id.'_'.$ival.'">
+						<input type="number" class="form-control" name="room['.$rval->id.']['.$ival.']" id="room_'.$rval->id.'_'.$ival.'" data-value="'.$rval->id.'_'.$ival.'" value="'.$rval->qt_same_name.'" onchange="fun_typechange(this);fun_allotment(this)">
+						<input type="hidden" name="date[]" value="'.$ival.'"></td>';
+					endforeach;
+					$html.='</tr>';
+				}
+				
+			}
+			$html.='</tbody></table></div>';
+		}
+		return $html;
+		
+    }
+	private function generateDateRange($start_date, $end_date){
+		$dates = [];
+		for($date = $start_date; $date->lte($end_date); $date->addDay()) {
+			$dates[] = $date->format('Y-m-d');
+		}
+	
+		return $dates;
+	}
+	private function generateMonthRange($start_date, $end_date){
+	
+		$begin = new DateTime($start_date);
+		$end = new DateTime($end_date);
+	
+		$interval = new DateInterval('P1D'); // 1 month interval
+		$period   = new DatePeriod($begin, $interval, $end); // Get a set of date beetween the 2 period
+		$months = array();
+	
+		foreach ($period as $dt) {
+			if(!in_array($dt->format("Y-m"),$months))
+			$months[] = $dt->format("Y-m");
+		}
+	
+		return $months;
+	}
+	public function allotmentupdatemain(Request $request){
+		$arrayelement=['hotel_id'=>$request->hotel,'room_id'=>$request->roomid,'date'=>$request->date];
+		$allotment=DB::table('allotment_detail')->where($arrayelement)->first();
+		$arrayelement['open']=$request->type;
+		$arrayelement['room']=(isset($request->room))?$request->room:0;
+		$arrayelement['refund']=(isset($request->refund))?$request->refund:0;
+		$arrayelement['min_day']=(isset($request->min_day))?$request->min_day:0;
+		$arrayelement['released']=(isset($request->released))?$request->released:0;
+		$arrayelement['paper']=(isset($request->paper))?$request->paper:0;
+		$arrayelement['user_id']=Auth::user()->id;
+		if(isset($allotment)){
+			DB::table('allotment_detail')->where('id',$allotment->id)->update($arrayelement);
+		}
+		else
+		DB::table('allotment_detail')->insert($arrayelement);
+		$msg="Updated Successfully";
+		return $msg;
+	}
+	public function allotmentlistmanager(Request $request){
+		
+		//$request->from=date('Y-m-d H:i:s',strtotime($request->from));
+		//$request->to=date('Y-m-d H:i:s',strtotime($request->to));
+		$from = Carbon::parse($request->from);
+		$to = Carbon::parse($request->to);
+		
+		//$startdate=$from;
+		$interval =$this->generateDateRange($from,$to);
+		
+		$startdate = Carbon::parse($request->from);
+		$month =$this->generateMonthRange($startdate,$to);
+		
+		$wherecondition=['is_deleted'=>0,'is_active'=>0,'hotelid'=>Auth::user()->hotel_id];
+		$room_detail=DB::table('room_details')->where($wherecondition);
+		if(isset($request->room))
+		$room_detail=$room_detail->whereIn('id',$request->room);
+		$room_detail=$room_detail->get();
+		$html='';
+		/*Hotel Section */
+		foreach($room_detail as $hkey=>$hval){
+			$html.='<h1 class="cst-datatable-heading">'.ucwords($hval->personal_name).'</h1>';
+			$html.='<div class="table-responsive"><table id="" class="table table-striped table-bordered" width="100%" cellspacing="0"><thead><tr><th rowspan="2"></th>';
+			/*Month Section */
+			foreach($month as $mkey=>$mval):
+				$result = preg_grep('~' . $mval . '~', $interval);
+				$tdcolspan=count($result);
+				$html.='<th colspan="'.$tdcolspan.'">'.date('F/Y',strtotime($mval)).'</th>';
+			endforeach;
+			$html.='</tr><tr>';
+			/*Days Section */
+			foreach($interval as $ikey=>$ival):
+				$html.='<th>'.date('d',strtotime($ival)).'</th>';
+			endforeach;
+			$html.='</tr></thead><tbody>';
+			$allotment_type=DB::table('taxinomies_allotment_type')->where(['is_delete'=>0,'status'=>1])->get();
+			/*Room Section */
+			foreach($allotment_type as $rkey=>$rval){
+				/*Two tr required in room Section */
+				
+					$html.='<tr>';
+					$html.='<th >'.ucwords($rval->name).'</th>';
+					/*Days Section with room section*/
+					foreach($interval as $ikey=>$ival):
+						$arrayelement=['hotel_id'=>Auth::user()->hotel_id,'room_id'=>$hval->id,'date'=>$ival];
+						$allotmentcount=DB::table('allotment_detail')->where($arrayelement)->get();
+						if($allotmentcount->count()==0){
+							if(isset($request->status)){
+								if(!in_array(1,$request->status)){
+									$html.='<td></td>';
+									continue;
+								}
+							}
+							$arrayelement['open']=1;
+							$arrayelement['room']=(isset($hval->qt_same_name))?$hval->qt_same_name:0;
+							$arrayelement['user_id']=Auth::user()->id;
+							DB::table('allotment_detail')->insertGetId($arrayelement);
+							$typeselected='1';
+							$colorclass='green-bg';
+						}
+						else
+						{
+							$allotment=$allotmentcount[0];
+							if(isset($request->status)){
+								if(!in_array($allotment->open,$request->status)){
+									$html.='<td></td>';
+									continue;
+								}
+							}
+							$typeselected=$allotment->open;
+							$hval->qt_same_name=$allotment->room;
+							$this->minstay=$allotment->min_day;
+							$this->release=$allotment->released;
+							$colorclass=($typeselected==3)?'red-bg':(($typeselected==2)?"yellow-bg":"green-bg");
+						}
+						
+					
+						switch($rval->id){
+							case '1':
+							$allowselected=($typeselected==1)?"selected":"";
+							$closelected=($typeselected==3)?"selected":"";
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+										<select name="open['.$hval->id.']['.$ival.']" id="open_'.$hval->id.'_'.$ival.'"
+										 data-value="'.$hval->id.'_'.$ival.'" class="allow form-control" onchange="fun_typechange(this);fun_saveallotment(this)">
+										<option value="1" '.$allowselected.'>Allow</option>
+										<option value="3" '.$closelected.'>Close</option>
+										</select>
+										<input type="hidden" name="room_id[]" value="'.$hval->id.'" id="roomid_'.$hval->id.'_'.$ival.'">
+										<input id="hotelid_'.$hval->id.'_'.$ival.'" type="hidden" name="hotel_id[]" value="'.$hval->hotelid.'">
+										<input id="date_'.$hval->id.'_'.$ival.'" type="hidden" name="date[]" value="'.$ival.'">
+										</td>';
+										break;
+							case '2':
+							
+								$allowselected=($allotment->refund==1)?"selected":"";
+								$closelected=($allotment->refund==0)?"selected":"";
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+										<select name="refund['.$hval->id.']['.$ival.']" id="refund_'.$hval->id.'_'.$ival.'"
+										 data-value="'.$hval->id.'_'.$ival.'" class="allow form-control" onchange="fun_typechange(this);fun_saveallotment(this)">
+										<option value="1" '.$allowselected.'>Yes</option>
+										<option value="0" '.$closelected.'>No</option>
+										</select>
+										</td>';
+										break;
+							case '3':
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+								<input type="number" class="form-control" name="room['.$hval->id.']['.$ival.']" id="room_'.$hval->id.'_'.$ival.'"
+								 data-value="'.$hval->id.'_'.$ival.'" value="'.$hval->qt_same_name.'" onchange="fun_typechange(this);fun_saveallotment(this)">
+								</td>';
+								break;
+							case '4':
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+								<input type="number" class="form-control" name="min_day['.$hval->id.']['.$ival.']" id="min_stay_'.$hval->id.'_'.$ival.'"
+								 data-value="'.$hval->id.'_'.$ival.'" value="'.$this->minstay.'" onchange="fun_typechange(this);fun_saveallotment(this)">
+								</td>';
+								break;
+							case '5':
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+								<input type="number" class="form-control" name="released['.$hval->id.']['.$ival.']" id="released_'.$hval->id.'_'.$ival.'" 
+								data-value="'.$hval->id.'_'.$ival.'" value="'.$this->release.'" onchange="fun_typechange(this);fun_saveallotment(this)">
+								</td>';
+								break;
+							case '6':
+								$allowselected=($allotment->paper==1)?"selected":"";
+								$closelected=($allotment->paper==0)?"selected":"";
+								$html.='<td class="'.$colorclass.' type_'.$hval->id.'_'.$ival.'">
+										<select name="paper['.$hval->id.']['.$ival.']" id="paper_'.$hval->id.'_'.$ival.'" 
+										data-value="'.$hval->id.'_'.$ival.'" class="allow form-control" onchange="fun_typechange(this);fun_saveallotment(this)">
+										<option value="1" '.$allowselected.'>Yes</option>
+										<option value="0" '.$closelected.'>No</option>
+										</select>
+										
+										</td>';
+								break;
+							
+						}
+					endforeach;
+				$html.='</tr>';
+				
+			}
+			$html.='</tbody></table></div>';
+		}
+		return $html;
+		
+    
+	}
+
+}

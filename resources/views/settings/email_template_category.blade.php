@@ -11,6 +11,7 @@
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
     <div class="ssetting-wrap">
+        @if(checkpermission($module_id,$parent_id, 1))
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="table-btn">
@@ -22,6 +23,7 @@
                 </div>
             </div>
         </div>
+        @endif
         <div class="section-border">
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">

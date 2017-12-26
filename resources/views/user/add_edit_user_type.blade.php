@@ -9,7 +9,6 @@
     @endif
     @include('common.errors')
     <?php $arrlanguages = getlanguages();?>
-    <?php $modules = fetch_modules(0, '', 0); ?>
 
     {{ Form::open(array('url' => 'user_type/update', 'files' => true, 'id' => 'user_type_form')) }}
 
@@ -35,7 +34,7 @@
                         <div class="col-md-4 col-sm-12 col-xs-12">
 
                             <div class="form-group">
-                                <label for="">@lang('messages.keyword_type') <span class="required">(*)</span></label>
+                                <label for="">@lang('messages.keyword_type')</label>
                                 <input type="text" value="{{ isset($user_type->type) ? $user_type->type : '' }}" name="type" class="form-control" id=""
                                        placeholder="@lang('messages.keyword_user_type')" required>
 
@@ -54,71 +53,29 @@
 
 
                 <div class="col-md-12 col-sm-12 col-xs-12">
-                    <table class="table table-hover table-bordered permission_table">
+    
+                    @php $selected_array = []; @endphp
+                    @if(isset($user_type->id))
+                        {{--used for selected checkboxes permissions--}}
+                        <?php $selected_array = getUserTypePermissions($user_type->id); ?>
+                    @endif
+                    
+                    
+                    <table class="table table-hover table-bordered permission_table table-condensed">
                         <tr>
                             <th>@lang('messages.keyword_modules')</th>
                             <th class="text-center">@lang('messages.keyword_writing')</th>
                             <th class="text-center">@lang('messages.keyword_reading')</th>
                         </tr>
 
-                        @forelse($modules as $row)
-                            <tr class="{{ ($row['level'] == 1) ? 'info' : '' }}">
-                                <td>
-                                    @if($row['level'] == 1)
-
-                                        <span class="{{ (($row['level'] == 1) ? 'text-primary' : 'text-primary') }}"><strong>{{ $row['name'] }}</strong></span>
-                                    @else
-                                        <?php
-                                            $primaryWriteClass = ($row['parent_id'] != 0) ? getParentName($row['parent_id']): '';
-                                        ?>
-                                    &nbsp; &nbsp;<span class="{{ (($row['level'] == 1) ? 'text-primary' : 'text-primary') }}">{{ $row['name'] }}</span>
-                                    @endif
-                                </td>
-
-
-                                {{--primary class--}}
-                                <?php
-                                    $primaryWriteID = ($row['level'] == 1) ? $row['class_name']."_1" : 'default_1_'.$row['module_id'];
-                                    $primaryReadID = ($row['level'] == 1) ? $row['class_name']."_0" : 'default_0_'.$row['module_id'];
-                                    $primaryWriteClass = ($row['level'] == 1) ? 'writing' : '';
-                                    $primaryReadClass = ($row['level'] == 1) ? 'reading' : '';
-
-                                    $secondaryWriteClass = ($row['level'] != 1) ? getParentName($row['parent_id'])."_1" : '';
-                                    $secondaryReadClass = ($row['level'] != 1) ? getParentName($row['parent_id'])."_0" : '';
-                                ?>
-                                {{--primary class--}}
-
-                                {{-- Fetching specific usertypes permission --}}
-                                <?php $selected_array = array(); ?>
-                                @if(isset($user_type->id))
-                                    <?php $selected_array = getUserTypePermissions($user_type->id); ?>
-                                @endif
-
-                                <?php
-                                // selected data array in module_id | parent_id | read:0 / write:1 format
-                                $write_selected  = in_array($row['module_id']."|".$row['parent_id']."|1", $selected_array) ? 'checked' : '' ;
-                                $read_selected  = in_array($row['module_id']."|".$row['parent_id']."|0", $selected_array) ? 'checked' : '' ;
-                                ?>
-                                <td class="text-center">
-                                    <div class="ryt-chk">
-                                        <input type="checkbox" name="writing[]" class="{{ $secondaryWriteClass }} {{ $primaryWriteClass }}" id="{{ $primaryWriteID }}" value="{{ $row['module_id']."|".$row['parent_id']."|1" }}" {{ $write_selected }}>
-                                        <label for="{{ $primaryWriteID }}"></label>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    <div class="ryt-chk">
-                                        <input type="checkbox" name="reading[]" class="{{ $secondaryReadClass }} {{ $primaryReadClass }}" id="{{ $primaryReadID }}" value="{{ $row['module_id']."|".$row['parent_id']."|0" }}" {{ $read_selected }}>
-                                        <label for="{{ $primaryReadID }}"></label>
-                                    </div>
-
-                                </td>
-                            </tr>
-
-                        @empty
-                            <tr>
-                                <td colspan="3">@lang('messages.keyword_no_modules_found')</td>
-                            </tr>
-                        @endforelse
+                        {{-- Modules--}}
+                        @php $modules = fetch_modules_for_permission(1,0, '',array(), $selected_array) @endphp
+                        @foreach($modules as $module)
+                            {!! $module !!}
+                        @endforeach
+                        
+                        
+                        
                     </table>
                 </div>
 
@@ -160,16 +117,7 @@
 
 
         $(document).ready(function(){
-            $('.writing').click(function(){
-                var $id = $(this).attr('id');
-                $('.'+$id).prop('checked', this.checked);
-            });
-
-            $('.reading').click(function(){
-                var $id = $(this).attr('id');
-                $('.'+$id).prop('checked', this.checked);
-            });
-
+            //Unchecks main checkbox if all not checked
             $(".permission_table input[type='checkbox']").change(function(){
                 var className = $(this).attr('class');
                 //alert(className);
@@ -182,7 +130,6 @@
                 }else{
                     $("#" + className).prop("checked", false);
                 }
-
             });
 
         });
@@ -192,6 +139,16 @@
         {
             var countChecked =  $('[class="'+ className +'"]:checked').length;
             return countChecked;
+        }
+        
+        
+         function checkAll(e){
+            var id = $(e).attr('id');
+            if($(e).prop('checked')){
+                $("." + id).prop('checked', true);
+            }else{
+                $("." + id).prop('checked', false);
+            }
         }
 
     </script>

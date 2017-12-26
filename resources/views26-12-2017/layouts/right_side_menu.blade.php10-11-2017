@@ -1,0 +1,177 @@
+<div id="sidebar-wrapper" class="sidebar-wrapper">
+  <div class="side-heading"><h1>Admin</h1></div><?php
+    $request = parse_url($_SERVER['REQUEST_URI']);
+    $path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/thermapro/', '', $request["path"]), '/') : $request["path"];
+    $cpath = explode('/',$path);
+
+    $last = end($cpath);    
+    if($last == 'home') {
+      ?><ul class="sidebar-nav"><li><a href="{{url('index.html')}}" class="active">dashboard</a></li></ul><?php 
+    }   
+    elseif(strpos($path, 'hotel/edit') !== false){
+      $last=(is_numeric($last))? $last:'';
+      ?> <ul class="sidebar-nav">
+          <li><a href="{{url('hotel')}}" class="back"><i class="fa fa-chevron-left" aria-hidden="true"></i> Cancel</a></li>
+          <li class="dropdown">
+            <a href="#" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Hotel<span class="caret"></span></a>
+            <ul class="dropdown-menu ">
+              <!--<li><a href="{{url('hotel/edit/location').'/'.$last}}">Location</a></li>-->
+              <li><a href="{{url('hotel/edit/basic').'/'.$last}}">Basic Info</a></li><?php
+              if(is_numeric($last)){
+              ?>
+              <li><a href="{{url('hotel/edit/detail').'/'.$last}}">Hotel Details</a></li>
+              <li><a href="{{url('hotel/edit/billinginfo').'/'.$last}}">Billing Info</a></li>
+              <li><a href="{{url('hotel/edit/contactdetail').'/'.$last}}">Contact Detail</a></li>
+              <li><a href="{{ url('hotel/edit/amenities').'/'.$last }}" class="{{ in_array('amenities', $cpath) ? 'active' : '' }}">Amenities</a></li> 
+              <li><a href="{{ url('hotel/edit/media').'/'.$last }}" class="{{ in_array('media', $cpath) ? 'active' : '' }}">Media</a></li>
+              <li><a href="{{ url('hotel/edit/policies').'/'.$last }}" class="{{ in_array('policies', $cpath) ? 'active' : '' }}"> Policies</a></li>
+              <li><a href="{{ url('hotel/edit/other').'/'.$last }}" class="{{ in_array('agreement', $cpath) ? 'active' : '' }}">Other details</a></li><?php 
+            }
+            ?>
+            </ul>
+          </li>
+              <?php /*<li class="dropdown"><a href="room-info.html" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Room<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="edit-room-detail.html">Room info</a></li>
+            <li><a href="price-list.html">Price listing </a></li>
+            <li><a href="room-amenities.html">amenities</a></li>
+            <li><a href="room-media.html">media</a></li>
+            <li><a href="extra.html">extra</a></li>
+          </ul>
+          </li>
+
+            <li><a href="{{url('hotel')}}" class="back"><i class="fa fa-chevron-left" aria-hidden="true"></i> Cancel</a></li>
+                <li>
+                    <a href="{{url('hotel/edit/basic').'/'.$last}}">Basic info</a>
+                </li>
+                <li>
+                    <a href="{{url('hotel/edit/detail').'/'.$last}}">hotel details</a>
+                </li>
+                <li><a href="{{ url('hotel/edit/room-details').'/'.$last }}" class="<?php if( in_array('room-details', $cpath) || in_array('room', $cpath)) { echo "active"; }else { echo "";} ?>">room details</a></li>
+                <li><a href="{{ url('hotel/edit/room-options').'/'.$last }}" class="{{ in_array('room-options', $cpath) ? 'active' : '' }}">hotels room Options</a></li>
+                <li><a href="{{ url('hotel/edit/amenities').'/'.$last }}" class="{{ in_array('amenities', $cpath) ? 'active' : '' }}">amenities</a></li>
+                <li><a href="{{ url('hotel/edit/extra').'/'.$last }}" class="{{ in_array('extra', $cpath) ? 'active' : '' }}">extra</a></li>
+                <li><a href="{{ url('hotel/edit/media').'/'.$last }}" class="{{ in_array('media', $cpath) ? 'active' : '' }}">media</a></li>
+                <li><a href="{{ url('hotel/edit/payment-policies').'/'.$last }}" class="{{ in_array('payment-policies', $cpath) ? 'active' : '' }}">payment policies</a></li>
+                <li><a href="{{ url('hotel/edit/agreement').'/'.$last }}" class="{{ in_array('agreement', $cpath) ? 'active' : '' }}">agreement</a></li>*/?>
+
+            </ul><?php
+    }    
+    elseif((in_array('hotel',$cpath) && !in_array('taxonomies',$cpath) && !in_array('room',$cpath)) || strpos($path, 'room/room-details') !== false ){
+      ?><ul class="sidebar-nav">                
+        <li class="dropdown">
+            <a href="#" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Manage hotel property<span class="caret"></span></a>
+            <ul class="dropdown-menu ">          
+              <li><a href="{{url('hotel')}}">Hotel Detail</a></li>            
+              <li><a href="{{url('hotel/options')}}">Hotel Options</a></li>            
+              <li><a href="{{url('hotel/prices')}}">Hotel Prices</a></li>            
+              <li><a href="{{ url('hotel/room/room-details') }}">Room Detail</a></li>
+            </ul>
+        </li>
+      </ul><?php
+    }
+    elseif(strpos($path, 'room/edit') !== false || strpos($path, 'room/price-list') !== false ||  strpos($path, 'room/amenities') !== false ||  strpos($path, 'room/media') !== false){
+      $last=(is_numeric($last))? $last:'';
+      ?><ul class="sidebar-nav">
+          <li><a href="{{url('hotel/room/room-details')}}" class="back"><i class="fa fa-chevron-left" aria-hidden="true"></i> Cancel</a></li>          
+          <li class="dropdown"><a href="room-info.html" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Room<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{{url('hotel/room/edit').'/'.$last}}">Room info</a></li><?php
+            if(is_numeric($last)){
+              ?>            
+            <li><a href="{{url('hotel/room/price-list').'/'.$last}}">Price listing </a></li>
+            <li><a href="{{url('hotel/room/amenities').'/'.$last}}">amenities</a></li>
+            <li><a href="{{url('hotel/room/media').'/'.$last}}">media</a></li><?php
+            }
+            ?>            
+          </ul>
+          </li>
+      <?php
+    }	
+  elseif(in_array('users',$cpath) || in_array('user',$cpath) || in_array('activity',$cpath)){
+    ?><ul class="sidebar-nav third-step-dropdown">
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">@lang('messages.keyword_manage_user_type')<span class="caret"></span></a>
+            <ul class="dropdown-menu ">
+                @forelse(getUserTypes() as $key => $value)
+                    <li><a class="{{ (strpos($path, 'users'."/".$value->id ) !== false) ? 'active' : '' }}" href="{{ url('users/')."/".$value->id }}" >@lang('messages.keyword_manage') {{ $value->type }}</a></li>
+                @empty
+                    <li><a class="" href="javascript:void(0)">@lang('messages.keyword_no_user_types_available')</a></li>
+                @endforelse
+            </ul>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">@lang('messages.keyword_user_management')<span class="caret"></span></a>
+            <ul class="dropdown-menu ">
+                <li><a href="{{ url('user/add/') }}" class="{{ (strpos($path, 'user/add' ) !== false) ? 'active' : '' }}">@lang('messages.keyword_add_new_user')</a></li>
+                <li><a href="{{ url('users') }}">@lang('messages.keyword_registered_users')</a></li>
+            </ul>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">@lang('messages.keyword_member_activity')<span class="caret"></span></a>
+            <ul class="dropdown-menu ">
+                <li><a href="{{ url('activity/list') }}" class="{{ (strpos($path, 'activity' ) !== false) ? 'active' : '' }}">@lang('messages.keyword_logs')</a></li>
+            </ul>
+        </li>
+    </ul>
+    <?php
+    }
+    elseif(in_array('wizard', $cpath)){
+     ?><!--  Tree view  --><?php
+      //      $categoryList = fetchCategoryTree(0, '', $cpath);
+      //      foreach ($categoryList as $r) {
+      //           echo  $r;
+      //          }
+
+            $categoryList = fetchCategoryTreeDesign(0, '', 0, $cpath);
+            foreach ($categoryList as $r) {
+                echo  $r;
+            }
+
+            ?>
+
+        <!--  Tree view  -->
+        {{--<ul class="sidebar-nav">--}}
+              {{--<!--<li><a href="{{url('wizard/category')}}" class="{{ in_array('category', $cpath) ? 'active' : '' }}">Category</a></li>-->--}}
+            {{--@foreach(getWizardEndLevelCategories() as $key => $value)--}}
+                {{--<li><a href="{{ url('wizard/options/'.$value->id) }}"  class="{{ in_array($value->id, $cpath) ? 'active' : '' }}">{{ $value->name }}</a></li>--}}
+            {{--@endforeach--}}
+            {{--<!--<li><a href="{{url('wizard/options/edit/')}}" class="{{ in_array('options', $cpath) ? 'active' : '' }}">Options</a></li>-->--}}
+        {{--</ul>--}}
+    <?php }
+    else {
+    ?><ul class="sidebar-nav third-step-dropdown">
+    <li class="dropdown">
+      <a href="setting.html" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">setting <span class="caret"></span></a>
+      <ul class="dropdown-menu ">
+        <li><a class="active" href="{{url('language')}}">Languages and Phases</a></li>
+        <li><a href="{{url('currencies.html')}}">currencies</a></li>
+        <li><a href="{{url('email-template.html')}}">Email template</a></li>
+      </ul>
+    </li>
+  <li class="dropdown"><a href="{{url('taxonomies-hotel.html')}}" class="btn btn-primary dropdown-toggle" type="button">taxonomies</a>   
+   <ul class="dropdown-menu ">
+    <li>
+      <ul class="sub-dropdown-menu">          
+        <li class="dropdown"><a href="{{url('taxonomies-hotel.html')}}" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">types & States<span class="caret"></span></a>
+        <ul class="dropdown-menu ">
+          <li><a href="{{url('taxonomies/hotel')}}">hotel</a></li>
+          <li><a href="{{url('taxonomies/room')}}">room</a></li>
+          <li><a href="{{url('taxonomies-booking.html')}}">booking</a></li>
+          <li><a href="{{url('taxonomies-customer.html')}}">customer</a></li>
+          <li><a href="{{url('taxonomies/payment')}}">payment</a></li>
+        </ul>
+        </li>
+        <li class="dropdown"><a href="#" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">sales<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a href="{{url('taxonomies-packages.html')}}">Packages</a></li>
+          <li><a href="{{url('taxonomies-promotions.html')}}">Promotions</a></li>
+          <li><a href="{{url('taxonomies-taxation.html')}}">Taxation</a></li>
+        </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+  </li>
+</ul><?php } ?>
+</div>

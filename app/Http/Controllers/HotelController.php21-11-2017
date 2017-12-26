@@ -14,6 +14,7 @@ use Auth;
 use DateTime;
 use Cookie;
 
+use Illuminate\Support\Facades\Schema;
 
 
 class HotelController extends Controller
@@ -27,8 +28,7 @@ class HotelController extends Controller
 
     public function getjsonhotelproperty(Request $request) {
     	$hotelDetails = array();
-		$hotel_main = DB::table('hotel_main')->select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0)->get();            		
-
+		$hotel_main = DB::table('hotel_main')->select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0)->get();            
 		foreach($hotel_main as $data) {							
 			$checked = ($data->is_active==0) ? 'checked' : '';
 			$data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';   	
@@ -38,13 +38,6 @@ class HotelController extends Controller
 			/*if($data->icon != ""){					
 				$data->icon = '<img src="'.url('storage/app/images/languageicon').'/'.$data->icon.'" height="100px" width="100px">';			
 			}*/
-			$hotelManagerdetails = DB::table('users')->where(['hotel_id'=>$data->id,'profile_id'=>'1'])->first();			 						
-			if(isset($hotelManagerdetails->id)){
-				$data->access_user = '<a class="btn btn-default" href="'.url('user/access')."/".encodehelper($hotelManagerdetails->id).'" >'.trans('messages.keyword_go').'</a>';
-			}
-			else {
-				$data->access_user = '<a class="btn btn-default" href="javascript:void(0)" >'.trans('messages.keyword_go').'</a>';	
-			}
 			$hotelDetails[] = $data;	
 		}
 		return json_encode($hotelDetails);    
@@ -108,39 +101,9 @@ class HotelController extends Controller
             return $this->agreement($request);
         }
 	}
-	 /* add/edit form details */
-	public function basicinforedit(Request $request) {    
-        $action = 'add';
-        $arrDetails = array();
-        //$hotelstatus = getTaxonomies('emotional_status');
-        $hotelstatus = getTaxonomies('emotional_status');
-        $hotel_category = DB::table('hotel_category')->where('is_deleted','0')->orderby('hotel_star','asc')->get()->toArray();
-		$currency=DB::table('currency')->get();
-        $arrRecords = [
-			'action'=>'add',
-			'hotelstatus'=>$hotelstatus,
-			'hotel_category'=>$hotel_category,
-			'currency'=>$currency
-			];
-
-        if(isset($request->hotelid)){
-			$action = 'edit';			
-			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
-			
-			$hotel_detail = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
-			$userdetail = DB::table('users')->where(['hotel_id'=>$arrDetails->id,'is_delete'=>'0'])->first();
-			
-			$arrRecords['action'] = 'edit';
-			$arrRecords['hoteldetails'] = $arrDetails;
-			$arrRecords['hotel_detail'] = $hotel_detail;
-			$arrRecords['userdetail'] = $userdetail;
-			
-        }
-		return view('hotel.hotelbasicinfoedit',$arrRecords);        
-    }
 	
 	/* add/edit form details */
-	public function detailedit(Request $request) {    
+	public function basicinforedit(Request $request) {    
         $action = 'add';
         $arrDetails = array();
         /*$hotelstatus = array('0'=>'Off, unavailable','1'=>'Hidden, not sold','2'=>'Viewed, sold');*/
@@ -178,10 +141,39 @@ class HotelController extends Controller
 			$arrRecords['text_information_language'] = $arrtextlanguageval;
         }
 
-		return view('hotel.hoteldetailedit',$arrRecords);        
+		return view('hotelbasicinfoedit',$arrRecords);        
     }
 
-   
+    /* add/edit form details */
+		public function detailedit(Request $request) {    
+        $action = 'add';
+        $arrDetails = array();
+        //$hotelstatus = getTaxonomies('emotional_status');
+        $hotelstatus = getTaxonomies('emotional_status');
+        $hotel_category = DB::table('hotel_category')->where('is_deleted','0')->orderby('hotel_star','asc')->get()->toArray();
+		$currency=DB::table('currency')->get();
+        $arrRecords = [
+			'action'=>'add',
+			'hotelstatus'=>$hotelstatus,
+			'hotel_category'=>$hotel_category,
+			'currency'=>$currency
+			];
+
+        if(isset($request->hotelid)){
+			$action = 'edit';			
+			$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
+			
+			$hotel_detail = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
+			$userdetail = DB::table('users')->where(['hotel_id'=>$arrDetails->id,'is_delete'=>'0'])->first();
+			
+			$arrRecords['action'] = 'edit';
+			$arrRecords['hoteldetails'] = $arrDetails;
+			$arrRecords['hotel_detail'] = $hotel_detail;
+			$arrRecords['userdetail'] = $userdetail;
+			
+        }
+		return view('hoteldetailedit',$arrRecords);        
+    }
 
 
     /* add/edit form Contact Details */
@@ -200,23 +192,26 @@ class HotelController extends Controller
 		return view('hotelcontactedit',$arrRecords);        
     }
 
-     /* === Save the Hotel Basic infomation === */
-    public function savehotelbasicinfo(Request $request) {
+     /* === Save the Hotel second Detail Step === */
+    public function savehoteldetail(Request $request) {
 		if(isset($request->hotel_id)) {
-			$userdetail = User::where('email',$request->email)->first();
-			$userrecord = [	'name'=>$request->contact_person,
+			$userdetail=User::where('email',$request->email)->first();
+			$userrecord=[
+							'name'=>$request->contact_person,
 							'email'=>$request->email,
 							'username'=>$request->username,
 							'hotel_id'=>$request->hotel_id,
 							'department'=>1,
 							'updated_at'=>date('Y-m-d H:i:s'),
 						];
-			if(isset($userdetail)) {
+			if(isset($userdetail))
+			{
 				if(isset($request->password))
 				$userrecord['password']=bcrypt($request->password);
 				User::where('email',$request->email)->update($userrecord);
 			}
-			else {
+			else
+			{
 				$userrecord['password']=bcrypt($request->password_required);
 				$userrecord['created_at']=date('Y-m-d H:i:s');
 				User::create($userrecord);
@@ -279,8 +274,8 @@ class HotelController extends Controller
 
 
 
-    /* Save the Hotel Details */
-	public function savehoteldetail(Request $request) {
+    /* Save the Hotel Basic Details */
+	public function savehotelbasicinfo(Request $request) {
 			$nome='';
 			if ($request->logo != null) {
 			// Memorizzo l'immagine nella cartella public/imagesavealpha
@@ -742,20 +737,23 @@ class HotelController extends Controller
 			return redirect('hotel/edit/basic'); 
 		}
         
-        $hotelstatus = getTaxonomies('emotional_status');
-		$action = 'edit';
-		$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();
-		$defaultCurrency = DB::table('currency')->where('is_active','0')->first();
-		$hotelDetails = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();
-		$wizard_category = DB::table('wizard_categories')->where(['is_deleted'=>'0','is_active'=>'0','parent_id'=>1])->get();
-		$hotelFeatures = DB::table('hotel_feature')->where(['hotel_id'=>$arrDetails->id])->first();
+       // $hotelstatus = getTaxonomies('emotional_status');
+		$action = 'edit';			
+		$arrDetails = DB::table('hotel_main')->where(['id'=>$request->hotelid,'is_deleted'=>'0'])->first();		
+		$defaultCurrency = DB::table('currency')->where('is_active','0')->first();		
+		$hotelDetails = DB::table('hotel_detail')->where(['hotel_id'=>$arrDetails->id,'is_deleted'=>'0'])->first();		
+		$wizard_category = DB::table('wizard_categories')->where(['is_deleted'=>'0','is_active'=>'0','parent_id'=>1])->get();		
+		
+		$hotelFeatures = DB::table('hotel_feature')->where(['hotel_id'=>$arrDetails->id])->first();		
+		
 
 		$arrRecords['action'] = 'edit';
 		$arrRecords['wizard_category'] = $wizard_category;
 		$arrRecords['defaultCurrency'] = $defaultCurrency;
 		$arrRecords['hoteldetails'] = $arrDetails;
-		//$arrRecords['hotel_category'] = $hotel_category;
-		$arrRecords['hotelFeatures'] = $hotelFeatures;
+		//$arrRecords['hotel_category'] = $hotel_category;		
+		$arrRecords['hotelFeatures'] = $hotelFeatures;		
+						
 
         return view('amenities', $arrRecords);
     }

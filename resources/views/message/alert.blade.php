@@ -15,7 +15,8 @@
 
 
         <div class="message-wrap alert-wrap">
-
+            
+            @if(checkpermission($module_id,$parent_id, 1))
             <div class="row">
                 <div class="col-md-12 col-sm1-12 col-xs-12">
                     <!--<p class="invoice-information-head">This is was issued on 1 nov 2016, based on the information displayed below. <a href="#">Click here to view the reservations.</a></p>-->
@@ -29,7 +30,8 @@
 
                 </div>
             </div>
-
+            @endif
+            
             <div class="section-border">
                 <div class="row">
                     <div class="col-md-12 col-sm-12 col-xs-12">

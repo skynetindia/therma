@@ -1,0 +1,209 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+    <?php $modules = fetch_modules(0, '', 0); ?>
+
+    {{ Form::open(array('url' => 'user_type/update', 'files' => true, 'id' => 'user_type_form')) }}
+
+
+
+
+    <input type="hidden" name="typeid" value="{{ isset($user_type->id) ? $user_type->id : '' }}">
+    <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+    <div class="user-profile-wrap change-passowrd-wrap">
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <h1 class="user-profile-heading">@lang('messages.keyword_user_type')</h1>
+                <hr/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="user-profile change-pass">
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="row">
+                        <div class="col-md-4 col-sm-12 col-xs-12">
+
+                            <div class="form-group">
+                                <label for="">@lang('messages.keyword_type')</label>
+                                <input type="text" value="{{ isset($user_type->type) ? $user_type->type : '' }}" name="type" class="form-control" id=""
+                                       placeholder="@lang('messages.keyword_user_type')" required>
+
+                            </div>
+                            {{--<div class="error">{{ $errors->first('type') }}</div>--}}
+
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <h4 class="user-profile-heading">@lang('messages.keyword_change_permission')</h4><br>
+                </div>
+
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <table class="table table-hover table-bordered permission_table">
+                        <tr>
+                            <th>@lang('messages.keyword_modules')</th>
+                            <th class="text-center">@lang('messages.keyword_writing')</th>
+                            <th class="text-center">@lang('messages.keyword_reading')</th>
+                        </tr>
+
+                        @forelse($modules as $row)
+                            
+                            
+                            <tr class="{{ ($row['level'] == 1) ? 'info' : '' }}">
+                                <td>
+                                    @if($row['level'] == 1)
+
+                                        <span class="{{ (($row['level'] == 1) ? 'text-primary' : 'text-primary') }}"><strong>{{ $row['name'] }}</strong></span>
+                                    @else
+                                        <?php
+                                            $primaryWriteClass = ($row['parent_id'] != 0) ? getParentName($row['parent_id']): '';
+                                        ?>
+                                    &nbsp; &nbsp;<span class="{{ (($row['level'] == 1) ? 'text-primary' : 'text-primary') }}">{{ $row['name'] }}</span>
+                                    @endif
+                                </td>
+
+
+                                
+                                
+    
+                               
+                                    
+                                 
+
+                                
+                                @php $selected_array = []; @endphp
+                                @if(isset($user_type->id))
+                                    {{--used for selected checkboxes permissions--}}
+                                    <?php $selected_array = getUserTypePermissions($user_type->id); ?>
+                                @endif
+
+                                <?php
+                                    $checkAllWriteID = 'check_1_'.$row['module_id'];
+                                    $checkAllWriteClass = 'check_1_'.$row['parent_id'];
+                                    //$write_selected  = in_array($row['module_id']."|".$row['parent_id']."|1", $selected_array) ? 'checked' : '' ;
+                                    
+                                    if($row['level'] > 2){
+                                    
+                                    }
+                                ?>
+                                <td class="text-center">
+                                    <div class="ryt-chk">
+                                        <input type="checkbox" name="writing[]" onclick="checkAll(this)" class="{{ $checkAllWriteClass }}" id="{{ $checkAllWriteID }}" value="{{ $row['module_id']."|".$row['parent_id']."|1" }}" {{ $write_selected = '' }}>
+                                        <label for="{{ $checkAllWriteID }}"></label>
+                                    </div>
+                                </td>
+    
+                                <?php
+                                $checkAllReadID = 'check_0_'.$row['module_id'];
+                                $checkAllReadClass = 'check_0_'.$row['parent_id'];
+                                
+                                //$read_selected  = in_array($row['module_id']."|".$row['parent_id']."|0", $selected_array) ? 'checked' : '' ;
+                                ?>
+                                <td class="text-center">
+                                    <div class="ryt-chk">
+                                        <input type="checkbox" name="reading[]" onclick="checkAll(this)" class="{{ $checkAllReadClass }}" id="{{ $checkAllReadID }}" value="{{ $row['module_id']."|".$row['parent_id']."|0" }}" {{ $read_selected='' }}>
+                                        <label for="{{ $checkAllReadID }}"></label>
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        @empty
+                            <tr>
+                                <td colspan="3">@lang('messages.keyword_no_modules_found')</td>
+                            </tr>
+                        @endforelse
+                    </table>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="btn-shape">
+
+        <div class="row">
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left"><a href="{{ url('user_type') }}" class="btn btn-default">@lang('messages.keyword_previous')</a></div>
+                    <div class="col-md-6 col-sm-12 col-xs-12 text-right"><button type="submit"  class="btn btn-default">@lang('messages.keyword_save')</button></div>
+                </div>
+
+        </div>
+
+    </div>
+
+    {{ Form::close() }}
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script src="{{ url('public/js/additional-methods.min.js') }}"></script>
+    <script>
+        $( "#user_type_form" ).validate({
+            rules: {
+                type: "required",
+            },
+            messages: {
+                type: {
+                    required: "@lang('messages.keyword_please_enter_type')",
+                }
+            }
+        });
+
+
+        $(document).ready(function(){
+            //Unchecks main checkbox if all not checked
+            $(".permission_table input[type='checkbox']").change(function(){
+                var className = $(this).attr('class');
+                //alert(className);
+                var countTotal = $('.' + className).length; // count total class
+
+                var countChecked = checkedLength(className); // count checked checkbox
+
+                if(countTotal == countChecked){
+                    $("#" + className).prop("checked", this.checked);
+                }else{
+                    $("#" + className).prop("checked", false);
+                }
+            });
+
+        });
+
+
+        function checkedLength(className)
+        {
+            var countChecked =  $('[class="'+ className +'"]:checked').length;
+            return countChecked;
+        }
+        
+        
+        function checkAll(e){
+            var id = $(e).attr('id');
+            if($(e).prop('checked')){
+                $("." + id).prop('checked', true);
+            }else{
+                $("." + id).prop('checked', false);
+            }
+            
+            
+        }
+
+    </script>
+@endsection

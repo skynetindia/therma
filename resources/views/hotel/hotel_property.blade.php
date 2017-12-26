@@ -14,11 +14,16 @@
 <div class="row">
     <div class="col-md-12 col-sm-12 col-xs-12">	
 	   <div class="table-btn">
+           @if(checkpermission($module_id,$parent_id, 1))
         	<a href="{{ url('/hotel/edit/basic') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
             <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
              <a href="javascript:void(0);" onclick="multipleAction('room');" class="btn btn-edit"><i class="fa fa-home"></i></a>
             <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i class="fa fa-trash"></i></a>
-        </div>                                    
+           @endif
+            <a href="javascript:void(0);" onclick="multipleAction('season');" class="btn btn-add"><img src="{{asset('public/images/dynamic_menu/1512199413.svg')}}" alt="{{trans('messages.keyword_seasons')}}" title="{{trans('messages.keyword_seasons')}}"/></a>
+            <a href="javascript:void(0);" onclick="multipleAction('discount_promotion');" class="btn btn-add"><img src="{{asset('public/images/dynamic_menu/1512199470.svg')}}" alt="{{trans('messages.keyword_discount_&_promotions')}}" title="{{trans('messages.keyword_discount_&_promotions')}}"/></a>
+            <a href="javascript:void(0);" onclick="multipleAction('cure_treatment');" class="btn btn-add"><img src="{{asset('public/images/dynamic_menu/1512365765.svg')}}" alt="{{trans('messages.keyword_cure_&_treatment')}}" title="{{trans('messages.keyword_cure_&_treatment')}}"/></a>
+        </div>
     </div>
  </div> 
 <div class="section-border"> 
@@ -62,18 +67,23 @@
     if ($("#activestatus_"+id).is(':checked')) {
         status = '0';
     }
-    $.ajax({
-        type: "GET",
-        url: url + id +'/'+status,
-        error: function (url) {                
-        },
-        success:function (data) { 
-            /*$(".currencytogal").prop('checked',false);
-            $(".currencytogal").prop('disabled',false);*/
-            //$("#activestatus_"+id).prop('checked',true);
-            /*$("#activestatus_"+id).prop('disabled',true);*/
-        }
-     });
+     if(confirmToggle(status, '', '') == true)
+     {
+         $.ajax({
+             type: "GET",
+             url: url + id + '/' + status,
+             error: function (url) {
+             },
+             success: function (data) {
+             }
+         });
+     }else{
+         if($("#activestatus_" + id).is(':checked')){
+             $("#activestatus_" + id).prop('checked', false);
+         }else{
+             $("#activestatus_" + id).prop('checked', true);
+         }
+     }
 }
 var selezione = [];
 var indici = [];
@@ -158,7 +168,35 @@ function multipleAction(act) {
 					link.dispatchEvent(clickEvent);
 				}
 			break;              
-		}
+		
+             case 'season':
+                if(selectedid != 0) {					
+					link.href = "{{ url('/hotel/seasons') }}" + '/' + selectedid ;
+					selectedid = 0;
+					selezione = undefined;
+					link.dispatchEvent(clickEvent);
+				}
+			break;
+
+            case 'discount_promotion':
+                if(selectedid != 0) {
+                    link.href = "{{ url('/package/discount') }}" + '/' + selectedid ;
+                    selectedid = 0;
+                    selezione = undefined;
+                    link.dispatchEvent(clickEvent);
+                }
+                break;
+
+            case 'cure_treatment':
+                if(selectedid != 0) {
+                    link.href = "{{ url('/package/cure-treatment') }}" + '/' + selectedid ;
+                    selectedid = 0;
+                    selezione = undefined;
+                    link.dispatchEvent(clickEvent);
+                }
+                break;
+
+        }
 }
 
 

@@ -1,0 +1,92 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+
+    {{ Form::open(array('url' => 'user_type/update', 'files' => true, 'id' => 'user_type_form')) }}
+
+
+
+
+    <input type="hidden" name="typeid" value="{{ isset($user_type->id) ? $user_type->id : '' }}">
+    <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+    <div class="user-profile-wrap change-passowrd-wrap">
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <h1 class="user-profile-heading">@lang('messages.keyword_user_type')</h1>
+                <hr/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="user-profile change-pass">
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="row">
+                        <div class="col-md-4 col-sm-12 col-xs-12">
+
+                            <div class="form-group">
+                                <label for="">@lang('messages.keyword_type')</label>
+                                <input type="text" value="{{ isset($user_type->type) ? $user_type->type : '' }}" name="type" class="form-control" id=""
+                                       placeholder="@lang('messages.keyword_user_type')" required>
+
+                            </div>
+                            {{--<div class="error">{{ $errors->first('type') }}</div>--}}
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <button class="btn btn-default" type="submit" id="change_password_button">Save</button>
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {{ Form::close() }}
+
+    <div class="btn-shape">
+
+        <div class="row">
+            <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left"><a href="{{ url('user_type') }}" class="btn btn-default">@lang('messages.keyword_previous')</a></div>
+        </div>
+
+    </div>
+
+
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script src="{{ url('public/js/additional-methods.min.js') }}"></script>
+    <script>
+
+
+
+
+        $( "#user_type_form" ).validate({
+            rules: {
+                type: "required",
+            },
+            messages: {
+                type: {
+                    required: "@lang('messages.keyword_please_enter_type')",
+                }
+            }
+        });
+
+
+    </script>
+@endsection

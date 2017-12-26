@@ -1,0 +1,197 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+@if(!empty(Session::get('msg')))
+    <script>
+        var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+        document.write(msg);
+    </script>
+@endif
+@include('common.errors')
+
+<?php
+
+if(isset($optionsdetails) && !empty($optionsdetails) && $action == 'edit'){
+    echo Form::open(array('url' => '/wizard/update/options/'.$optionsdetails->id, 'files' => true, 'id' => 'wizard_options_form'));
+}
+else {
+    echo Form::open(array('url' => '/wizard/update/options', 'files' => true, 'id' => 'wizard_options_form'));
+}
+?>
+    <input type="hidden" name="options_id" value="{{isset($optionsdetails->id) ? $optionsdetails->id : ''}}">
+    <input type="hidden" name="category_id" value="{{isset($categories->id) ? $categories->id : ''}}">    
+    <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+
+    {{ csrf_field() }}
+    <div class="basic-info-wrap">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="">
+                    <div class="basic-info-lft">
+                        <div class="basic-data-blk">
+                            <div class="section-border">
+                                <p class="bold blue-head">{{trans('messages.keyword_options')}}</p>
+                                <div class="row">
+                                    <div class="col-md-6 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_title')}} <span class="required">(*)</span></label>
+                                            <input class="form-control" placeholder="{{trans('messages.keyword_options_name')}}" value="{{(isset($optionsdetails->title))?$optionsdetails->title : old('name')}}" name="options" id="name" type="text">
+                                        </div>
+                                        <div class="form-group form-control-file">
+                                            <label for="">Choose File</label>
+                                            <input type="hidden" name="old_options_image" value="{{(isset($optionsdetails->option_image))?$optionsdetails->option_image : old('option_image')}}">
+                                            <input class="" value="" name="option_image" id="option_image" type="file">
+                                        </div>
+                                        @if($action == 'edit' && !empty($optionsdetails->option_image))
+                                            <div class="form-group">
+                                                <label for="">Uploaded Image</label>
+                                                <img src="{{ url('images/widget_icon')."/".$optionsdetails->option_image }}" alt="" class="thumbnail" height="200px">
+                                            </div>
+                                        @endif
+
+                                        <div class="form-group">
+                                            <div class="">@lang('messages.keyword_language') ? </div><div class="switch"><input value="1" name="is_language" id="switch27" type="checkbox" ><label for="switch27"></label></div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+
+                                            <label for="">{{trans('messages.keyword_select_category')}} <span class="required">(*)</span></label>
+                                            <select name="category_id" id="" class="form-control">
+                                                <option value="">-- Select --</option>
+                                                @foreach(fetchCategory() as $key => $category)
+                                                    <option value="{{ $category->id }}" {{ ($category->id == $categories->id) ? 'selected' : '' }}>{{ $category->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label for="">Description</label>
+                                            <input class="form-control" placeholder="{{trans('messages.keyword_description')}}" value="{{(isset($optionsdetails->description))?$optionsdetails->description : old('description')}}" name="description" id="description" type="text">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="btn-shape">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-6 btn-left-shape ">
+                <a href="{{ url('wizard/options').'/'.$categories->id }}" class="btn btn-default">{{trans('messages.keyword_back')}}</a>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-6 text-right">
+                <button type="submit" class="btn btn-default">{{trans('messages.keyword_save')}}</button>
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+
+
+    <?php echo Form::close(); ?>
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script src="{{ url('public/js/additional-methods.min.js') }}"></script>
+
+    <script type="text/javascript">
+        /*Validations*/
+        $(document).ready(function() {
+            $("#wizard_options_form").validate({
+                rules: {
+                    options: {
+                        required: true,
+                        maxlength: 50
+                    },
+                    option_image : {
+                        extension: "jpg|png|gif|jpeg"
+                    }
+
+                },
+                messages: {
+                    options: {
+                        required: "{{trans('messages.keyword_please_enter_an_option_name')}}",
+                        maxlength: "{{trans('messages.keyword_option_name_must_be_less_than_50_characters')}}"
+                    },
+                    option_image : {
+                        extension: "@lang('messages.keyword_please_upload_valid_extension') (JPG | PNG | JPEG | GIF)"
+                    }
+                }
+            });
+        });
+        /*Validations*/
+
+        function select_option_on_change(v) {
+            var sectionid = v.id;
+            var sectionidArr = sectionid.split('_');
+            var sectioniddigit = parseInt(sectionidArr[2])
+
+            var html = "";
+            if(v.value == 'radio' || v.value == 'checkbox' || v.value == 'select') {
+                html = add_new_field(v, sectioniddigit, 1);
+            }
+            $("#field_option_section_"+sectioniddigit).append(html);
+        }
+        function field_type_remove(sectionid) {            
+            var typecount = parseInt($("#count_field_type").val());
+            var newtypecount = typecount - 1;
+            $("#count_field_type").val(newtypecount);
+            $(".field_option_class_"+sectionid).remove();
+        }
+        function field_type_add() {            
+            var typecount = parseInt($("#count_field_type").val());
+            var newtypecount = typecount + 1;
+            $("#count_field_type").val(newtypecount);
+               var html='<div class="form-group field_option_class_'+newtypecount+'"><label for="">Field Type</label>'+
+               '<select class="form-control" select_option_type" name="field_type['+newtypecount+']" id="field_type_'+newtypecount+'" onchange="select_option_on_change(this);" required>'+
+               '<option>Select Field</option><option value="radio">Radio</option><option value="select">Select</option><option value="text">Text Box</option><option value="textarea">Textarea</option><option value="checkbox">Checkbox</option><option value="label">Label</option></select>'+
+               '<div class="add-btn"><button type="button" onclick="field_type_remove('+newtypecount+')" class="btn btn-default field_type_add"><i class="fa fa-minus" aria-hidden="true"></i></button></div></div>'+'<div class="field_option_section field_option_class_'+newtypecount+'" id="field_option_section_'+newtypecount+'"></div><input type="hidden" name="count_field_option_'+newtypecount+'" id="count_field_option_'+newtypecount+'" class="field_option_class_'+newtypecount+'" value="0">';
+            $("#field_type_section").append(html);
+        }
+
+        /*  @add_new_field
+         *  @param -> dynamic_name is generated when this functin used in select_option on change
+         *  in @select_option_on change will create v.value and it's equal to dynamic name
+          * */
+        function add_new_field(r,typecount,ischange){
+            var optioncount = $("#count_field_option_"+typecount).val();                        
+            var html = "<div class=\"form-group\">" +
+            "<div class=\"Wizard-field-set\" id=\"radio\">" +
+            "<div class='add-btn-wiz'><input type='text' name='options_field["+ typecount +"]["+optioncount+"]' class='form-control radio_input' placeholder='@lang("messages.keyword_enter_option")'/><input type='text' name='options_field_value["+ typecount +"]["+optioncount+"]' class='form-control' placeholder='<?php echo trans('messages.keyword_enter_value'); ?>'/></div>" +
+            "<div class=\"\"><label>@lang('messages.keyword_language')? &nbsp; &nbsp; <input type=\"checkbox\" name='is_language["+ typecount +"]["+optioncount+"]' value='1'></label></div>" +
+            "<div class=\"add-btn\"><a href=\"#\" onclick=\"add_new_field(this,"+typecount+",0);\" class=\"btn btn-default\"><i class=\"fa fa-plus\" aria-hidden=\"true\"></i></a></div>" +
+            "";
+            if(ischange == '1'){
+                $("#field_option_section_"+typecount).html(html);    
+            }
+            else {            
+                $("#field_option_section_"+typecount).append(html);                    
+            }
+            optioncount =  parseInt(optioncount) + 1;
+            $("#count_field_option_"+typecount).val(optioncount);
+        }
+
+        /* Uncheck all button and toggle select field class */
+        UncheckAll();
+        $(".field_option_class_1").hide();
+        $(document).on("change","#switch26", function(){
+            if($(this).is(':checked')){
+                $(".field_option_class_1").show();
+            }
+            else{
+                $(".field_option_class_1").hide();
+            }
+        });
+        /* Uncheck all button and toggle select field class */
+
+    </script>
+@endsection

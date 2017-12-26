@@ -299,6 +299,12 @@
 	function stringformate($word){
 		return ucfirst(strtolower($word));
 	}
+	
+	function toUcWord($string){
+      $string = strtolower($string);
+      $string = ucwords($string);
+      return $string;
+    }
 
 	/* Get the active currency details */
 	function getActiveCurrency($id='0') {
@@ -444,43 +450,8 @@
 			
 		}
 		return isset($arrBreadcrumbs[$key]) ? $arrBreadcrumbs[$key] : array();
-	}
+	}		
 	
-	/* This function is used to list of all module for dashboard drag and drop */
-	function getModules() {
-		DB::connection()->enableQueryLog();
-		//$arrid = "'1', '2', '3', '4', '6', '9', '21', '27','67'";
-		$arrid = "'1', '2', '3', '4','21'";	
-		$arrModules = DB::select(DB::raw("select * from modulo where id NOT IN (select module_id from dashboard_widgets where user_type = ".Auth::user()->dipartimento." and user_id = ".Auth::user()->id.") AND id IN($arrid)"));
-		/*$queries = DB::getQueryLog();
-                    $last_query = end($queries);
-                    print_r($last_query);                
-                    exit;
-			$arrModules = DB::table('modulo')
-					->select('modulo.*')					
-					->Join('dashboard_widgets', 'dashboard_widgets.module_id', '=', 'modulo.id', 'left outer')
-					->where(['modulo.type'=>1])->whereNull('dashboard_widgets.module_id')
-					->where('dashboard_widgets.user_type', "!=", Auth::user()->dipartimento)->whereIn('modulo.id',$arrid)->get();
-		*/			
-		return $arrModules;
-	}
-	function checkmodule($id)
-	{
-		$where=[];
-		if($id==21)
-		$where=array('id'=>$id);
-		else
-		$where=array('modulo_sub'=>$id);
-		$arrModules = DB::table('modulo')->where($where)->get();
-		if(count($arrModules))
-		{
-			foreach($arrModules as $arr):
-			if(checkpermission($arr->modulo_sub, $arr->id, 'lettura'))
-			return true;
-			endforeach;
-		}
-		return false;
-	}
 
 function pre($array = '')
 {
@@ -831,11 +802,19 @@ function getUserTypes()
     return $user_types;
 }
 
+function getAllUserTypes()
+{
+    $user_types = DB::table('user_type')->where('is_delete',0)->get();
+    return $user_types;
+}
+
 function getUserTypesById($user_type_id)
 {
     $user_types = DB::table('user_type')->select('type')->where('id', $user_type_id)->get()->first();
     return (!empty($user_types->type)) ? $user_types->type : '-';
 }
+
+
 
 function getUserTypeIDFromUserID($userid)
 {
@@ -869,11 +848,10 @@ function getCardStatus()
     return $array;
 }
 
-function getBookingsCountries()
-{
-    $booking_country = DB::table('bookings')->select('country')->get();
-    if(count($booking_country) > 0)
-    {
+function getBookingsCountries() {
+    /*$booking_country = DB::table('booking_order')->select('country')->get();*/	
+	$booking_country = DB::table('countries')->select('*')->get();
+    if(count($booking_country) > 0) {
         return $booking_country;
     }
 }
@@ -932,9 +910,9 @@ function generateTransferId($length = 10)
 }
 
 
-function getHotelPolicies()
+function getHotelPolicies($hotelid)
 {
-    $hotel_policies = DB::table('hotel_plolicies')->select('title', 'description')->where('id', '!=' ,'0')->where(['is_deleted' => '0'])->get();
+    $hotel_policies = DB::table('hotel_plolicies')->select('id', 'title', 'description')->where('id', '!=' ,'0')->where(['hotel_id'=> $hotelid ,'is_deleted' => '0'])->get();
     if(count($hotel_policies) > 0)
     {
         return $hotel_policies;
@@ -947,6 +925,8 @@ function getPercentage($first, $second)
     $per = ($first * $second) / 100;
     return $per;
 }
+
+
 
 function getBookedRooms($booking_id)
 {
@@ -977,6 +957,17 @@ function getUsers()
         return $users;
     }
 }
+/*Bookings Package Selection*/
+function getPackages($id=null)
+{
+    $data = DB::table('package')->where(['is_active' => '0', 'is_delete' => '0']);
+	if(isset($id))
+	$data=$data->where('hotel_id',$id);
+	$data=$data->get();
+    return $data;
+}
+/*Bookings Package Selection*/
+
 
 /*Bookings Section end*/
 
@@ -1053,6 +1044,47 @@ function getParentName($id = '')
 
 
 /*Dynamic Menu Section*/
+function getModules() {
+    $arrid = ["5", "6", "7", "52"];
+    $query = "select * from dynamic_menu where id IN ('5','6','7','52') AND is_active ='0' AND id NOT IN (select module_id FROM dashboard_widgets WHERE user_type = ".Auth::user()->profile_id." AND  user_id = ".Auth::user()->id.")";
+    $arrModules = DB::select($query);
+    return $arrModules;
+}
+
+function showHideModule($module_id)
+{
+    $data = DB::table('dashboard_widgets')->where(['module_id' =>  $module_id, 'user_id' => Auth::user()->id])->first();
+
+    if(count($data) > 0) {
+        $class = ($data->type == '1') ? 'col-md-6' : 'col-md-6';
+    }
+    else{
+        $class="none";
+    }
+
+    return $class;
+
+}
+
+function checkmodule($id)
+{
+    $where=[];
+    if($id==21)
+        $where=array('id'=>$id);
+
+    $arrModules = DB::table('modulo')->where($where)->get();
+    if(count($arrModules))
+    {
+        foreach($arrModules as $arr):
+            if(checkpermission($arr->modulo_sub, $arr->id, 'lettura'))
+                return true;
+        endforeach;
+    }
+    return false;
+}
+
+
+
 function checkIfLinkExist($link)
 {
     $menu = DB::table('dynamic_menu')->where('link', $link)->first();
@@ -1063,7 +1095,6 @@ function checkIfLinkExist($link)
         return false;
     }
 }
-
 
 function getParentIdWithLink($link)
 {
@@ -1077,7 +1108,7 @@ function getParentIdWithLink($link)
     }
     else{
         $request = parse_url(URL::previous());
-        $path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/migrate/', '', $request["path"]), '/') : $request["path"];
+        $path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/therma/', '', $request["path"]), '/') : $request["path"];
         $cpath = explode('/',$path);
         $link = current($cpath);
         $menu  = DB::table('dynamic_menu')->where('link','like','%'.$link.'%')->first();
@@ -1090,108 +1121,303 @@ function getParentIdWithLink($link)
 
 }
 
-function checkUrlAndGetMenus($link)
-{
+function createParentChildRightNav($array, $parent_id = 0, $parents = array(),$link,$allotment_status1 = [], $roomvalue1 = []) {
+    //if ($parent_id == 0) 
+        {
+        foreach ($array as $element) {
+            if (($element['parent_id'] != 0) && !in_array($element['parent_id'], $parents)) {
+                $parents[] = $element['parent_id'];
+            }
+        }
+    }
+    $menu_html = "";
 
+    //data-toggle="dropdown"
+    foreach ($array as $k => $element) {
+        //echo $element['parent_id']."<br>";
+        if ($element['parent_id'] == $parent_id) {
+            
+            if (in_array($k, $parents) || ($element['link'] == '' && $element['menu_class'] == 'appendUserType')) {
+              
+                $menu_html .= '<li class="nav-item dropdown '.(($link == $element['link']) ? 'active' : '').'">';
+                $menu_html .= '<a href="' .  ( (isset($element['link']) && !empty($element['link'])) ? url('/'.$element['link']) : 'javascript:void(0)'  )  . '"   id="navbarDropdownMenuLink"  aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle '.(isset($element['menu_class']) ? $element['menu_class'] : '').' "><span><img src="'.((isset($element['image']) && !empty($element['image'])) ? asset('public/images/dynamic_menu/'.$element['image']): asset('public/images/dynamic_menu/default.svg')).'" /></span><span class="menu_text">'.$element['name'].'</span> </a><span class="caret"></span>';
+            } else {
+            
+                $menu_html .= '<li class="nav-item '.(($link == $element['link']) ? 'active' : '').'" >';
+                $menu_html .= '<a  href="' . ( (isset($element['link']) && !empty($element['link'])) ? url('/'.$element['link']) : 'javascript:void(0)'  ) . '" class="nav-link '.(isset($element['menu_class']) ? $element['menu_class'] : '').' "><span><img src="'.((isset($element['image']) && !empty($element['image'])) ? asset('public/images/dynamic_menu/'.$element['image']): asset('public/images/dynamic_menu/default.svg')).'" /></span><span class="menu_text">'.$element['name'].'</span></a>';
+            }
+            
+            if($element['link'] == 'home')
+            {
+
+                $menu_html .= getHomeHTML();
+            }
+            if($element['link'] == 'allotment' && Auth::user()->profile_id!=0) {
+                $menu_html .= getAllotMentHTML($allotment_status1, $roomvalue1);
+            }
+             if($element['link'] == '' && $element['menu_class'] == 'appendUserType')
+            {
+                $menu_html .= getAppendUserTypeHTML();
+            }
+            
+            if (in_array($k, $parents)) {
+                $menu_html .= '<ul class="dropdown-menu" role="menu">';
+                $menu_html .= createParentChildRightNav($array, $k, $parents,$link,$allotment_status1,$roomvalue1);
+                $menu_html .= '</ul>';
+            }
+            $menu_html .= '</li>';
+            
+            
+        }
+    }
     
-    if(getParentIdWithLink($link) == '0') {
+    return '<ul class="left-nav">'.$menu_html."</ul>";
+}
+function checkUrlAndGetMenus($link, $allotment_status = [], $roomvalue = [])
+{
+	DB::enableQueryLog();
+    if(getParentIdWithLink($link) == '0')
+    {
         $main_menu = DB::table('dynamic_menu')->where(['link' => $link,'parent_id' => '0', 'is_deleted' => '0', 'is_active' => '0'])->first();
     }
-    else {
-
-        $main_menu = DB::table('dynamic_menu')->where(['id'=> getParentIdWithLink($link),'is_deleted' => '0', 'is_active' => '0'])->first();
+    else{
+        $main_menu = DB::table('dynamic_menu')->where(['id'=> getParentIdWithLink($link),'is_deleted' => '0'/*, 'is_active' => '0'*/])->first();
     }
-    $child_menus = DB::table('dynamic_menu')->where(['parent_id'=> $main_menu->id, 'is_deleted' => '0','is_active' => '0'])->orderBy('priority', 'ASC')->orderBy('sub_priority', 'ASC')->get();
+	//echo $link;
+	//dd(DB::getQueryLog());
+    $child_menus = DB::table('dynamic_menu')->where([ 'is_deleted' => '0','is_active' => '0'])->where('user_types', 'like','%,'.Auth::user()->profile_id.',%')->orderBy('parent_id', 'ASC')->orderBy('priority', 'ASC')->get();
+  $tempmenudetail = $main_menu;
+  
+  while($tempmenudetail->parent_id > 0) {
+	 $tempmenudetail = DB::table('dynamic_menu')->where('id',$tempmenudetail->parent_id)->first();
+ }     
 
-    //return $child_menus;
     $html = '';
 
-
+    
     if(count($child_menus) > 0)
     {
 
 
-
+        /* $html .= '<ul class="sidebar-nav third-step-dropdown">';
         foreach($child_menus as $key => $child_menu)
         {
+          
             if($child_menu->link == '')
             {
-                $html .= '<ul class="sidebar-nav third-step-dropdown">
-                            <li class="dropdown">
-                                <a href="javascript:void(0)" class="btn btn-primary dropdown-toggle '.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').'" type="button" data-toggle="dropdown" >'.$child_menu->name.'<span class="caret"></span></a>
+                $html .= '
+                            <li class="">
+                                <a href="javascript:void(0)" class=" '.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').'" type="button" data-toggle="dropdown" ><span><img src="'.((isset($child_menu->image) && !empty($child_menu->image)) ? asset('public/images/dynamic_menu/'.$child_menu->image): asset('public/images/dynamic_menu/default.svg')).'" /></span><span class="menu_text">'.$child_menu->name.'</span><span class="caret"></span></a>
                             </li>
-                        </ul>';
+                        ';
 
             }
             elseif($child_menu->menu_class == 'primary')
             {
-                $html .= '<ul class="sidebar-nav third-step-dropdown">
-                            <li class="dropdown">
-                                <a href="'.( (isset($child_menu->link) && !empty($child_menu->link)) ? url('/'.$child_menu->link) : 'javascript:void(0)'  ).'" class="btn btn-primary dropdown-toggle '.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').' '.(($link == $child_menu->link) ? 'active' : '').'" >'.$child_menu->name.'</a>
+                $html .= '
+                            <li class="">
+                                <a href="'.( (isset($child_menu->link) && !empty($child_menu->link)) ? url('/'.$child_menu->link) : 'javascript:void(0)'  ).'" class=" '.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').' '.(($link == $child_menu->link) ? 'active' : '').'" ><span><img src="'.((isset($child_menu->image) && !empty($child_menu->image)) ? asset('public/images/dynamic_menu/'.$child_menu->image): asset('public/images/dynamic_menu/default.svg')).'" /></span><span class="menu_text">'.$child_menu->name.'</span></a>
                             </li>
-                        </ul>';
+                        ';
             }
             else{
-                $html .= '<ul class="sidebar-nav third-step-dropdown">
-                        <li class="dropdown">
-                            <ul class="dropdown-menu">
-                                <li><a href="'.( (isset($child_menu->link) && !empty($child_menu->link)) ? url('/'.$child_menu->link) : 'javascript:void(0)'  ).'" class="'.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').' '.(($link == $child_menu->link) ? 'active' : '').'">'.$child_menu->name.'</a></li>
-                            </ul>
+                               
+                
+                    
+                $html .= '
+                        <li class="">
+                            
+                            <a href="'.( (isset($child_menu->link) && !empty($child_menu->link)) ? url('/'.$child_menu->link) : 'javascript:void(0)'  ).'" class="'.(isset($child_menu->menu_class) ? $child_menu->menu_class : '').' '.(($link == $child_menu->link) ? 'active' : '').'"><span><img src="'.((isset($child_menu->image) && !empty($child_menu->image)) ? asset('public/images/dynamic_menu/'.$child_menu->image): asset('public/images/dynamic_menu/default.svg')).'" /></span><span class="menu_text">' .$child_menu->name.'</span></a>
+                          
                         </li>
-                    </ul>';
+                    ';
+                
             }
-
+            
 
             // If childmenu link found allotment in link then runs following code
-            if($child_menu->link == 'allotment')
-            {
-
-                $html .= getAllotMentHTML();
+            if($child_menu->link == 'allotment' && Auth::user()->profile_id!=0) {
+                $html .= getAllotMentHTML($allotment_status, $roomvalue);
             }
 
+            // If childmenu link found home in link then runs following code
+            if($child_menu->link == 'home')
+            {
+
+                $html .= getHomeHTML();
+            }
+            if($child_menu->link == '' && $child_menu->menu_class == 'appendUserType')
+            {
+                $html .= getAppendUserTypeHTML();
+            }
 
 
 
         }
+         $html .="</ul>";*/
+        
+        $menu_list = array();
+
+        foreach($child_menus as $row)
+        {
+                $menu_list[$row->id] = array("parent_id" => $row -> parent_id, "name" =>                       
+         $row->name,"link" => $row->link,"image" => $row->image,"menu_class" => $row->menu_class);   
+        }
+           $html = createParentChildRightNav($menu_list,$tempmenudetail->id,array(),$link,$allotment_status,$roomvalue);       
+       // $html = createParentChildRightNav($menu_list,isset($main_menu->id)?$main_menu->id:5,array(),$link,$allotment_status,$roomvalue);
+        
     }
     return $html;
 }
 
-function getAllotMentHTML()
+function getAppendUserTypeHTML()
 {
-    $html = '<br><div class="sidebar-booking-filter sidebar-allotment">';
-    $html .= '<div class="date-picker"><p class="gry-clr">start date</p><input placeholder="07/09/2017" id="example1" name="select-date" type="text"></div>
-              <div class="date-picker"><p class="gry-clr">End date</p><input placeholder="15/09/2017" id="example2" name="select-date" type="text"></div>';
+    $html = '<ul class="dropdown-menu" role="menu"><ul class="left-nav">';
+    foreach(getUserTypes() as $key => $value)
+    {
 
-    $html .= '<p>'.trans('messages.keyword_rooms').'</p>';
+        $html .= '
+                                 <li><a href="'.url("users"."/".$value->id).'" class=" ">'.trans('messages.keyword_manage')." ".$value->type.'</a></li>
+                          ';
+    }
 
-    $html .= '<div class="ryt-chk-content"><div class="ryt-chk"><input id="one" type="checkbox"><label for="one">Junior Suite</label></div></div>';
-    $html .= '<div class="ryt-chk-content"><div class="ryt-chk"><input id="one1" type="checkbox"><label for="one1">Suite</label></div></div>';
-    $html .= '<div class="ryt-chk-content"><div class="ryt-chk"><input id="one2" type="checkbox"><label for="one2">Double rooms</label></div></div><hr>';
+    return $html."</ul></ul>";
+}
+
+function getHomeHTML()
+{
+
+    $html =  '<div class="module-filter">';
+
+    $arrmodules = getModules();
+    foreach($arrmodules as $key=> $value)
+    {
+        $html .= '<div class="booking-input">
+                    <div class="drg ui-widget-content" valid="'.$value->id.'" ondragstart="dragStart(event)" draggable="true" id="dragtarget_'.$value->id.'">'.$value->name.'</div>
+                </div>';
+    }
 
 
-    $html .= '<div class="available-blk-allotment">';
-    $html .= '<div class="ryt-chk-content">';
-    $html .= '<div class="ryt-chk"><input id="one3" type="checkbox"><label for="one3">Available</label></div>';
-    $html .= '<div class="ryt-chk"><input id="one4" type="checkbox"><label for="one4">Sold Out</label></div>';
-    $html .= '<div class="ryt-chk"><input id="one5" type="checkbox"><label for="one5">Stop Out</label></div>';
-    $html .= '</div>';
-    $html .= '</div>';
+   $html .= '</div>';
 
-    $html .= '<button class="btn btn-default btn-6-12">Shows the data table</button>';
 
-    $html .= '</div>';
 
     return $html;
 }
 
+function getAllotMentHTML($allotment_status, $roomvalue)
+{
+	$daysdetail=[trans('messages.keyword_sunday'),trans('messages.keyword_monday'),trans('messages.keyword_tuesday'),trans('messages.keyword_wednesday'),trans('messages.keyword_thrusday'),trans('messages.keyword_friday'),trans('messages.keyword_saturday')];
+    $html = '<div class="sidebar-booking-filter sidebar-allotment">
+                <div class="date-picker">
+                    <p class="gry-clr">'.trans('messages.keyword_start_date').'</p>
+                    <input id="from" required name="from" placeholder="MM/DD/YYYY" class="form-control startdate" type="text" value="'.date('m/d/Y').'">
+                </div>
+                <div class="date-picker">
+                    <p class="gry-clr">'.trans('messages.keyword_end_date').'</p>
+                    <input id="to" required name="to" placeholder="MM/DD/YYYY" class="form-control enddate" type="text" value="'.date('m/d/Y',strtotime('+ 30days')).'">
+                </div>
+				  <hr/>
+				 <div class="available-blk-allotment">
+				
+					<p class="gry-clr">'.trans('messages.keyword_days').'</p>
+					<div class="select-container">
+					<select class="form-control selecttwoclass" name="days[]" id="days" multiple="multiple">
+					   <option value="all" selected>'.trans('messages.keyword_all').'</option>';
+						foreach($daysdetail as $dkey=>$dval):
+						$html.='<option value="'.$dkey.'">'.ucwords($dval).'</option>';
+						endforeach;
+				$html.='</select>
+				</div>
+			   </div>
+                <hr/>
+
+                <p>'.ucwords(trans('messages.keyword_room_details')).'</p>
+                <div class="roomcheck select-container">
+
+				<select class="form-control selecttwoclass" name="roomcheck[]" id="roomcheck" multiple="multiple">
+					   <option value="">'.trans('messages.keyword_all').'</option>';
+						foreach($roomvalue as $rkey=>$rval):
+						$html.='<option value="'.$rval->id .'">'. ucwords($rval->personal_name).'</option>';
+						endforeach;
+				$html.='</select>';
+               
+    $html .= '</div>
+            <hr/>
+            <div class="available-blk-allotment">
+                <div class="ryt-chk-content">';
+                    foreach($allotment_status as $akey=>$aval) {
+						$checked=($akey==0)?'':"";
+                        $html .= '<div class="ryt-chk">
+                            <input id="status' . $aval->id . '" name="status" value="' . $aval->id . '" type="checkbox" '.$checked.' >
+                            <label for="status' . $aval->id . '">' . ucwords($aval->name) . '</label>
+                        </div>';
+                    }
+                $html .= '</div>';
+	$html .= '</div>
+            <hr/>
+			<p>'.ucwords(trans('messages.keyword_non_refundable')).'</p>
+            <div class="available-blk-allotment">
+            <div class="ryt-chk-content">';
+			$html .= '<div class="ryt-chk">
+					<input id="refund1" name="refund" value="1" type="checkbox" >
+					<label for="refund1">' . ucwords(trans('messages.keyword_yes')) . '</label>
+				</div><div class="ryt-chk">
+					<input id="refund2" name="refund" value="0" type="checkbox" >
+					<label for="refund2">' . ucwords(trans('messages.keyword_no')) . '</label>
+				</div>';
+	$html .= '</div></div>
+            <hr/>
+			<p>'.ucwords(trans('messages.keyword_rooms')).'</p>
+            <div class="available-blk-allotment">
+                <div class="ryt-chk-content">';
+				$html .= '<div class="">
+						 <input id="rooms" class="form-control" name="rooms" value="" type="number" placeholder="'.trans('messages.keyword_rooms').'" >
+						</div>';
+	$html .= '</div></div>
+            <hr/>
+			<p>'.ucwords(trans('messages.keyword_minimum_stay')).'</p>
+            <div class="available-blk-allotment">
+                <div class="ryt-chk-content">';
+				$html .= '<div class="">
+						 <input id="min_stay"  class="form-control" name="min_stay" value="" type="number" placeholder="'.trans('messages.keyword_minimum_stay').'" >
+						</div>';
+	$html .= '</div></div>
+            <hr/>
+			<p>'.ucwords(trans('messages.keyword_release')).'</p>
+            <div class="available-blk-allotment">
+                <div class="ryt-chk-content">';
+				$html .= '<div class=" ">
+						 <input id="released" class="form-control" name="released" value="" type="number" placeholder="'.trans('messages.keyword_release').'" >
+						</div>';
+	$html .= '</div></div>
+            <hr/>
+			<p>'.ucwords(trans('messages.keyword_requires_paper')).'</p>
+            <div class="available-blk-allotment">
+            <div class="ryt-chk-content">';
+			$html .= '<div class="ryt-chk">
+					<input id="paper1" name="paper" value="1" type="checkbox" >
+					<label for="paper1">' . ucwords(trans('messages.keyword_yes')) . '</label>
+				</div><div class="ryt-chk">
+					<input id="paper2" name="paper" value="0" type="checkbox" >
+					<label for="paper2">' . ucwords(trans('messages.keyword_no')) . '</label>
+				</div>';		
+                $html .= '</div>
+				
+            </div>
+            <button class="btn btn-danger btn-6-12" id="allotmentbtn" type="button" onClick="fun_allotment()">'.ucwords(trans('messages.keyword_shows_the_data_table')).'</button>
+
+            </div>';
+
+
+    return $html;
+}
 
 function fetPrimaryDynamicMenu()
 {
     $primaryDynamicMenu = DB::table('dynamic_menu')->where(['is_deleted' => 0, 'level' => 1,'is_active'=> '0'])->orderBy('priority', 'ASC')->get();
     return $primaryDynamicMenu;
 }
-
 
 function fetSecondaryDynamicMenu($parent_id = '')
 {
@@ -1246,9 +1472,9 @@ function getPromotionsType()
     return $type;
 }
 
-function getPackageOptions()
+function getPackageOptions($hotel_id)
 {
-    $options = DB::table('package_options')->where('is_delete', '0')->get()->toArray();
+   $options = DB::table('cure_treatment')->where('is_delete', '0')->where('hotel_id', $hotel_id)->get()->toArray();
     return $options;
 }
 
@@ -1298,7 +1524,7 @@ function discount_accommodation_type()
 }
 function getDiscountActions()
 {
-    $action = DB::table('discount_action')->get();
+    $action = DB::table('taxonomies_discount_action')->get();
     return $action;
 }
 
@@ -1502,7 +1728,7 @@ function checkpermission_backup($module, $sub_id, $read_write,$iswriteper = 'fal
 }
 
 /*Permissions*/
-function checkpermission($module, $parent_id, $read_write,$iswriteper = 'false') {
+function checkpermission_backup_26_12($module, $parent_id, $read_write,$iswriteper = 'false') {
     if($iswriteper != 'false'){
         $request = parse_url($_SERVER['REQUEST_URI']);
         $path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/thermapro/', '', $request["path"]), '/') : $request["path"];
@@ -1555,15 +1781,38 @@ function checkpermission($module, $parent_id, $read_write,$iswriteper = 'false')
 /*Permissions*/
 
 
-/*Transfer Section*/
+/* Start get highest adult (standard bed) can stay in hotal room from entire therma */
+function getHighestAdultChild()
+{
+    $adults = DB::table("room_details")->select("standard_bed")->where('is_deleted', '=', 0)->orderBy('standard_bed', 'DESC')->first();
+    $child = DB::table("room_details")->select("extra_bed")->where('is_deleted', '=', 0)->orderBy('extra_bed', 'DESC')->first();
+    
+    if(empty($adults))
+        $adults = 0;
+    else
+        $adults = $adults->standard_bed;
+    
+    
+    
+    if(empty($child))
+        $child = 0;
+    else
+        $child = $child->extra_bed;
+ 
+    return ($adults+$child);
+}
+/* End */
+
 function getClientStatus()
 {
     $booked = trans('messages.keyword_booked');
+	$pending = trans('messages.keyword_pending');
     $cancelled = trans('messages.keyword_cancelled');
     $check_in = trans('messages.keyword_check_in');
     $check_out = trans('messages.keyword_check_out');
 
     $array = [
+		'0' => $pending,
         '1' => $booked,
         '2' => $cancelled,
         '3' => $check_in,
@@ -1573,4 +1822,405 @@ function getClientStatus()
     return $array;
 
 }
-/*Transfer Section*/
+
+function getAllMealDetail($roomid,$startdate,$enddate)
+{
+        DB::connection()->enableQueryLog();
+	$seasondetail=DB::table('room_sale_prices as p')
+					->select('p.*')
+					->join('hotel_season as s','s.id','p.season_id')
+					->where('room_id',$roomid)
+					->where('s.is_deleted',0)
+					->where('p.is_deleted',0)
+					->where('s.season_from','<=',$startdate)
+					->where('s.season_to','>=',$enddate)
+					->first();
+	
+                                      
+			
+			/* $query = DB::getQueryLog();
+			 $lastQuery = end($query);
+			 print_r($lastQuery);
+			 print('<pre>');
+			 exit;*/
+        
+	$mealdetail=isset($seasondetail->prices) ? json_decode($seasondetail->prices) : array();
+                
+	foreach($mealdetail as $mkey=>$mval){
+                        $meals = DB::table('taxinomies_meals')->where(['is_deleted'=>0,'id'=>$mkey])->first();
+                  
+                                $meals->price=$mval;
+                               
+                      
+                         $mealaary[]=$meals;
+	}
+           
+    return $mealaary;
+
+}
+function discountamount($hotelid,$true=false,$age=18){
+	$agediscount=DB::table('hotel_agediscount')->where('hotel_id',$hotelid)
+	->where('age_from','<=',$age)
+	->where('age_to','>=',$age);
+	if($true==true)
+	$agediscount=$agediscount->where('is_adult','1');
+	$agediscount=$agediscount->first();
+	
+	return $agediscount;
+}
+
+function countrycode($id){
+	return $countrycode=DB::table('countries')->where('i_id',$id)->first()->v_sortname;
+}
+
+function checkbookingallotment($bookid){
+	$bookingdetail=DB::table('booking_order')->where('id',$bookid)->first();
+	$allotment=DB::table('allotment_detail as a')
+						->join('taxinomies_allotment_status as s','s.id','a.open')
+						->where('room_id',$bookingdetail->room_id)
+						->where('hotel_id',$bookingdetail->hotel_id)
+						->where('date',$bookingdetail->arrival)
+						->first();
+	
+	return $allotment;
+}
+
+function mealname($id){
+	return $meals = DB::table('taxinomies_meals')->where(['is_deleted'=>0,'id'=>$id])->first();
+}
+function packagedetail($id){
+	return DB::table('package')->where(['is_delete'=>0,'id'=>$id])->first();
+	
+}
+function transferdetail($id){
+	return DB::table('transfer')->where(['is_deleted'=>0,'booking_id'=>$id])->first();
+}
+
+function dateTimeToSql($datetime)
+{
+        $datetime =  date('Y-m-d H:i:s',strtotime($datetime));
+
+    return $datetime;
+}
+
+function sqlToDateTime($datetime)
+{
+   
+    $datetime =  date('m/d/y h:i:s A',strtotime($datetime));
+   return $datetime;
+}
+
+function sqlToDate($date)
+{
+   
+    $datetime =  date('m/d/Y',strtotime($date));
+    return $datetime;
+}
+function dateToSql($date)
+{
+    
+    $datetime =  date('y-m-d',strtotime($date));
+    return $datetime;
+}
+
+
+
+function getHotelListByUserType()
+{
+    $user_id = Auth::user()->id;
+    $hotel_id = Auth::user()->hotel_id;
+    
+    $profile_id = DB::table('users')->select('profile_id')->where('id', $user_id)->first();
+    
+    
+    
+    if($profile_id->profile_id == 0){
+        $hotel_main = DB::table('hotel_main')->select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0)->get();
+    }else{
+        $hotel_main = DB::table('hotel_main')->select('*')->where('id',$hotel_id)->where('is_deleted', '=', 0)->get();
+    }
+    return $hotel_main;
+    
+}
+function getUserTypeByUsertypeId($user_type_id)
+{
+    $user_type = DB::table('user_type')->where('id', $user_type_id)->first();
+    return $user_type;
+}
+function fetchSelectedOptionsByCategory($cat_id = '', $option_ids = '')
+{
+    $query = 'SELECT * FROM wizard_options as wo WHERE wo.category_id='.$cat_id.' AND wo.id IN ('.$option_ids.')';
+    $options = DB::select($query);
+    return $options;
+}
+
+function getMinMaxIndividuals($hotel_id)
+{
+    $max = DB::table('room_details')->where(['is_deleted' => '0', 'is_active' => '0', 'hotelid'=> $hotel_id])->max('can_sleep');
+    $max = ($max > 0) ? $max : '1';
+    return $max;
+}
+function correct_size($photo) {
+    $maxHeight = 740;
+    $maxWidth = 710;
+    list($width, $height) = getimagesize($photo);
+    return ( ($width <= $maxWidth) && ($height <= $maxHeight) );
+}
+
+
+/*Payment & Invoice*/
+function getBookingAndPaymentDetail($hotel_id, $daterange)
+{
+	
+    $bookings = DB::table('booking_order as b')
+        ->select('b.*', 'h.commission as hotel_commission', 'p.commission_paid as commission_paid', 'p.remaining_price as commission_remaining_price', 'p.reason_incomplete_payment', 'p.confirm', 'p.is_requested', 'p.requester_id')
+            ->leftJoin('hotel_main as h','b.hotel_id','=','h.id')
+            ->leftJoin('payment_group_invoice as p','b.id','=','p.booking_id')
+            ->whereIn('b.order_status', [1,3,4])
+            ->where(['b.hotel_id' => $hotel_id, 'b.is_deleted' => '0'])
+            ->where('b.id','!=', '')
+			->whereBetween('b.create_date',[date('Y/m/1',strtotime('13-'.$daterange)),date('Y/m/t',strtotime('13-'.$daterange))])
+            ->orderBy('b.id', 'ASC')->get();
+    return $bookings;
+}
+
+function getRequestedBookingAndPaymentDetail()
+{
+    $query = DB::table('payment_group_invoice as p')
+            ->where('p.is_requested', '1')
+            ->where('p.confirm', '0')
+            ->orderBy('p.id', 'ASC');
+        
+        if(Auth::user()->profile_id == '1')
+            $query->where(['p.hotel_id' => Auth::user()->hotel_id]);
+        
+        $bookings = $query->get();
+    return $bookings;
+}
+
+function getConfirmedBookingAndPaymentDetail()
+{
+    $query = DB::table('payment_group_invoice as p')
+        ->select('p.*')
+        ->where('p.confirm', '1')
+        ->where('p.is_requested', '2');
+        
+    
+    if(Auth::user()->profile_id == '1'){
+        $query->where(['p.hotel_id' => Auth::user()->hotel_id]);
+    }
+    
+    
+    $bookings = $query->get();
+    return $bookings;
+}
+
+
+function getLastPaymentInvoice($hotel_id,$daterange)
+{
+    $l = DB::table('payment_group_invoice')->select('id')->where(['hotel_id'=>$hotel_id,'duration'=>$daterange])->max('id');
+    
+    $last = DB::table('payment_group_invoice')->where('id', $l)->first();
+    return $last;
+}
+
+function getCity($id){
+    $city  = DB::table('cities')->where('I_id', $id)->first();
+    if(count($city) > 0 ){
+        return $city->v_name;
+    }
+    
+}
+
+function getState($id){
+    $state  = DB::table('states')->where('I_id', $id)->first();
+    if(count($state) > 0 ){
+        return $state->v_name;
+    }
+}
+
+function getUserTypeIdByUserId($user_id){
+    $profile_id = DB::table('users')->where('id', $user_id)->value('profile_id');
+    $id = DB::table('user_type')->where('id', $profile_id)->value('id');
+    return $id;
+}
+
+function getAfterPaymentFromPaymentInvoice($hotel_id)
+{
+    $payments = Db::table('payment_group_invoice')->where('hotel_id', $hotel_id)->get();
+    return $payments;
+}
+
+function generateInvoiceNumber($hotel_id){
+    return 10000000 + (int) $hotel_id;
+}
+
+function getTempBookingId($booking_id){
+    $temp_id = DB::table('booking_order')->where('id', $booking_id)->value('temp_booking_id');
+    return $temp_id;
+}
+
+function checkInvoiceConfirmCount($hotel_id){
+    $rec = DB::table('payment_generate_invoice')->where('hotel_id', $hotel_id)->where('status', 1)->count();
+    return $rec;
+}
+
+function bookingDetails($booking_id){
+    $rec = DB::table('payment_group_invoice')->where('booking_id', $booking_id )->first();
+    return $rec;
+}
+/*Payment & Invoice*/
+
+function in_array_r($needle, $haystack, $strict = false) {
+    foreach ($haystack as $item) {
+        if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && in_array_r($needle, $item, $strict))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+	/*CMS*/
+	function slugify($text)
+	{
+		// replace non letter or digits by -
+		$text = preg_replace('~[^\pL\d]+~u', '-', $text);
+		// transliterate
+		$text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+		// remove unwanted characters
+		$text = preg_replace('~[^-\w]+~', '', $text);
+		// trim
+		$text = trim($text, '-');
+		// remove duplicate -
+		$text = preg_replace('~-+~', '-', $text);
+		
+		// lowercase
+		$text = strtolower($text);
+		if (empty($text)) {
+			return 'n-a';
+		}
+		
+		return $text;
+	}
+	
+	function checkUniqueTitle($title_language_key)
+	{
+		$check_unique_title = DB::table('cms')->where('title_language_key', 'like', '%' . $title_language_key . "%")->count();
+		
+		$slug = $title_language_key;
+		if ($check_unique_title > 0) {
+			
+			$slug = $title_language_key . "-" . $check_unique_title;
+		}
+		
+		return $slug;
+	}
+	
+	
+	function getCMSeditvalue($language_code, $language_key, $language_label)
+	{
+		$cmsvalue = DB::table('language_transalation_test')->where(['code' => $language_code, 'language_key' => $language_key, 'language_label' => $language_label])->value('language_value');
+		echo $cmsvalue;
+	}
+	
+	/*CMS*/
+	/*Permission Section*/
+	function fetch_modules_for_permission($level, $parent = 0, $user_tree_array = '', $class = array(), $selected_array)
+	{
+		if (!is_array($user_tree_array)) {
+			$user_tree_array = array();
+		}
+		$menu_list = DB::table('dynamic_menu as d')->select('d.*')
+			->where('d.id', '!=', 0)
+			->where('d.parent_id', $parent)
+			//->where('d.is_active', '=', 0)
+			->where('d.is_deleted', '=', 0)
+			->orderBy('d.priority', 'ASC')
+			->orderBy('d.parent_id', 'ASC')
+			->get()->toArray();
+		$space = '';
+		for ($i = 1; $i <= $level; $i++) {
+			$space .= '&nbsp; ';
+		}
+		$trClass = ($parent == 0) ? 'info' : '';
+		if ($menu_list > 0) {
+			$user_tree_array[] = '<tr class="' . $trClass . '">';
+			foreach ($menu_list as $row) {
+				$user_tree_array[] = '<td>' . $space . "" . $row->name.'</td>';
+				if ($row->parent_id != 0) {
+					$class['write'][] = "check_1_" . $row->parent_id;
+					$class['read'][] = "check_0_" . $row->parent_id;
+					$readclass = implode(' ', array_unique($class['read']));
+					$writeclass = implode(' ', array_unique($class['write']));
+				} else {
+					$readclass = "read";
+					$writeclass = "write";
+				}
+				//write checkbox
+				$write_selected = in_array($row->id . "|" . $row->parent_id . "|1", $selected_array) ? 'checked' : '';
+				$user_tree_array[] = '<td class="text-center">
+											<div class="switch">
+												<input name="writing[]" class="' . $writeclass . '"  id="check_1_' . $row->id . '" onclick="checkAll(this)" value="' . $row->id . "|" . $row->parent_id . "|1" . '" type="checkbox" ' . $write_selected . '>
+												<label for="check_1_' . $row->id . '"></label>
+											</div>
+										</td>';
+				//read checkbox
+				$read_selected = in_array($row->id . "|" . $row->parent_id . "|0", $selected_array) ? 'checked' : '';
+				$user_tree_array[] = '<td class="text-center">
+											<div class="switch">
+												<input name="reading[]" class="' . $readclass . '"  id="check_0_' . $row->id . '" onclick="checkAll(this)" value="' . $row->id . "|" . $row->parent_id . "|0" . '" type="checkbox" ' . $read_selected . '>
+												<label for="check_0_' . $row->id . '"></label>
+											</div>
+										</td>';
+				$user_tree_array = fetch_modules_for_permission($row->level, $row->id, $user_tree_array, $class, $selected_array);
+			}
+			$user_tree_array[] = '</tr>';
+		}
+		return $user_tree_array;
+	}
+	
+	function checkpermission($module, $parent_id, $read_write)
+	{
+		if (Auth::user()->id == '0' || Auth::user()->profile_id == '0') {
+			return true;
+		}
+			$path = config('constant.PATH');
+			$result = trim(str_replace(basename($_SERVER['SCRIPT_NAME']), '', $path), '/');
+			$current_module = DB::select('select * from dynamic_menu where TRIM(BOTH "/" FROM link) = :link', ['link' => $result]);
+			if(!empty($current_module)){
+				\Session::put('path', $path);
+			}
+			if (empty($current_module)) {
+				$path = \Session::get('path');
+				$result = trim(str_replace('http://' . $_SERVER['HTTP_HOST'], '', $path), '/');
+				$current_module = DB::select('select * from dynamic_menu where TRIM(BOTH "/" FROM link) = :link', ['link' => $result]);
+			}
+			$module = (isset($current_module[0]->id)) ? $current_module[0]->id : '';
+			$parent_id = (isset($current_module[0]->parent_id)) ? $current_module[0]->parent_id : '';
+		$user_id = Auth::user()->id;
+		$user_permission = Auth::user()->permissions;
+		$permission = json_decode($user_permission);
+		//dd($permission);
+		if ($user_id == '0' || Auth::user()->profile_id == '0') {
+			return true;
+		} else if ($user_permission != "null" && $permission != null) {
+			$check = in_array($module . '|' . $parent_id . '|' . $read_write, $permission);//echo $check;dd($permission);
+			if ($check) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	/*Permission Section*/
+/*Session wise hotel*/
+function getUserWiseHotelForSession(){
+    $hotels = DB::table('hotel_main as hm')
+        ->select('hm.id', 'hm.name')
+        ->leftJoin('hotel_detail as hd', 'hd.hotel_id','=', 'hm.id')
+        ->where('hd.user_id', Auth::user()->id)->get();
+    return $hotels;
+}
+/*Session wise hotel*/

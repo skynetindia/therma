@@ -12,7 +12,7 @@
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
 
 
-    <div class="step-page">
+    <!--<div class="step-page">
         <div class="row">
             <div class="col-md-12">
                 <div class="navigation-root">
@@ -30,10 +30,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>-->
 
 
-    <div class="ssetting-wrap">
+    <div class="rooms-list">
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="table-btn">
@@ -85,37 +85,44 @@
                                 
                             </p>
                            
-                            <div class="ryt-chk-content childmain">
+                            <div class="ryt-chk-content childmain set-height">
                             @if($age_detail->count()>0)
                             	@foreach($age_detail as $akey=>$aval)
                                 <div class="ryt-chk one{{$akey}}">
                                     <input id="one{{$akey}}" type="checkbox" class="checkbox">
                                     <label for="one{{$akey}}">{{ucwords(trans('messages.keyword_from'))}}
-                                    <input  type="number" name="age_from[]" id="age_from{{$akey}}" value="{{$aval->age_from}}">
+                                        <input  type="number" name="age_from[]" id="age_from{{$akey}}" value="{{$aval->age_from}}" required>
                                     {{ucwords(trans('messages.keyword_to'))}}
-                                     <input value="{{$aval->age_to}}" type="number" name="age_to[]" id="age_to{{$akey}}">
+                                     <input value="{{$aval->age_to}}" type="number" name="age_to[]" id="age_to{{$akey}}" required>
                                      {{ucwords(trans('messages.keyword_discount'))}}
-                                     <input  type="number" name="age_discount[]" id="age_discount{{$akey}}" value="{{$aval->discount}}">
+                                     <input  type="number" name="age_discount[]" id="age_discount{{$akey}}" value="{{$aval->discount}}" required>
+                                     
+                                     			<div class="block">
                                      {{ucwords(trans('messages.keyword_display_name'))}}
-                                      <input  type="text" name="display_name[]" id="display_name{{$akey}}" value="{{$aval->display_name}}">
+                                      <input  type="text" name="display_name[]" id="display_name{{$akey}}" value="{{$aval->display_name}}" required>
+                                      			</div>
+                                      			
                                       </label>
                                  </div>
                                 @endforeach
                             @else
                                 <div class="ryt-chk one0">
                                     <input id="one0" type="checkbox" class="checkbox">
-                                    <label for="one0">{{ucwords(trans('messages.keyword_from'))}}<input  type="text" name="age_from[]" id="age_from0">
-                                    {{ucwords(trans('messages.keyword_to'))}} <input  type="text" name="age_to[]" id="age_to0">
+                                    <label for="one0">{{ucwords(trans('messages.keyword_from'))}}<input  type="text" name="age_from[]" id="age_from0" required>
+                                    {{ucwords(trans('messages.keyword_to'))}} <input  type="text" name="age_to[]" id="age_to0" required>
                                       {{ucwords(trans('messages.keyword_discount'))}}
                                      <input  type="number" name="age_discount[]" id="age_discount0" >
+                                     		
+                                            <div class="block">
                                      {{ucwords(trans('messages.keyword_display_name'))}}
-                                      <input  type="text" name="display_name[]" id="display_name0">
+                                      <input  type="text" name="display_name[]" id="display_name0" required>
+                                      		</div>
                                     
                                  </div>
                              @endif
                                        
                             </div>
-                            <input type="hidden" id="noofchild" value="{{($age_detail->count()>0)?$age_detail->count():0}}">    
+                            <input type="hidden" id="noofchild" value="{{($age_detail->count()>0)?$age_detail->count():0}}" >    
                              <input type="hidden" name="hotel_id" value="{{$hotelid}}">  
                                     
                             <div class="payment-ryt-footer">
@@ -135,11 +142,11 @@
 	counter=$('#noofchild').val();
 	$('#addchild').click(function(e) {
 		counter++;
-        $('.childmain').append("<div class='ryt-chk one"+counter+"'><input id='one"+counter+"' type='checkbox' class='checkbox'>\
-		<label for='one"+counter+"'>{{ucwords(trans('messages.keyword_from'))}}<input value='' type='number' name='age_from[]' id='age_from"+counter+"'>\
-         {{ucwords(trans('messages.keyword_to'))}} <input value='' type='number' name='age_to[]' id='age_to"+counter+"'>\
-         {{ucwords(trans('messages.keyword_discount'))}}<input  type='number' name='age_discount[]' id='age_discount"+counter+"' >\
-         {{ucwords(trans('messages.keyword_display_name'))}}<input  type='text' name='display_name[]' id='display_name"+counter+"'></label></div");
+        $('.childmain').append("<div class='ryt-chk one"+counter+"'><input id='one"+counter+"' type='checkbox' class='checkbox' >\
+		<label for='one"+counter+"'>{{ucwords(trans('messages.keyword_from'))}}<input value='' type='number' name='age_from[]' required id='age_from"+counter+"'>\
+         {{ucwords(trans('messages.keyword_to'))}} <input value='' type='number' name='age_to[]' id='age_to"+counter+"' required>\
+         {{ucwords(trans('messages.keyword_discount'))}}<input  type='number' name='age_discount[]' id='age_discount"+counter+"' required>\
+       <div class='block'>  {{ucwords(trans('messages.keyword_display_name'))}}<input  type='text' name='display_name[]' id='display_name"+counter+"' required></label></div</div>");
 		  $('#noofchild').val(counter)
     });
 	$('#removechild').click(function(e) {
@@ -165,18 +172,23 @@
             if ($("#activestatus_" + id).is(':checked')) {
                 status = '0';
             }
-            $.ajax({
-                type: "GET",
-                url: url + id + '/' + status,
-                error: function (url) {
-                },
-                success: function (data) {
-                    /*$(".currencytogal").prop('checked',false);
-                    $(".currencytogal").prop('disabled',false);*/
-                    //$("#activestatus_"+id).prop('checked',true);
-                    /*$("#activestatus_"+id).prop('disabled',true);*/
+            if(confirmToggle(status, '', '') == true)
+            {
+                $.ajax({
+                    type: "GET",
+                    url: url + id + '/' + status,
+                    error: function (url) {
+                    },
+                    success: function (data) {
+                    }
+                });
+            }else{
+                if($("#activestatus_" + id).is(':checked')){
+                    $("#activestatus_" + id).prop('checked', false);
+                }else{
+                    $("#activestatus_" + id).prop('checked', true);
                 }
-            });
+            }
         }
 
         var selezione = [];

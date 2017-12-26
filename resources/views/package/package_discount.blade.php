@@ -15,11 +15,14 @@
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="table-btn">
                     <!--<a class="btn btn-add" data-backdrop="static" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i></a>-->
-                    <a href="{{ url('package/discount/edit') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
+                    <a href="{{ url('package/discount/edit/')."/".$hotel_id }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
                     <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
                                 class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
                     <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
                                 class="fa fa-trash"></i></a>
+    
+                    <a href="javascript:void(0);" onclick="multipleAction('copy');" class="btn btn-add"><i
+                                class="fa fa-copy"></i></a>
                 </div>
             </div>
         </div>
@@ -31,10 +34,13 @@
                             <h1 class="cst-datatable-heading">@lang('messages.keyword_discount_offer')</h1>
                             <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
                                    data-show-refresh="true" data-show-columns="true"
-                                   data-url="{{ url('package/discount/property/json') }}"
+                                   data-url="{{ url('package/discount/property/json/'.$hotel_id) }}"
                                    data-classes="table table-bordered" id="table">
                                 <thead>
                                 <th data-field="id" data-sortable="true">{{trans('messages.keyword_id')}}</th>
+                                <th data-field="discount_name" data-sortable="true">{{trans('messages.keyword_discount_name')}}</th>
+                                <th data-field="commission" data-sortable="true">{{trans('messages.keyword_commission')}}</th>
+                                <th data-field="time_period" data-sortable="true">{{trans('messages.keyword_time_period')}}</th>
                                 <th data-field="tax_discount_id" data-sortable="true">{{trans('messages.keyword_type_of_discount')}}</th>
                                 <th data-field="days_before_arrival" data-sortable="true">{{trans('messages.keyword_days_before_arrival')}}</th>
                                 <th data-field="discount" data-sortable="true">{{trans('messages.keyword_discount')}}</th>
@@ -58,18 +64,23 @@
             if ($("#activestatus_" + id).is(':checked')) {
                 status = '0';
             }
-            $.ajax({
-                type: "GET",
-                url: url + id + '/' + status,
-                error: function (url) {
-                },
-                success: function (data) {
-                    /*$(".currencytogal").prop('checked',false);
-                    $(".currencytogal").prop('disabled',false);*/
-                    //$("#activestatus_"+id).prop('checked',true);
-                    /*$("#activestatus_"+id).prop('disabled',true);*/
+            if(confirmToggle(status, '', '') == true)
+            {
+                $.ajax({
+                    type: "GET",
+                    url: url + id + '/' + status,
+                    error: function (url) {
+                    },
+                    success: function (data) {
+                    }
+                });
+            }else{
+                if($("#activestatus_" + id).is(':checked')){
+                    $("#activestatus_" + id).prop('checked', false);
+                }else{
+                    $("#activestatus_" + id).prop('checked', true);
                 }
-            });
+            }
         }
 
 
@@ -147,7 +158,17 @@
                 case 'modify':
                     if (n != 0) {
                         n--;
-                        link.href = "{{ url('package/discount/edit') }}" + '/' + indici[n];
+                        link.href = "{{ url('package/discount/edit') }}" + '/' + {{ $hotel_id }}  + '/' + indici[n];
+                        n = 0;
+                        selezione = undefined;
+                        link.dispatchEvent(clickEvent);
+                    }
+                    break;
+
+                case 'copy':
+                    if (n != 0) {
+                        n--;
+                        link.href = "{{ url('package/copy/record') }}" + '/' + indici[n];
                         n = 0;
                         selezione = undefined;
                         link.dispatchEvent(clickEvent);

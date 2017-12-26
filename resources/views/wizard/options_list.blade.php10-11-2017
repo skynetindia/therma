@@ -1,0 +1,244 @@
+@extends('layouts.app')
+@section('content')
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
+    <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
+    <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
+    <div class="ssetting-wrap">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="table-btn">
+                    <!--<a class="btn btn-add" data-backdrop="static" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i></a>-->
+                    <a href="{{url('wizard/option/addedit').'/'.$category->id }}" class="btn btn-add btn-9-12"><i class="fa fa-plus"></i></a>
+                    <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit btn-9-12"><i
+                                class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                    <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete btn-9-12"><i
+                                class="fa fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="section-border wizard-screen">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="data-table">
+                        <div class="table-responsive">
+                            <h1 class="cst-datatable-heading">{{ isset($category->language_key) ? trans('messages.keyword_'.$category->language_key) : '' }}</h1>
+                            <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
+                                   data-show-refresh="true" data-show-columns="true"
+                                   data-url="<?php  echo url('wizard/optionsjson/'.(isset($category->id) ? $category->id : '0'));?>"
+                                   data-classes="table table-bordered" id="table">
+                                <thead>
+                                <th data-field="status" data-sortable="true">{{trans('messages.keyword_active')}}</th>
+                                <th data-field="id" data-sortable="true">{{trans('messages.keyword_id')}}</th>
+                                <th data-field="icon" data-sortable="true">{{trans('messages.keyword_icon')}}</th>
+                                <th data-field="title" data-sortable="true">{{trans('messages.keyword_title')}}</th>
+                                <th data-field="description" data-sortable="true">{{trans('messages.keyword_description')}}</th>
+                                <!--<th data-field="type" data-sortable="true">{{trans('messages.keyword_type')}}</th>-->
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script type="application/javascript">
+        // validations
+        $(document).ready(function() {
+            $("#add_options_form").validate({
+                rules: {
+                    title: {
+                        required: true,
+                        maxlength: 50
+                    }
+                },
+                messages: {
+                    title: {
+                        required: "{{trans('messages.keyword_please_enter_title')}}",
+                        maxlength: "{{trans('messages.keyword_hotel_name_must_be_less_than_50_characters')}}"
+                    }
+                }
+            });
+        });
+        //validations
+
+        function updateoptionsStatus(id) {
+            var url = "{{ url('/wizard/options/changeactivestatus') }}" + '/';
+            var status = '1';
+            if ($("#activestatus_" + id).is(':checked')) {
+                status = '0';
+            }
+            $.ajax({
+                type: "GET",
+                url: url + id + '/' + status,
+                error: function (url) {
+                },
+                success: function (data) {
+                    /*$(".currencytogal").prop('checked',false);
+                    $(".currencytogal").prop('disabled',false);*/
+                    //$("#activestatus_"+id).prop('checked',true);
+                    /*$("#activestatus_"+id).prop('disabled',true);*/
+                }
+            });
+        }
+
+        var selezione;
+        var indici;
+        var n = 0;
+
+        $('#table').on('click-row.bs.table', function (row, tr, el) {
+            var cod = $(el[0]).children()[1].innerHTML;
+            if (!selezione) {
+                $('#table tr.selected').removeClass("selected");
+                $(el[0]).addClass("selected");
+                selezione = cod;
+                indici = cod;
+                n++;
+
+            } else {
+                $(el[0]).removeClass("selected");
+                selezione = undefined;
+                n--;
+                $('#table tr.selected').removeClass("selected");
+                $(el[0]).addClass("selected");
+                selezione = cod;
+                indici = cod;
+                n++;
+
+            }
+        });
+
+        function check() {
+            return confirm("{{trans('messages.keyword_are_you_sure_want__delete_options')}}");
+        }
+
+        function multipleAction(act) {
+            var link = document.createElement("a");
+            var clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            var error = false;
+            switch (act) {
+                case 'delete':
+                    link.href = "{{ url('/wizard/options/delete') }}" + '/'+{{$category->id}}+ '/';
+                    if (check() && n != 0) {
+                        //for(var i = 0; i < n; i++) {
+                        $.ajax({
+                            type: "GET",
+                            url: link.href + indici,
+                            error: function (url) {
+                                if (url.status == 403) {
+                                    link.href = "{{ url('/wizard/options/delete') }}" + '/'+{{$category->id}}+ '/' + indici;
+                                    link.dispatchEvent(clickEvent);
+                                    error = true;
+                                }
+                            }
+                        });
+                        //}
+                        selezione = undefined;
+                        if (error === false)
+                            setTimeout(function () {
+                                location.reload();
+                            }, 100 * n);
+
+                        n = 0;
+                    }
+                    break;
+                case 'modify':
+                    if (n != 0) {
+                        n--;
+                        link.href = "{{ url('/wizard/option/addedit') }}" + '/'+{{$category->id}}+ '/' + indici;
+                        n = 0;
+                        selezione = undefined;
+                        link.dispatchEvent(clickEvent);
+                    }
+                    break;               
+            }
+        }
+
+
+
+
+
+
+
+    </script>
+@endsection
+
+{{--Do not change --}}
+<input type="hidden" name="field_type_inc" id="field_type_inc" value="1">
+<input type="hidden" name="radio_inc" id="radio_inc" value="1">
+<input type="hidden" name="select_inc" id="select_inc" value="1">
+<input type="hidden" name="checkbox_inc" id="checkbox_inc" value="1">
+{{--Do not change --}}
+
+<!-- Modal -->
+<div class="modal fade wizard-model-wrap" id="myModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            {{ Form::open(array('url' => 'wizard/update/options/', 'files' => true, 'id' => 'add_options_form')) }}
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{trans('messages.keyword_add_options')}} </h4>
+            </div>
+            <div class="modal-body">
+                <div class="wizard-blk hotel-features-blk">
+                    <div class="form-group">
+                        <label for="">{{trans('messages.keyword_title')}} <span class="required">(*)</span></label>
+                        <input class="form-control" id="" placeholder="{{trans('messages.keyword_options_title')}}"
+                               name="title" value="" type="text">
+                    </div>
+
+
+                    <div class="field_type"> <!-- this class will help append new field this type -->
+                        <div class="form-group">
+                            <label for="">{{trans('messages.keyword_select_type')}}</label>
+                            <select class="form-control select_option_type" name="select_field_1" onchange="select_option_on_change(this)"
+                                    style="width:90%;float:left;">
+                                <option>-- {{trans('messages.keyword_please_select')}}</option>
+                                <option value="radio">radio</option>
+                                <option value="select">select</option>
+                                <option value="checkbox">checkbox</option>
+                                <option value="text">text</option>
+                                <option value="textarea">textarea</option>
+                            </select>
+                            <div class="add-btn">
+                                <button type="button" class="btn btn-default" onclick="field_type_add()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="generate_fields"></div>
+                    </div>
+
+                        {{--<div class="required">--}}
+                            {{--<div class="inline-block">{{trans('messages.keyword_required')}}</div>--}}
+                            {{--<div class="switch"><input value="" name="" id="switch25" type="checkbox"><label--}}
+                                        {{--for="switch25"></label></div>--}}
+                        {{--</div>--}}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" id="wizard_options_submit" class="btn btn-default btn-6-12">{{trans('messages.keyword_save')}}</button>
+                <button type="button" class="btn btn-delete btn-6-12"
+                        data-dismiss="modal">{{trans('messages.keyword_close')}}</button>
+            </div>
+        </div>
+
+        {{ Form::close() }}
+
+    </div>
+</div>
+<!---modal wizz over--->
+
+

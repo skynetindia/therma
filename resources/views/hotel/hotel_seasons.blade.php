@@ -16,6 +16,7 @@
         <div class="table-btn">
             <a href="{{ url('/hotel/season/add') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
             <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+             <a href="javascript:void(0);" onclick="multipleAction('copy');" class="btn btn-edit"><i class="fa fa-copy"></i></a>
             <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i class="fa fa-trash"></i></a>
         </div>                                    
     </div>
@@ -177,6 +178,15 @@
                     if (n != 0) {
                         n--;
                         link.href = "{{ url('hotel/season/edit') }}" + '/' + indici;
+                        n = 0;
+                        selezione = undefined;
+                        link.dispatchEvent(clickEvent);
+                    }
+                    break;
+				case 'copy':
+                    if (n != 0) {
+                        n--;
+                        link.href = "{{ url('hotel/season/copy') }}" + '/' + indici;
                         n = 0;
                         selezione = undefined;
                         link.dispatchEvent(clickEvent);

@@ -4,6 +4,7 @@
         <script>
             var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
             document.write(msg);
+
         </script>
     @endif
     @include('common.errors')
@@ -17,136 +18,169 @@
     {{--Content--}}
 
     <div class="ssetting-wrap">
-        <div class="row">
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="table-btn">
-                    <a href="{{ url('/wizard/category/edit/') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
-                    <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
-                                class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
-                    <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
-                                class="fa fa-trash"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="heading-search-dashboard">
-
-            {{ Form::open(array('url' => 'transfer/search', 'files' => true, 'id' => 'transfer_search_form')) }}
-            <div class="form-wrap">
-
-                <div class="reservation-list-widthcalc">
-                    <div class="input form-group">
-                        <label>@lang('messages.keyword_search')</label>
-                        <input type="text" class="form-control" name="search" placeholder="@lang('messages.keyword_transfer') @lang('messages.keyword_id')"/>
-                    </div>
-                    <div class="input form-group">
-                        <label>@lang('messages.keyword_client') @lang('messages.keyword_status')</label>
-                        <select class="form-control bg-arrow" name="client_status">
-                            <option value="">@lang('messages.keyword_--select--')</option>
-                            @forelse(getClientStatus() as $key => $status)
-                                <option value="{{ $key }}">{{ $status }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-
-                    <div class="input form-group">
-                        <div class="date-input ">
-                            <label>@lang('messages.keyword_start_date')</label>
-                            <input type="text" id="start_date" value="{{ old('start_date') }}" name="arrival" placeholder="YYYY-MM-DD" class="form-control" readonly/>
-                        </div>
-                        <div>-</div>
-                        <div class="date-input">
-                            <label>@lang('messages.keyword_end_date')</label>
-                            <input type="text" id="end_date" value="{{ old('end_date') }}" placeholder="YYYY-MM-DD" name="departure"
-                                   class="form-control" readonly/>
-                        </div>
-                    </div>
-
-                    <div class="input form-group">
-                        <label>@lang('messages.keyword_admin') @lang('messages.keyword_subject')</label>
-                        <select class="form-control bg-arrow" name="admin_subject">
-                            <option value="">@lang('messages.keyword_--select--')</option>
-                            <option value="0">@lang('messages.keyword_confirm')</option>
-                            <option value="1">@lang('messages.keyword_not_confirm')</option>
-                        </select>
-                    </div>
-
-                    <div class="input form-group">
-                        <label>@lang('messages.keyword_type')</label>
-                        <select class="form-control bg-arrow" name="type">
-                            <option value="">@lang('messages.keyword_--select--')</option>
-                            <option value="1">@lang('messages.keyword_group')</option>
-                            <option value="0">@lang('messages.keyword_individual')</option>
-                        </select>
-                    </div>
-
-
-
-                </div>
-
-                <div class="dashbord-filter inline-block pull-right">
-                    <button type="submit" class="btn btn-default">@lang('messages.keyword_filter')</button>
-                    <button type="reset" class="btn btn-default" ><i class="fa fa-times" aria-hidden="true"></i></button>
-                </div>
-
-            </div>
-            {{ Form::close() }}
-            <div class="clearfix"></div>
-
-        </div>
-        <div class="section-border">
+        <div class="list-listing-page">
+            @if(checkpermission($module_id,$parent_id, 1))
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="data-table">
-                        <div class="table-responsive">
+                    <div class="table-btn">
+                         <a href="{{ url('transfer/edit') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
+                        <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
+                                    class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                        <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
+                                    class="fa fa-trash"></i></a>
+                    </div>
+                </div>
+            </div>
+            @endif
+            <div class="section-border">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="data-table">
                             <h1 class="cst-datatable-heading">@lang('messages.keyword_transfer') @lang('messages.keyword_list')</h1><hr>
-                            <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
-                                   data-show-refresh="true" data-toolbar="#toolbar" data-show-columns="true"
-                                   data-url="<?php  echo url('/transfer/property/json');?>"
-                                   data-classes="table table-bordered"  data-show-export="true" id="table">
-                                <thead>
-                                <th data-field="checkbox" >
-                                    <input type="checkbox" onchange="toggleCheck(this)" name="" id="checkall">
-                                </th>
-                                    <th data-field="id" data-sortable="true">{{trans('messages.keyword_id')}}</th>
-                                    <th data-field="status" data-sortable="true">{{trans('messages.keyword_confirm')}}</th>
-                                    <th data-field="send_info_status" data-sortable="true">{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_send_status')}}</th>
-                                    <th data-field="unique_transfer_id" data-sortable="true">{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_id')}}</th>
-                                    <th data-field="client_name" data-sortable="true">{{trans('messages.keyword_client')}} {{trans('messages.keyword_name')}}</th>
-                                    <th data-field="client_phone" data-sortable="true">{{trans('messages.keyword_client')}} {{trans('messages.keyword_phone')}}</th>
-                                    <th data-field="direction" data-sortable="true">{{trans('messages.keyword_direction')}}</th>
-                                    <th data-field="type" data-sortable="true">{{trans('messages.keyword_type')}}</th>
-                                    <th data-field="pax" data-sortable="true">{{trans('messages.keyword_pax')}}</th>
-                                    <th data-field="start" data-sortable="true">{{trans('messages.keyword_start')}}</th>
-                                    <th data-field="destination" data-sortable="true">{{trans('messages.keyword_destination')}}</th>
-                                    <th data-field="flight_time" data-sortable="true">{{trans('messages.keyword_flight')}} {{trans('messages.keyword_time')}}</th>
-                                    <th data-field="flight" data-sortable="true">{{trans('messages.keyword_flight')}}</th>
-                                    <th data-field="pickup_time" data-sortable="true">{{trans('messages.keyword_pickup_time')}}</th>
-                                    <th data-field="notes" data-sortable="true">{{trans('messages.keyword_notes')}}</th>
-                                    <th data-field="price" data-sortable="true">{{trans('messages.keyword_price')}}</th>
-                                </thead>
-                            </table>
-                        </div>
+                            <div class="table-responsive">
 
-                        <div class="transfer-list-btn">
-                            <button class="btn btn-default btn-6-12" onclick="checkNotEmptyReservations(this);">Confirm reservations</button>
-                            <button class="btn btn-info btn-6-12" type="button" onclick="checkNotEmptySendInfo(this)">Send info to Hotel</button>
-                            <button class="btn btn-success btn-6-12 text-right" id="exportCSV">Export (CSV)</button>
+
+
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <div class="heading-search-dashboard">
+
+                                            {{ Form::open(array('url' => 'transfer/search', 'files' => true, 'id' => 'transfer_search_form')) }}
+                                            <div class="form-wrap">
+
+                                                <div class="reservation-list-widthcalc">
+                                                    <div class="input form-group">
+                                                        <label>@lang('messages.keyword_search')</label>
+                                                        <input type="text" class="form-control" name="search" placeholder="@lang('messages.keyword_transfer') @lang('messages.keyword_id')"/>
+                                                    </div>
+
+
+                                                    <div class="input form-group">
+                                                        <label>@lang('messages.keyword_client') @lang('messages.keyword_status')</label>
+                                                        <select class="form-control bg-arrow" name="">
+                                                            <option value="">@lang('messages.keyword_--select--')</option>
+                                                            @forelse(getClientStatus() as $key => $status)
+                                                                <option value="{{ $key }}">{{ $status }}</option>
+                                                            @empty
+                                                            @endforelse
+                                                        </select>
+                                                    </div>
+
+
+                                                    <div class="input form-group">
+                                                        <div class="date-input ">
+                                                            <label>@lang('messages.keyword_start_date')</label>
+                                                            <input type="text" id="arrival" value="{{ old('arrival') }}" name="arrival" placeholder="mm/dd/yyyy" class="form-control startdate"/>
+                                                        </div>
+                                                        <div>-</div>
+                                                        <div class="date-input">
+                                                            <label>@lang('messages.keyword_end_date')</label>
+                                                            <input type="text" id="departure" value="{{ old('departure') }}" placeholder="mm/dd/yyyy" name="departure"  class="form-control enddate"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="input form-group">
+                                                        <label>@lang('messages.keyword_admin') @lang('messages.keyword_subject')</label>
+                                                        <select class="form-control bg-arrow" name="admin_subject">
+                                                            <option value="">@lang('messages.keyword_--select--')</option>
+                                                            <option value="0">@lang('messages.keyword_confirm')</option>
+                                                            <option value="1">@lang('messages.keyword_not_confirm')</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="input form-group">
+                                                        <label>@lang('messages.keyword_type')</label>
+                                                        <select class="form-control bg-arrow" name="type">
+                                                            <option value="">@lang('messages.keyword_--select--')</option>
+                                                            <option value="1">@lang('messages.keyword_group')</option>
+                                                            <option value="0">@lang('messages.keyword_individual')</option>
+                                                        </select>
+                                                    </div>
+
+
+
+                                                </div>
+
+                                                <div class="dashbord-filter inline-block pull-right">
+                                                    <button type="submit" id="transfer_filtes_button" class="btn btn-default">@lang('messages.keyword_filter')</button>
+                                                    <button type="reset" class="btn btn-default" ><i class="fa fa-times" aria-hidden="true"></i></button>
+                                                </div>
+
+                                            </div>
+                                            {{ Form::close() }}
+                                            <div class="clearfix"></div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="panel-body">
+
+                                        <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
+                                               data-show-refresh="true" data-toolbar="#toolbar" data-show-columns="true"
+                                               data-url="<?php  echo url('/transfer/property/json');?>"
+                                               data-classes="table table-bordered"  data-show-export="true" id="table">
+                                            <thead>
+                                            @if(checkpermission($module_id,$parent_id, 1))
+                                            <th data-field="checkbox" >
+                                                <input type="checkbox" onchange="toggleCheck(this)" name="" id="checkall">
+                                            </th>
+                                            @endif
+                                            <th data-field="id" data-sortable="true">{{trans('messages.keyword_id')}}</th>
+                                            <th data-field="status" data-sortable="true">{{trans('messages.keyword_confirm')}}</th>
+                                            <th data-field="send_info_status" data-sortable="true">{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_send_status')}}</th>
+                                            <th data-field="unique_transfer_id" data-sortable="true">{{trans('messages.keyword_transfer')}} {{trans('messages.keyword_id')}}</th>
+                                            <th data-field="client_name" data-sortable="true">{{trans('messages.keyword_client')}} {{trans('messages.keyword_name')}}</th>
+                                            <th data-field="client_phone" data-sortable="true">{{trans('messages.keyword_client')}} {{trans('messages.keyword_phone')}}</th>
+                                            <th data-field="direction" data-sortable="true">{{trans('messages.keyword_direction')}}</th>
+                                            <th data-field="type" data-sortable="true">{{trans('messages.keyword_type')}}</th>
+                                            <th data-field="pax" data-sortable="true">{{trans('messages.keyword_pax')}}</th>
+                                            <th data-field="start" data-sortable="true">{{trans('messages.keyword_start')}}</th>
+                                            <th data-field="destination" data-sortable="true">{{trans('messages.keyword_destination')}}</th>
+                                            <th data-field="flight_time" data-sortable="true">{{trans('messages.keyword_flight')}} {{trans('messages.keyword_time')}}</th>
+                                            <th data-field="flight" data-sortable="true">{{trans('messages.keyword_flight')}}</th>
+                                            <th data-field="pickup_time" data-sortable="true">{{trans('messages.keyword_pickup_time')}}</th>
+                                            <th data-field="notes" data-sortable="true">{{trans('messages.keyword_notes')}}</th>
+                                            <th data-field="price" data-sortable="true">{{trans('messages.keyword_price')}}</th>
+
+                                            </thead>
+                                        </table>
+
+                                    </div>
+
+
+                                </div>
+
+
+
+
+
+                            </div>
+    
+                            @if(checkpermission($module_id,$parent_id, 1))
+                            <div class="transfer-list-btn">
+                                <button class="btn btn-default btn-6-12" onclick="checkNotEmptyReservations(this);">Confirm reservations</button>
+                                <button class="btn btn-info btn-6-12" type="button" onclick="checkNotEmptySendInfo(this)">Send info to Hotel</button>
+                                <button class="btn btn-success btn-6-12 text-right" id="exportCSV">Export (CSV)</button>
+                            </div>
+                            @endif
+
                         </div>
 
                     </div>
-
                 </div>
             </div>
+
+
         </div>
-
-
     </div>
 
     {{--Content--}}
 
     <script>
 
+        $('#transfer_filtes_button').click(function(e) {
+            $("#preloaderdiv").show();
+        });
         function updateTransferStatus(id) {
             var url = "{{ url('transfer/changeactivestatus') }}" + '/';
             var status = '1';
@@ -159,10 +193,7 @@
                 error: function (url) {
                 },
                 success: function (data) {
-                    /*$(".currencytogal").prop('checked',false);
-                    $(".currencytogal").prop('disabled',false);*/
-                    //$("#activestatus_"+id).prop('checked',true);
-                    /*$("#activestatus_"+id).prop('disabled',true);*/
+
                 }
             });
         }
@@ -173,15 +204,15 @@
         var n = 0;
 
         $('#table').on('click-row.bs.table', function (row, tr, el) {
-            var cod = /\d+/.exec($(el[0]).children()[0].innerHTML);
+            var cod = /\d+/.exec($(el[0]).children()[1].innerHTML);
             if (!selezione[cod]) {
-                // $('#table tr.selected').removeClass("selected");
+                $('#table tr.selected').removeClass("selected");
                 $(el[0]).addClass("selected");
                 selezione[cod] = cod;
                 indici[n] = cod;
                 n++;
             } else {
-                //$(el[0]).removeClass("selected");
+                $(el[0]).removeClass("selected");
                 selezione[cod] = undefined;
                 for(var i = 0; i < n; i++) {
                     if(indici[i] == cod) {
@@ -190,11 +221,11 @@
                         break;
                     }
                 }
-                /*n--;
+                n--;
                 $('#table tr.selected').removeClass("selected");
                 $(el[0]).addClass("selected");
                 selezione[cod] = cod;
-                indici[n] = cod;*/
+                indici[n] = cod;
                 n++;
             }
         });
@@ -202,6 +233,62 @@
         function check_confirm() {
 
             return confirm("{{trans('messages.keyword_are_you_sure_want_to_confirm_selected_reservations?')}}");
+        }
+
+        function check()
+        {
+            return confirm("{{trans('messages.keyword_are_you_sure_want_to_remove_transfer')}}");
+        }
+
+        function transfer_confirm($checkedLength)
+        {
+            if( check_confirm()) {
+
+                var sendUrl = "{{ url('transfer/confirm-reservations') }}" + '/';
+                $(".child_checkbox:checked").each(function(){
+                    id = $(this).data('id');
+                    //alert(id);
+
+                    $.ajax({
+                        type: "GET",
+                        url : sendUrl + id,
+
+                    });
+
+                });
+                var n = $(".child_checkbox:checked").length;
+                setTimeout(function () {
+
+                    location.reload();
+                }, 100 * n);
+
+            }
+        }
+        function transfer_send()
+        {
+            var sendUrl = "{{ url('transfer/send-info-to-hotel') }}";
+            $(".child_checkbox:checked").each(function(){
+
+
+                id = $(this).data('id');
+
+                var description = $("#description").val();
+
+                $.ajax({
+                    type: "POST",
+                    data: {"_token": "{{ csrf_token() }}", description: description, id: id},
+                    url : sendUrl,
+
+                });
+
+            });
+
+            var n = $(".child_checkbox:checked").length;
+            setTimeout(function () {
+
+                location.reload();
+            }, 100 * n);
+
         }
 
 
@@ -214,54 +301,37 @@
                 "cancelable": false
             });
             switch(act) {
-                case 'confirm':
-
-                    link.href = "{{ url('transfer/confirm-reservations') }}" + '/';
-                    if( check_confirm() && n!=0) {
-                        for(var i = 0; i < n; i++) {
-                            $.ajax({
-                                type: "GET",
-                                url : link.href + indici[i],
-                                error: function(url) {
-                                    if(url.status==403) {
-                                        link.href = "{{ url('transfer/confirm-reservations') }}" + '/' + indici[i];
-                                        link.dispatchEvent(clickEvent);
-                                    }
-                                }
-                            });
-                            if(i==n){
-                                setTimeout(function(){location.reload();},100*n);
-                                n = 0;
-                            }
-                        }
-                        selezione = undefined;
-                        setTimeout(function(){location.reload();},100*n);
+                case 'modify':
+                    if (n != 0 && n == 1) {
+                        n--;
+                        link.href = "{{ url('/transfer/edit/') }}" + '/' + indici[n];
                         n = 0;
+                        selezione = undefined;
+                        link.dispatchEvent(clickEvent);
                     }
                     break;
-                case 'send':
-                    link.href = "{{ url('transfer/send-info-to-hotel') }}";
-                    if(n!=0) {
-                        for(var i = 0; i < n; i++) {
-                            var description = $("#description").val();
-                            $.ajax({
-                                type: "POST",
-                                data: {"_token": "{{ csrf_token() }}", description: description, id: indici[i]},
-                                url : link.href,
-                                error: function(url) {
-                                    if(url.status==403) {
-                                        link.href = "{{ url('transfer/send-info-to-hotel') }}";
-                                        link.dispatchEvent(clickEvent);
-                                    }
+                case 'delete':
+                    link.href = "{{ url('/transfer/delete') }}" + '/';
+                    if (check() && n != 0 && n==1) {
+                        //for(var i = 0; i < n; i++) {
+                        $.ajax({
+                            type: "GET",
+                            url: link.href + indici[n - 1],
+                            error: function (url) {
+                                if (url.status == 403) {
+                                    link.href = "{{ url('/transfer/delete') }}" + '/' + indici[n];
+                                    link.dispatchEvent(clickEvent);
+                                    error = true;
                                 }
-                            });
-                            if(i==n){
-                                setTimeout(function(){location.reload();},100*n);
-                                n = 0;
                             }
-                        }
+                        });
+                        //}
                         selezione = undefined;
-                        setTimeout(function(){location.reload();},100*n);
+                        if (error === false)
+                            setTimeout(function () {
+                                location.reload();
+                            }, 100 * n);
+
                         n = 0;
                     }
                     break;
@@ -271,7 +341,21 @@
 
     <script>
         $("#exportCSV").on("click", function(){
-            $('#table').tableExport({type:'csv', fileName: 'Transfer List'});
+            //$('#table').tableExport({type:'csv', fileName: 'Transfer List', ignoreCols:1});
+            $("table").tableExport({
+                headings: true,                    // (Boolean), display table headings (th/td elements) in the <thead>
+                footers: true,                     // (Boolean), display table footers (th/td elements) in the <tfoot>
+                type: 'csv',
+                fileName: "Transfer List",                    // (id, String), filename for the downloaded file
+                bootstrap: true,                   // (Boolean), style buttons using bootstrap
+                position: "bottom",                 // (top, bottom), position of the caption element relative to table
+                ignoreRows: [1,2,3],                  // (Number, Number[]), row indices to exclude from the exported file(s)
+                ignoreCols: null,                  // (Number, Number[]), column indices to exclude from the exported file(s)
+                ignoreCSS: ".tableexport-ignore",  // (selector, selector[]), selector(s) to exclude from the exported file(s)
+                emptyCSS: ".tableexport-empty",    // (selector, selector[]), selector(s) to replace cells with an empty string in the exported file(s)
+                trimWhitespace: false              // (Boolean), remove all leading/trailing newlines, spaces, and tabs from cell text in the exported file(s)
+            });
+
         });
 
         function toggleCheck(e)
@@ -289,10 +373,10 @@
             var checkedLength = $(".child_checkbox:checked").length;
             if(checkedLength == '0')
             {
-                alert('Please select atleast one record to send information');
+                alert('{{ trans('messages.keyword_please_select_atleast_one_record') }}');
 
             }else{
-                multipleAction('confirm');
+                transfer_confirm(checkedLength);
             }
         }
 
@@ -301,25 +385,17 @@
             var checkedLength = $(".child_checkbox:checked").length;
             if(checkedLength == '0')
             {
-                alert('Please select atleast one record to send information');
+                alert('{{ trans('messages.keyword_please_select_atleast_one_record') }}');
             }else{
                 $("#info_to_hotel").modal('show');
             }
         }
 
-        $(document).ready(function () {
 
-            $('#departure_date, #arrival_date, #end_date, #start_date').datepicker({
-                format: "yyyy-mm-dd",
-                startDate: "18-07-2015",//'-30d',
-                endDate: '+30d',
-            }).datepicker();
-
-        });
     </script>
 @endsection
 
-@section('modals')
+
 <!-- Modal -->
 <div id="info_to_hotel" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -338,7 +414,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" onclick="multipleAction('send');">@lang('messages.keyword_send')</button>
+                <button type="button" class="btn btn-default" onclick="transfer_send();">@lang('messages.keyword_send')</button>
             </div>
 
         </div>
@@ -346,4 +422,3 @@
     </div>
 </div>
 
-@endsection

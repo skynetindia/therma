@@ -7,6 +7,12 @@
             document.write(msg);
         </script>
     @endif
+    
+    
+    @if(!checkpermission($module_id,$parent_id, 1))
+        @php return redirect('/unauthorized'); @endphp
+    @endif
+    
     @include('common.errors')
     <?php $arrlanguages = getlanguages();?>
 

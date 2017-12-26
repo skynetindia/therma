@@ -64,7 +64,7 @@ class PackageController extends Controller
                 'code' => $request->code,
                 'name' => $request->name,
                 'language_key' => strtolower(str_replace(" ", "_", $request->name)),
-                'image' => $imageName,
+                'image' => ($imageName != '') ? $imageName : 'default.png',
                 'discount' => $request->discount,
                 'price' => $request->price,
                 'min_individual' => $request->min_individual,
@@ -167,7 +167,7 @@ class PackageController extends Controller
                 'code' => $request->code,
                 'name' => $request->name,
                 'language_key' => strtolower(str_replace(" ", "_", $request->name)),
-                'image' => $imageName,
+                'image' => ($imageName != '') ? $imageName : 'default.png',
                 'discount' => $request->discount,
                 'price' => $request->price,
                 'min_individual' => $request->min_individual,
@@ -245,14 +245,7 @@ class PackageController extends Controller
         $options = DB::table('package')->select('*')->where('id', '!=', 0)->where('is_delete', '=', 0)->get();
         foreach ($options as $data) {
             $checked = ($data->is_active == 0) ? 'checked' : '';
-
-            if($data->image != ''){
-                $data->image = '<img src="'.asset('public/images/package')."/".$data->image.'" style="width:60px;"></i>';
-            }
-            else{
-                $data->image = '<img src="'.asset('public/images/default/default_package.jpg').'" style="width:60px;"></i>';
-            }
-
+            $data->image = '<img src="'.asset('public/images/package')."/".$data->image.'" style="width:60px;"></i>';
             $cur = getActiveCurrency();
             $data->price = $data->price." ".$cur['symbol'];
             $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updatePackageStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
@@ -331,7 +324,7 @@ class PackageController extends Controller
                 'language_key' => strtolower(str_replace(" ", "_", $request->short_name)),
                 'discount' => $request->discount,
                 'quick_description' => $request->quick_description,
-                'image' => $imageName,
+                'image' => ($imageName != '') ? $imageName : 'default.png',
                 'updated_at' => date('Y-m-d H:i:s')
             ];
             Db::table('package_options')->where('id', $request->options_id)->update($data);
@@ -369,7 +362,7 @@ class PackageController extends Controller
                 'language_key' => strtolower(str_replace(" ", "_", $request->short_name)),
                 'discount' => $request->discount,
                 'quick_description' => $request->quick_description,
-                'image' => $imageName,
+                'image' => ($imageName != '') ? $imageName : 'default.png',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ];
@@ -398,14 +391,7 @@ class PackageController extends Controller
             $checked = ($data->is_active == 0) ? 'checked' : '';
             $cur = getActiveCurrency();
             $data->base_price = $data->base_price." ".$cur['symbol'];
-
-            if($data->image != ''){
-                $data->image = '<img src="'.asset('public/images/package')."/".$data->image.'" style="width:60px;"></i>';
-            }
-            else{
-                $data->image = '<img src="'.asset('public/images/default/default_option.png').'" style="width:60px;"></i>';
-            }
-
+            $data->image = '<img src="'.asset('public/images/package')."/".$data->image.'" style="width:60px;"></i>';
             $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updatePackageOptionsStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
             $package_options[] = $data;
         }
@@ -631,8 +617,8 @@ class PackageController extends Controller
     {
         $package_options = array();
         $options = DB::table('discount_offer as d_o')->select('d_o.*', 't_d.name as discount_type')
-            ->leftJoin('taxonomies_discount as t_d', 't_d.id', '=', 'd_o.tax_discount_id')
-            ->where('d_o.id', '!=', 0)->where('d_o.is_delete', '=', 0)->get();
+                ->leftJoin('taxonomies_discount as t_d', 't_d.id', '=', 'd_o.tax_discount_id')
+                ->where('d_o.id', '!=', 0)->where('d_o.is_delete', '=', 0)->get();
         foreach ($options as $data) {
             $data->tax_discount_id  = $data->discount_type;
             $checked = ($data->is_active == 0) ? 'checked' : '';
@@ -645,27 +631,18 @@ class PackageController extends Controller
 
 
             $rooms_ids = explode(',', $data->rooms);
-            //pre($rooms_ids);
             $room_names = '';
             if(count($rooms_ids) > 0)
             {
-                $key = 1;
-                foreach($rooms_ids as $room_id)
+                foreach($rooms_ids as $key => $room_id)
                 {
-
+                    ++$key;
                     if($room_id != '' && $room_id != null){
-
-                        if(getRoomNameWithRoomId($room_id) != '')
-                        {
-                            $room_names .= $key.") ".getRoomNameWithRoomId($room_id)."<br>";
-                            $key++;
-                        }
-
+                        $room_names .= $key.") ".getRoomNameWithRoomId($room_id)."<br>";
                     }
                     else{
                         $room_names .= "--";
                     }
-
                 }
             }
             $data->rooms = $room_names;

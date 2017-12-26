@@ -33,7 +33,7 @@
                                     </tr>
                                     <tr>
                                         <td>@lang('messages.keyword_country')</td>
-                                        <td>{{ isset($booking->country) ? $booking->country : '--' }} <img src="images/flag2.png"/></td>
+                                        <td>{{ isset($booking->country) ? countrycode($booking->country) : '--' }} <img src="{{url('images/flag2.png')}}"/></td>
                                     </tr>
                                     <tr>
                                         <td>@lang('messages.keyword_phone')</td>
@@ -49,32 +49,54 @@
 
                             <div class="client-note">
                                 <p class="client-note-heading">client note</p>
-                                <p class="clinet-description">Lorem Ipsum is simply dummy text of the printing
-                                    and typesetting industry. Lorem Ipsum has been the industry's standard dummy
-                                    text ever since the 1500s, when an unknown printer took a galley of type and
-                                    scrambled it to make a type specimen book. </p>
+                                <p class="clinet-description">{{ucwords($booking->note) }}</p>
                             </div>
 
                         </div>
 
                     </div>
 
-                    <div class="section-border">
-                        <div class="reservation-data">
-                            <p class="bold blue-head">@lang('messages.keyword_id') @lang('messages.keyword_transfer')</p>
+                    {{--<div class="section-border">--}}
+                        {{--<div class="reservation-data">--}}
+                            {{--<p class="bold blue-head">@lang('messages.keyword_id') @lang('messages.keyword_transfer')</p>--}}
+
+                            {{--<div class="table-responsive">--}}
+                                {{--<table class="table table-bordered table-striped">--}}
+                                    {{--<tr>--}}
+                                        {{--<td>@lang('messages.keyword_id') {{ $booking->transfer_id }}</td>--}}
+                                        {{--<td>@lang('messages.keyword_view')</td>--}}
+                                    {{--</tr>--}}
+                                {{--</table>--}}
+                            {{--</div>--}}
+
+                        {{--</div>--}}
+                    {{--</div>--}}
+                    @if($booking->is_transfer==1)
+					<div class="section-border">
+                        <div class="policies-reservation-id">
+                            <p class="bold blue-head">@lang('messages.keyword_id_transfer')</p>
+
+
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
+                                   @php $transfer=transferdetail($booking->id) ;@endphp
                                     <tr>
-                                        <td>@lang('messages.keyword_id') {{ $booking->transfer_id }}</td>
-                                        <td>@lang('messages.keyword_view')</td>
+                                        <th>{{ $transfer->unique_transfer_id }}</th>
+                                        @if(checkpermission($module_id,$parent_id, 1))
+                                            <td><a href="{{url('transfer/edit/'.$transfer->id)}}" class="btn btn-default">@lang('messages.keyword_view')</a></td>
+                                        @endif
                                     </tr>
+                                   
                                 </table>
                             </div>
 
                         </div>
                     </div>
-
+                    @endif
+    
+    
+                    @if(checkpermission($module_id,$parent_id, 1))
                     <div class="section-border">
                         <div class="resend-confirm-email">
                             <p class="bold blue-head">@lang('messages.keyword_resend_confirmation_again')</p>
@@ -97,6 +119,7 @@
 
                         </div>
                     </div>
+                    @endif
 
 
                     <div class="section-border">
@@ -107,7 +130,7 @@
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
-                                    @foreach(getHotelPolicies() as $policy)
+                                    @foreach(getHotelPolicies($booking->hotel_id) as $policy)
                                     <tr>
                                         <th>{{ $policy->title }}</th>
                                         <td>{{ $policy->description }}</td>
@@ -124,47 +147,47 @@
 
                 <div class="col-md-8 col-sm-12 col-xs-12">
 
-                    <div class="section-border">
-                        <div class="history">
-                            <p class="bold blue-head">@lang('messages.keyword_history')</p>
+                    {{--<div class="section-border">--}}
+                        {{--<div class="history">--}}
+                            {{--<p class="bold blue-head">@lang('messages.keyword_history')</p>--}}
 
 
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                    <tr>
-                                        <th>@lang('messages.keyword_date')</th>
-                                        <th>@lang('messages.keyword_client') @lang('messages.keyword_status')</th>
-                                        <th>@lang('messages.keyword_hotel') @lang('messages.keyword_status')</th>
-                                        <th>@lang('messages.keyword_who')</th>
-                                        <th>@lang('messages.keyword_ip_address')</th>
-                                    </tr>
-                                    </thead>
+                            {{--<div class="table-responsive">--}}
+                                {{--<table class="table table-bordered table-striped">--}}
+                                    {{--<thead>--}}
+                                    {{--<tr>--}}
+                                        {{--<th>@lang('messages.keyword_date')</th>--}}
+                                        {{--<th>@lang('messages.keyword_client') @lang('messages.keyword_status')</th>--}}
+                                        {{--<th>@lang('messages.keyword_hotel') @lang('messages.keyword_status')</th>--}}
+                                        {{--<th>@lang('messages.keyword_who')</th>--}}
+                                        {{--<th>@lang('messages.keyword_ip_address')</th>--}}
+                                    {{--</tr>--}}
+                                    {{--</thead>--}}
 
-                                    <tbody>
-                                    <tr>
-                                        <td>02/10/2015 hi2.35'12"</td>
-                                        <td>Booked</td>
-                                        <td></td>
-                                        <td>Client</td>
-                                        <td>195.124.481</td>
-                                    </tr>
+                                    {{--<tbody>--}}
+                                    {{--<tr>--}}
+                                        {{--<td>02/10/2015 hi2.35'12"</td>--}}
+                                        {{--<td>Booked</td>--}}
+                                        {{--<td></td>--}}
+                                        {{--<td>Client</td>--}}
+                                        {{--<td>195.124.481</td>--}}
+                                    {{--</tr>--}}
 
-                                    <tr>
-                                        <td>03/10/2015 hi2.35'12"</td>
-                                        <td></td>
-                                        <td>Waiting</td>
-                                        <td>Hotel</td>
-                                        <td>198.144.481</td>
-                                    </tr>
+                                    {{--<tr>--}}
+                                        {{--<td>03/10/2015 hi2.35'12"</td>--}}
+                                        {{--<td></td>--}}
+                                        {{--<td>Waiting</td>--}}
+                                        {{--<td>Hotel</td>--}}
+                                        {{--<td>198.144.481</td>--}}
+                                    {{--</tr>--}}
 
 
-                                    </tbody>
-                                </table>
-                            </div>
+                                    {{--</tbody>--}}
+                                {{--</table>--}}
+                            {{--</div>--}}
 
-                        </div>
-                    </div>
+                        {{--</div>--}}
+                    {{--</div>--}}
 
 
                     <div class="section-border">
@@ -175,7 +198,8 @@
 
 
                             <?php
-                                $booked_rooms = getBookedRooms($booking->id);
+                               /* $booked_rooms = getBookedRooms($booking->id);
+								
                                 //find price with all booked rooms
                                 $total_price = [];
                                 $total_price_extra = [];
@@ -195,7 +219,7 @@
                                 $total_price_extra = array_sum($total_price_extra);
                                 $total_price_extra_format = number_format($total_price_extra, 2);
 
-                                /*Commission Calculation*/
+                                /*Commission Calculation
                                 $total_commission_percentage = [];
                                 $total_commission_price = [];
                                 foreach($commission as $com)
@@ -210,7 +234,7 @@
                                 $total_commission_price_format = number_format($total_commission_price, 2);
                                 /*Commission Calculation*/
 
-                            /*Commission Extra Calculation*/
+                            /*Commission Extra Calculation
                             $total_commission_extra_percentage = [];
                             $total_commission_extra_price = [];
                             foreach($commission_extra as $com)
@@ -224,9 +248,18 @@
                             $total_commission_extra_price = array_sum($total_commission_extra_price);
                             $total_commission_extra_price_format = number_format($total_commission_extra_price, 2);
                             /*Commission extra Calculation*/
-
-
-
+							//dd($booking);
+							$total_price_format=$booking->total_price;
+							$total_commission_percentage=$booking->commission;
+							$total_commission_price_format=(($total_price_format*$total_commission_percentage)/100);
+							
+							$total_price_extra_format=$booking->total_package;
+							$total_commission_extra_percentage=$booking->treatment_commission;
+							$total_commission_extra_price_format=(($total_price_extra_format*$total_commission_extra_percentage)/100);
+							
+							$total_price=$booking->total_fare;
+						
+							$total_commission=(($total_commission_extra_price_format+$total_commission_price_format));
 
                             ?>
 
@@ -251,25 +284,25 @@
 
                                     <tr>
                                         <td>@lang('messages.keyword_amount_room')</td>
-                                        <td>{{ $total_price_format }} {{ $booking->symbol }}</td>
+                                        <td>{{ $total_price_format }} </td>
                                         <td>@lang('messages.keyword_commission_room')</td>
-                                        <td> {{ $total_commission_price_format }} {{ $booking->symbol }} {{--({{ $total_commission_percentage }}% )--}} </td>
+                                        <td> {{ $total_commission_price_format }} {{--({{ $total_commission_percentage }}% )--}} </td>
                                     </tr>
 
                                     <tr>
                                         <td>@lang('messages.keyword_amount') @lang('messages.keyword_extra')</td>
-                                        <td>{{ $total_price_extra_format }} {{ $booking->symbol }}</td>
+                                        <td>{{ $total_price_extra_format }} </td>
                                         <td>@lang('messages.keyword_commission') @lang('messages.keyword_extra')</td>
-                                        <td> {{ $total_commission_extra_price_format }} {{ $booking->symbol }} {{--({{ $total_commission_extra_percentage }}% )--}} </td>
+                                        <td> {{ $total_commission_extra_price_format }}  {{--({{ $total_commission_extra_percentage }}% )--}} </td>
                                     </tr>
 
                                     <tr>
                                         <td>@lang('messages.keyword_amount') @lang('messages.keyword_total')</td>
-                                        <td><b>{{ number_format($total_price + $total_price_extra, 2) }} {{ $booking->symbol }}</b></td>
+                                        <td><b>{{ number_format($total_price , 2) }}</b></td>
                                         <td>@lang('messages.keyword_commission') @lang('messages.keyword_total')</td>
                                         <td>
 
-                                            <b>{{ number_format($total_commission_price +$total_commission_extra_price, 2) }} {{ $booking->symbol }}</b>
+                                            <b>{{ number_format($total_commission, 2) }} </b>
                                         </td>
                                     </tr>
 
@@ -280,20 +313,55 @@
                         </div>
                     </div>
 
-
+					@if($booking->is_package==1 && isset($booking->package)!='')
                     <div class="section-border">
                         <div class="information-extra">
                             <p class="bold blue-head">Information about Extra</p>
 
 
                             <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                  @php $packagedetail =isset($booking->package)?explode(',',trim($booking->package,',')):array();@endphp
+                                        <thead>
+                                        <tr>
+                                            <th>@lang('messages.keyword_name')</th>
+                                            <th>@lang('messages.keyword_package_name')</th>
+                                            <th>@lang('messages.keyword_package_price')</th>
+                                            <th>@lang('messages.keyword_package_description')</th>
+                                        </tr>
+                                        </thead>
+										
+                                        <tbody>
+										 @foreach($packagedetail as $pack)
+                                            @php $subdetail=explode('->',$pack);
+                                           
+                                            $packvalue=packagedetail($subdetail[1])@endphp
+                                        <tr>
+                                            <td>{{ $subdetail[0] }}</td>
+                                            <td>{{ $packvalue->name }}</td>
+                                            <td>{{ $packvalue->price }}</td>
+                                            <td>{{ $packvalue->description }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="10" class="text-right"><b></b></td>
+                                        </tr>
+                                       
+                                    @endforeach
+                                     </tbody>
+                                </table>
 
                             </div>
 
                         </div>
                     </div>
 
-                    {{--Room Details Start--}}
+                   @endif
+
+                    <?php
+                        $details_member = isset($booking->details_of_members)?json_decode($booking->details_of_members):array();
+
+                    ?>
 
                     <div class="section-border">
                         <div class="information-extra">
@@ -302,44 +370,73 @@
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
-                                    @foreach(getBookedRooms($booking->id) as $booked_room)
+                                    @foreach($details_member as $member)
                                         <thead>
-                                            <tr>
-                                                <th>@lang('messages.keyword_room')</th>
-                                                <th>@lang('messages.keyword_client') / @lang('messages.keyword_age')</th>
-                                                <th>@lang('messages.keyword_bed')</th>
-                                                <th>@lang('messages.keyword_meals')</th>
-                                                <th>@lang('messages.keyword_extra')</th>
-                                                <th>@lang('messages.keyword_price_room')</th>
-                                                <th>@lang('messages.keyword_commission')</th>
-                                                <th>@lang('messages.keyword_extra') @lang('messages.keyword_price')</th>
-                                                <th>@lang('messages.keyword_extra') @lang('messages.keyword_commission')</th>
-                                                <th>@lang('messages.keyword_total') @lang('messages.keyword_price')</th>
-                                            </tr>
+                                        <tr>
+                                            <th>@lang('messages.keyword_room')</th>
+                                            <th>@lang('messages.keyword_client') / @lang('messages.keyword_age')</th>
+                                            <th>@lang('messages.keyword_meal_type')</th>
+                                            <th>@lang('messages.keyword_meal_price')</th>
+                                        </tr>
                                         </thead>
 
-                                      <tbody>
+                                        <tbody>
 
-                                            <tr>
-                                                <td>{{ $booked_room->room_name }}</td>
-                                                <td>{{ $booked_room->client_name }}/ {{ $booked_room->age }}</td>
-                                                <td>Standard</td>
-                                                <td>Full Board</td>
-                                                <td>Pack1</td>
-                                                <td>{{ number_format($booked_room->price, 2) }} {{ $booked_room->symbol }}</td>
-                                                <td> {{ number_format(getPercentage($booked_room->price, $booked_room->commission), 2) }} {{ $booked_room->symbol }} ({{ $booked_room->commission }}% ) </td>
-                                                <td>{{ number_format($booked_room->price_extra, 2) }} {{ $booked_room->symbol }}</td>
-                                                <td> {{ number_format(getPercentage($booked_room->price_extra, $booked_room->commission_extra), 2) }} {{ $booked_room->symbol }} ({{ $booked_room->commission_extra }}% ) </td>
-                                                <td>{{ number_format(($booked_room->price + $booked_room->price_extra), 2) }} {{ $booked_room->symbol }}</td>
-                                            </tr>
+                                        <tr>
+                                            <td>{{ $booking->room_name }}</td>
+                                            <td>{{ $member->name }}/ {{ $member->age }}</td>
+                                            <td>{{ trans('messages.'.mealname($member->meal_type)->language_key) }}</td>
+                                            <td>{{ $member->meal_price }}</td>
+                                        </tr>
 
-                                            <tr>
-                                                <td colspan="10" class="text-right"><b>{{ number_format(($booked_room->price + $booked_room->price_extra), 2) }} {{ $booked_room->symbol }}</b></td>
-                                            </tr>
-                                    </tbody>
+                                        <tr>
+                                            <td colspan="10" class="text-right"><b></b></td>
+                                        </tr>
+                                        </tbody>
                                     @endforeach
                                 </table>
                             </div>
+
+                            {{--<div class="table-responsive">--}}
+                                {{--<table class="table table-bordered table-striped">--}}
+                                    {{--@foreach(getBookedRooms($booking->id) as $booked_room)--}}
+                                        {{--<thead>--}}
+                                            {{--<tr>--}}
+                                                {{--<th>@lang('messages.keyword_room')</th>--}}
+                                                {{--<th>@lang('messages.keyword_client') / @lang('messages.keyword_age')</th>--}}
+                                                {{--<th>@lang('messages.keyword_bed')</th>--}}
+                                                {{--<th>@lang('messages.keyword_meals')</th>--}}
+                                                {{--<th>@lang('messages.keyword_extra')</th>--}}
+                                                {{--<th>@lang('messages.keyword_price_room')</th>--}}
+                                                {{--<th>@lang('messages.keyword_commission')</th>--}}
+                                                {{--<th>@lang('messages.keyword_extra') @lang('messages.keyword_price')</th>--}}
+                                                {{--<th>@lang('messages.keyword_extra') @lang('messages.keyword_commission')</th>--}}
+                                                {{--<th>@lang('messages.keyword_total') @lang('messages.keyword_price')</th>--}}
+                                            {{--</tr>--}}
+                                        {{--</thead>--}}
+
+                                      {{--<tbody>--}}
+
+                                            {{--<tr>--}}
+                                                {{--<td>{{ $booked_room->room_name }}</td>--}}
+                                                {{--<td>{{ $booked_room->client_name }}/ {{ $booked_room->age }}</td>--}}
+                                                {{--<td>Standard</td>--}}
+                                                {{--<td>Full Board</td>--}}
+                                                {{--<td>Pack1</td>--}}
+                                                {{--<td>{{ number_format($booked_room->price, 2) }} {{ $booked_room->symbol }}</td>--}}
+                                                {{--<td> {{ number_format(getPercentage($booked_room->price, $booked_room->commission), 2) }} {{ $booked_room->symbol }} ({{ $booked_room->commission }}% ) </td>--}}
+                                                {{--<td>{{ number_format($booked_room->price_extra, 2) }} {{ $booked_room->symbol }}</td>--}}
+                                                {{--<td> {{ number_format(getPercentage($booked_room->price_extra, $booked_room->commission_extra), 2) }} {{ $booked_room->symbol }} ({{ $booked_room->commission_extra }}% ) </td>--}}
+                                                {{--<td>{{ number_format(($booked_room->price + $booked_room->price_extra), 2) }} {{ $booked_room->symbol }}</td>--}}
+                                            {{--</tr>--}}
+
+                                            {{--<tr>--}}
+                                                {{--<td colspan="10" class="text-right"><b>{{ number_format(($booked_room->price + $booked_room->price_extra), 2) }} {{ $booked_room->symbol }}</b></td>--}}
+                                            {{--</tr>--}}
+                                    {{--</tbody>--}}
+                                    {{--@endforeach--}}
+                                {{--</table>--}}
+                            {{--</div>--}}
 
 
                         </div>
@@ -365,7 +462,9 @@
                                     @endforeach
                                 </div>
                             </div>
-
+    
+                            @if(checkpermission($module_id,$parent_id, 1))
+                            
                             {{ Form::open(array('url' => 'booking/conversations/update', 'method'=> 'post', 'id' => 'conversations_edit_form')) }}
                             <input type="hidden" name="booking_id" value="{{ isset($booking->id) ? $booking->id : '' }}">
                             <div class="conversation-guest-text">
@@ -375,6 +474,8 @@
                                 <button type="submit" class="btn btn-default btn-6-12">Send a new message</button>
                             </div>
                             {{ Form::close() }}
+                            
+                            @endif
 
                         </div>
 

@@ -44,7 +44,7 @@
               
              @foreach($wizard_category as $wizardcatkey=>$wizardcat)
             @php $categoryoptions = getWizardOptionByCategory($wizardcat->id,'get');  @endphp
-             
+            
             <div class="col-md-6 col-sm-12 col-xs-12"> 
                             <div class="section-border">
                             	<div class="hotel-amenties">
@@ -119,6 +119,7 @@
 					data:{'name':name,"catid":catid,'_token':'{{csrf_token()}}'},
 					success: function(data) {
 						 $('#myModal').modal('hide');
+						 window.location.reload(true);
 					}                                
 				});
 		}

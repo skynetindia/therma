@@ -22,16 +22,28 @@ class WizardController extends Controller
 
     public function __construct()
     {
+        parent::__construct();
         $this->middleware('auth');
     }
 
     public function categorylist()
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         return view('wizard.category_list');
     }
 
     public function categoryaddedit(Request $request)
     {
+    
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $action = 'add';
         $categories = DB::table('wizard_categories')->where('is_deleted','0')->orderby('name','asc')->get()->toArray();
         //dd($categories);
@@ -112,7 +124,7 @@ class WizardController extends Controller
             /* Store the log details */
             $logs = 'Category Updated -> (ID:'.$request->parent_category_id.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_category_updated_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_category_updated_successfully').'</div>';
 
             $lang_data = [
                 'name' => $request->name,
@@ -151,7 +163,7 @@ class WizardController extends Controller
             /* Store the log details */
             $logs = 'Category Added -> (ID:' . $last_added_id . ')';
             storelogs($request->user()->id, $logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_category_added_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_category_added_successfully').'</div>';
 
             //update in language table
             $lang_data = [
@@ -292,7 +304,7 @@ class WizardController extends Controller
 
             language_keyword_add($lang_data);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_options_updated_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_options_updated_successfully').'</div>';
 
         }
         else{
@@ -328,7 +340,7 @@ class WizardController extends Controller
 
             language_keyword_add($lang_data);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_options_added_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_options_added_successfully').'</div>';
         }
 
 

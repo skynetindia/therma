@@ -21,6 +21,7 @@
 
                 <div class="email-template-tab">
                     <h3 class="email-heading">@lang('messages.keyword_email_template')</h3>
+                    @if(checkpermission($module_id,$parent_id, 1))
                     <div class="row">
                         <div class="col-md-3 col-sm-12 col-xs-12">
                             <div class="form-group">
@@ -38,7 +39,7 @@
 
                         <div class="col-md-3 col-sm-12 col-xs-12">
                             <div class="form-group">
-                                <label>@lang('messages.keyword_subject') :</label>
+                                <label>@lang('messages.keyword_name') :</label>
                                 <input type="text" class="form-control" placeholder="Enter Name" name="filter_name"/>
                             </div>
                         </div>
@@ -51,26 +52,28 @@
                         </div>
 
                         <div class="col-md-3 col-sm-12 col-xs-12">
-                            <button class="btn btn-default">@lang('messages.keyword_search')</button>
+                            <button class="btn btn-default btn-6-12 btn-email-search-head">@lang('messages.keyword_search')</button>
                         </div>
 
                     </div>
+                    @endif
 
                     {{--Main Loop--}}
-                    @foreach(array_chunk(getEmailTemplateCategory(), 1) as $chunk)
+                    @foreach(array_chunk(getEmailTemplateCategory(), 2) as $chunk)
                         <div class="row">
                             @foreach($chunk as $key => $category)
 
-                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-6 col-sm-12 col-xs-12">
                                     <div class="section-border">
+                                        @if(checkpermission($module_id,$parent_id, 1))
                                         <div class="table-btn">
                                             <a href="{{url('email/template/edit') }}" class="btn btn-add"><i
                                                         class="fa fa-plus"></i></a>
                                             <a href="javascript:void(0)" onclick="multipleAction('modify');" class="btn btn-edit"><i
                                                         class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
                                             <a href="javascript:void(0)" onclick="multipleAction('delete');" class="btn btn-delete"><i class="fa fa-trash"></i></a>
-                                        </div>
-                                        <hr/>
+                                        </div><hr/>
+                                        @endif
                                         <div class="table-responsive">
                                             <div class="data-table">
                                                 <div class="table-responsive">
@@ -82,7 +85,6 @@
                                                         <thead>
                                                             <th data-field="status" data-sortable="true">{{trans('messages.keyword_active')}}</th>
                                                             <th data-field="id" data-sortable="true">{{trans('messages.keyword_id')}}</th>
-                                                            <th data-field="subject" data-sortable="true">{{trans('messages.keyword_subject')}}</th>
                                                             <th data-field="description" data-sortable="true">{{trans('messages.keyword_description')}}</th>
                                                         </thead>
 
@@ -113,11 +115,17 @@
             rules: {
                 email_cat_id: {
                     required: true
+                },
+                filter_name: {
+                    required: true
                 }
             },
             messages: {
                 email_cat_id: {
                     required: "@lang('messages.keyword_please_select_category')"
+                },
+                filter_name: {
+                    required: "@lang('messages.keyword_please_enter_a_name')"
                 }
             }
         });

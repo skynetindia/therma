@@ -3689,7 +3689,7 @@ backface-visibility: hidden;
 }
 
 .payment-information-ryt .ryt-chk-content input {
-    width: 40px;
+    width: 50px;
     margin: 0px 6px;
     text-align: center;
 }
@@ -3704,7 +3704,7 @@ backface-visibility: hidden;
 .payment-ryt-footer .btn.btn-danger{margin-right:11px;}
 
  .hotel-amenties .hotel-amenties-chk {
-    max-height: 365px;
+   height: 365px;
     overflow-y: auto;
 }
 .rooms-id .hotel-amenties .hotel-amenties-chk {
@@ -4142,7 +4142,7 @@ border: 1px solid #ddd;}
 .ck-editor-abs{position: absolute;
 
 left: 0;
-bottom: 66px;
+bottom:70px;
 margin-left: 35px;
 width: calc(100% - 70px);}
 .hotel-info-rel{position:relative;}
@@ -4150,7 +4150,7 @@ width: calc(100% - 70px);}
     position: static;
 }
 .hotel-info-rel .section-border {
-    padding-bottom: 24em;
+    padding-bottom: 26em;
 }
 .ck-editor-abs textarea {
     width: 100%;
@@ -4194,6 +4194,73 @@ overflow: hidden;
     white-space: normal;
     text-align: left;
 }
+
+
+
+
+/*************system 21-11-17****************/
+.hotel-info-rel .btn-shape {
+    position: absolute;
+    right: 15px;
+    bottom: -142px;
+}
+.hotel-info-rel {
+    margin-bottom: 10em;
+}
+.dropzone {
+    border: none;
+}
+.slider-hotel-information .lSSlideOuter .lSSlideWrapper {
+    max-height: 450px;
+}
+.ck-editor-abs label {
+    font-weight: normal;
+    text-transform: capitalize;
+}
+.upload-file .dropzone {
+    border: none;
+}
+
+.ui-timepicker-standard a:hover , .ui-timepicker-standard a:hover{background-color:#00ABBB; color:#fff;}
+
+.ui-timepicker-standard .ui-state-hover{background-color:#00ABBB !important; color:#fff !important;}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #00ABBB !important;
+    border: 1px solid #00ABBB !important; color:#fff !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #fff !important;
+}
+
+
+.billing-information .input-file-with-pdf input[type="file"]
+{
+	width:100%;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border: 1px solid #ccc;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple
+{
+	border: 1px solid #ccc !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] , .select2-container--default .select2-results__option--highlighted[aria-selected] {
+background-color: #00ABBB !important;
+color: #fff !important;
+}
+.select2-container {    max-width: 100%;}
+p, label {    word-break: break-all;}
+
+.data-table table tr.selected td {
+    background: #00ABBB;
+    color: #fff;
+}
+
 /****************************************************/
 
 @media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm) { .sidebar-nav .dropdown a .caret {

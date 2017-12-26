@@ -28,14 +28,91 @@
                         </div>
                         </div>
 					</div></div>
-                    
+
+
+                {{ Form::open(['url'=> 'hotel/update/policies', 'id'=> 'hotel_policy_form', 'method'=> 'post']) }}
+
+                <div class="row">
+                    {{ csrf_field() }}
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <?php
+						$hotelPolicys = getHotelPolicies($hotelid);
+                            $countPolicy = count($hotelPolicys);
+                        ?>
+
+
+                        <input type="hidden" id="noofchild" value="{{ ($countPolicy > 0) ? $countPolicy : '0' }}">
+                        <input type="hidden" name="hotel_id" value="{{ isset($hotelid) ? $hotelid : ''}}">
+    
+                            <a href="{{ url('hotel/edit/amenities')."/".$hotelid }}">@lang('messages.keyword_skip')</a>
+                        <div class="section-border">
+                            <div class="payment-information">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" type="button" id="addchild"><i class="fa fa-plus"></i></button>
+                                    <button class="btn btn-danger" type="button" id="removechild"><i class="fa fa-minus"></i></button>
+                                </div>
+                                <p class="blue-head bold">{{trans('messages.keyword_hotel')}} {{ trans('messages.keyword_policies') }}</p>
+								@if($countPolicy > 0)	
+                                @foreach($hotelPolicys as $key => $policy)
+                                <div class="row" id="row0">
+                                    <input type="hidden" name="policy_id[]" value="{{ $policy->id }}">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_title')}} <span class="required">(*)</span></label>
+                                            <input type="text" class="form-control" value="{{ !empty($policy->title) ? $policy->title : '' }}" id="title" placeholder="{{trans('messages.keyword_title')}}"  name="title[]">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_description')}} <span class="required">(*)</span></label>
+                                            <input type="text" class="form-control" value="{{ !empty($policy->description) ? $policy->description : '' }}" id="description" placeholder="{{trans('messages.keyword_description')}}" name="description[]">
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                                @else
+                                  <div class="row" id="row0">
+                                    <input type="hidden" name="policy_id[]" value="0">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_title')}} <span class="required">(*)</span></label>
+                                            <input type="text" class="form-control" value="" id="title" placeholder="{{trans('messages.keyword_title')}}"  name="title[]">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_description')}} <span class="required">(*)</span></label>
+                                            <input type="text" class="form-control" value="" id="description" placeholder="{{trans('messages.keyword_description')}}" name="description[]">
+                                        </div>
+                                    </div>
+                                </div>                                
+                                @endif
+
+                                <div class="childmain"></div>
+
+                                <div class="payment-ryt-footer">
+                                    <button class="btn btn-default">@lang('messages.keyword_save')</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{ Form::close() }}
+
                     <?php if (isset($hotelid) && !empty($hotelid)) {
 							echo Form::open(array('url' => '/update/hotelpaymentpolicy' . "/" . $hotelid, 'files' => true, 'id' => 'frmHotelPaymentPolicy'));
 						} else {
 							echo Form::open(array('url' => '/update/hotelpaymentpolicy', 'files' => true, 'id' => 'frmHotelPaymentPolicy'));
 						}
-					?><input type="hidden" name="hotel_id" value="{{isset($hotelid) ? $hotelid : ''}}">    
+					?><input type="hidden" name="hotel_id" value="{{isset($hotelid) ? $hotelid : ''}}">
+
+
                    <div class="row">
+
+
                    		<div class="col-md-6 col-sm-12 col-xs-12"> 
                             <div class="section-border">
                             
@@ -52,36 +129,41 @@
                                         </div>
                                         <div class="form-group">
                                         	 <label for="">{{trans('messages.keyword_amount')}} (%)</label>
-                                       <input type="text" class="form-control" id="credit_card_amount" placeholder="{{trans('messages.keyword_amount')}} (%)" value="{{(isset($hotel_detail->credit_card_amount)) ? $hotel_detail->credit_card_amount : ''}}" name="credit_card_amount">
+                                             <input type="text" class="form-control" id="credit_card_amount" placeholder="{{trans('messages.keyword_amount')}} (%)" value="{{(isset($hotel_detail->credit_card_amount)) ? $hotel_detail->credit_card_amount : ''}}" name="credit_card_amount">
                                         </div>
-                                        
+
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_how_many_days_before_arrival')}}</label>
+                                            <input type="text" class="form-control" id="credit_card_amount" placeholder="{{trans('messages.keyword_how_many_days_before_arrival')}}" value="{{(isset($hotel_detail->days_before_arrival)) ? $hotel_detail->days_before_arrival : ''}}" name="days_before_arrival">
+                                        </div>
                                        
                                         <?php
                             $notingroup = getWizardOptionByCategory(22);
 							//dd($notingroup)
+							$arrselectcardcvc = explode(",",$hotel_detail->requested_card_cvc);
                             ?>
                               <div class="payment-checkbox">
                             @foreach($notingroup as $keynoind => $valnoind)
 
                                <div class="ryt-chk-content">
-                                                <div class="ryt-chk">
-                                        <?php 
-                                        if (isset($valnoind->id) && $valnoind->id != null) {
-                                        $selectvalcredit_card_options = isset($hotel_detail->credit_card_options) ? $hotel_detail->credit_card_options : null;
-                                            echo createwizard($valnoind, '1','credit_cards',$selectvalcredit_card_options);
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
+                                                <div class="ryt-chk"><?php 
+											if (isset($valnoind->id) && $valnoind->id != null) {
+											$selectvalcredit_card_options = isset($hotel_detail->credit_card_options) ? $hotel_detail->credit_card_options : null;
+												echo createwizard($valnoind, '1','credit_cards',$selectvalcredit_card_options);
+											}
+                                       ?></div><?php 
+									 $checkCVC = (in_array($valnoind->id,$arrselectcardcvc)) ? 'checked' : '';
+										echo '<div class="ryt-chk">
+                                        <input name="card_cvc[]" id="id_card_cvc'.$valnoind->title.'" '.$checkCVC.'  value="'.$valnoind->id.'" type="checkbox"><label class="control-label" for="id_card_cvc'.$valnoind->title.'">Requested Card CVC? </label></div>';  
+								?></div>
                             @endforeach
-                            </div>
-                                        	
+                                <div class="hotel-amenties-add">
+                                    <a href="javascript:void(0)" onclick="newoption(22)" data-toggle="modal" data-target="#myModal" class="btn btn-default btn-6-12">Add New</a>
+                                </div>
+                            </div>      	
                                </div>
-                            
                            </div> 
                     	</div>
-                        
-                        
                         <div class="col-md-6 col-sm-12 col-xs-12"> 
                             <div class="section-border">
                             	<div class="payment-information-ryt">
@@ -91,10 +173,13 @@
                                     @endphp
                           <div class="ryt-chk-content">
                             @foreach($taxoinfo as $keytaxo => $valtaxo)
-                             @php $policyday=isset($cancelation_policy[$keytaxo]->policy_day)?$cancelation_policy[$keytaxo]->policy_day:0;
-                                 $policyper=isset($cancelation_policy[$keytaxo]->percentage)?$cancelation_policy[$keytaxo]->percentage:0;
-                                  $checked=isset($cancelation_policy[$keytaxo]->percentage)?"checked":'';
-                                  $disabled=isset($cancelation_policy[$keytaxo]->percentage)?"":'disabled';
+                             @php $policyday=(isset($cancelation_policy[$keytaxo]) && (isset($cancelation_policy[$keytaxo]->policy_day)))?$cancelation_policy[$keytaxo]->policy_day:0;
+                             
+                                 $policyper=(isset($cancelation_policy[$keytaxo]) && (isset($cancelation_policy[$keytaxo]->percentage))) ? $cancelation_policy[$keytaxo]->percentage:0;
+
+                                  $checked=(isset($cancelation_policy[$keytaxo]) && (isset($cancelation_policy[$keytaxo]->percentage))) ?"checked":'';
+
+                                  $disabled=(isset($cancelation_policy[$keytaxo]) && (isset($cancelation_policy[$keytaxo]->percentage)))?"":'disabled';
                              @endphp
                                 <div class="ryt-chk">
                                     <input id="one{{$keytaxo}}" type="checkbox" onClick="fun_checked(this.id)"  {{$checked}}>
@@ -183,4 +268,129 @@
         });
 
     </script>
+
+
+
+    <script>
+
+        $("#hotel_policy_form").validate({
+            rules: {
+                "title[]": {
+                    required: true,
+                    maxlength: 50
+                },
+                "description[]": {
+                    required: true
+                }
+            },
+            messages: {
+                "title[]": {
+                    required: "{{trans('messages.keyword_please_enter_a_title')}}"
+                },
+                "description[]": {
+                    required: "{{trans('messages.keyword_please_enter_a_description')}}"
+                }
+            }
+        });
+
+
+
+        counter=$('#noofchild').val();
+
+        $('#addchild').click(function(e) {
+            counter++;
+            $('.childmain').append("<div class='row' id='row"+ counter +"'><input type=\"hidden\" name=\"policy_id[]\" value=\"0\"><div class=\"col-md-6\">\n" +
+                "        <div class=\"form-group\">\n" +
+                "            <label for=\"\">{{trans('messages.keyword_title')}} <span class=\"required\">(*)</span></label>\n" +
+                "            <input type=\"text\" class=\"form-control\" id=\"title\" placeholder=\"{{trans('messages.keyword_title')}}\" value=\"\" name=\"title[]\">\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "\n" +
+                "    <div class=\"col-md-6\">\n" +
+                "        <div class=\"form-group\">\n" +
+                "            <label for=\"\">{{trans('messages.keyword_description')}} <span class=\"required\">(*)</span></label>\n" +
+                "            <input type=\"text\" class=\"form-control\" id=\"description\" placeholder=\"{{trans('messages.keyword_description')}}\" value=\"\" name=\"description[]\">\n" +
+                "        </div>\n" +
+                "    </div></div>");
+            $('#noofchild').val(counter);
+        });
+        $('#removechild').click(function(e) {
+
+                //alert(counter);
+
+                if(counter==0){
+                    alert("you cannot delete first record");
+                    return true;
+                }
+
+                $("#row" + counter).remove();
+                counter--;
+
+        });
+    </script>
+
+    <script type="text/javascript">
+        function newoption(val)
+        {
+            $('#catid').val(val);
+        }
+    </script>
+
+    <script type="text/javascript">
+
+
+        function saveoption()
+        {
+
+            var name=$('#name').val();
+            var catid=$('#catid').val();
+            var urlredirect="{{url('hotel/wizard/new')}}";
+            $.ajax({
+                type: "POST",
+                url :urlredirect ,
+                data:{'name':name,"catid":catid,'_token':'{{csrf_token()}}'},
+                success: function(data) {
+                    $('#myModal').modal('hide');
+                    window.location.reload(true);
+                }
+            });
+        }
+    </script>
+
 @endsection
+
+
+
+<div class="modal fade hotel-prices1-new-modal"  id="myModal" role="dialog">
+    <div class="modal-dialog" >
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Wizard</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="form-group">
+                            <label for="">Name</label>
+                            <input class="form-control" id="name" placeholder="" name="name" type="text">
+                            <input class="form-control" id="catid" name="catid" placeholder="" type="hidden">
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-6-12" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default btn-6-12" data-dismiss="modal" onclick="saveoption();">save</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+

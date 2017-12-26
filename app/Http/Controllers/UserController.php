@@ -20,12 +20,23 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    
+    protected $module;
+    protected $parent_id;
+    
     public function __construct(Request $request){
+        parent::__construct();
         $this->middleware('auth');
     }
 
     public function index(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+    
+    
         if(isset($request->typeid) && !empty($request->typeid))
         {
             $data['typeid'] = $request->typeid;
@@ -36,6 +47,13 @@ class UserController extends Controller
 
     public function add_edit_user(Request $request)
     {
+        if(Auth::user()->profile_id !='0' && !checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+    
+    
+    
         $action = 'add';
         $arrRecords = [
             'action' => 'add',
@@ -132,8 +150,8 @@ class UserController extends Controller
             storelogs($request->user()->id,$logs);
 
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Updated successfully!</div>';
-            return Redirect::to('users')->with('msg', $msg);
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Updated successfully!</div>';
+            return Redirect::back()->with('msg', $msg);
 
         }
         else{
@@ -162,8 +180,7 @@ class UserController extends Controller
 
             $user = new User;
             $user->name = $request->name;
-//            $user->image= ($imageName != '') ? $imageName : 'default.png';
-            $user->image= $imageName;
+            $user->image= ($imageName != '') ? $imageName : 'default.png';
             $user->password = bcrypt($request->password);
             $user->profile_id = $request->profile_id;
             $user->language_key = strtolower(str_replace(" ", "_", $request->name));
@@ -207,8 +224,8 @@ class UserController extends Controller
             $logs = 'User Created -> (ID:'.$user->id.')';
             storelogs($request->user()->id,$logs);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Created successfully!</div>';
-            return Redirect::to('users')->with('msg', $msg);
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Created successfully!</div>';
+            return Redirect::back()->with('msg', $msg);
         }
     }
 
@@ -230,19 +247,27 @@ class UserController extends Controller
         }
 
         foreach ($users as $key =>  $data) {
+    
+    
+    
+    
             $checked = ($data->is_active == 0) ? 'checked' : '';
-            $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateUsersStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            if(checkpermission($this->module_id,$this->parent_id, 1)){
+                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateUsersStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }else{
+                $data->status = '<div class="switch"><input disabled="disabled" name="status" class="currencytogal" onchange="updateUsersStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }
+            
+            
+            
+    
             $data->access = '<a href="'.url('user/access')."/".encodehelper($data->id).'" >'.trans('messages.keyword_extranet').'</a>';
-
-            if($data->image != '')
-            {
-                $data->image = '<img src="'.asset('public/images/user')."/".$data->image.'" style="width:60px;"></i>';
-            }
-            else{
-                $data->image = '<img src="'.asset('public/images/default/default_user.png').'" style="width:60px;"></i>';
-            }
-
-            $data->profile_id = $data->profile_id." | ". (!empty($data->type) ? $data->type : '-');
+            $data->profile_id =  checkpermission($this->module_id,$this->parent_id, 1);
+            
+            
+            
+            $data->image = '<img src="'.asset('public/images/user')."/".$data->image.'" style="width:60px;"></i>';
+            //$data->profile_id = $data->profile_id." | ". (!empty($data->type) ? $data->type : '-');
             $user_details[] = $data;
         }
         return json_encode($user_details);
@@ -305,7 +330,7 @@ class UserController extends Controller
         storelogs($request->user()->id,$logs);
 
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Profile Updated successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Profile Updated successfully!</div>';
         return Redirect::back()->with('msg', $msg);
     }
 
@@ -328,7 +353,7 @@ class UserController extends Controller
         $user = User::find($request->userid);
         if (Hash::check($request->old_password, $user->password)) {
             $user->fill(['password' => Hash::make($request->password)])->save();
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Password changed successfully!</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Password changed successfully!</div>';
         }
         else {
             $request->session()->flash('error', 'Password does not match');
@@ -337,12 +362,24 @@ class UserController extends Controller
         return Redirect::back()->with('msg', $msg);
     }
 
+    
+    public function get_default_permission(Request $request){
+        
+        $user_type_id = $request->user_type_id;
+        return view('user.default_permission_with_user_type', compact('user_type_id'));
+    }
+    
     /*
      *   User Types Coding
      */
 
     public function user_type()
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         return view('user.user_type');
     }
 
@@ -358,6 +395,11 @@ class UserController extends Controller
 
     public function add_edit_user_type(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $action = 'add';
         $arrRecords = [
             'action' => 'add',
@@ -428,7 +470,7 @@ class UserController extends Controller
             ];
             language_keyword_add($lang_data);
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Type Updated successfully!</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>User Type Updated successfully!</div>';
             return Redirect::back()->with('msg', $msg);
         }
         else{
@@ -484,7 +526,7 @@ class UserController extends Controller
             language_keyword_add($lang_data);
 
 
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_user_type_added_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_user_type_added_successfully').'</div>';
             return Redirect::back()->with('msg', $msg);
         }
     }
@@ -503,6 +545,8 @@ class UserController extends Controller
         }
     }
 
+    
+    
     /*
      * Access
      */
@@ -521,6 +565,11 @@ class UserController extends Controller
 
     public function members_activity(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $arrData = [];
         if(isset($request->type_id))
         {
@@ -589,11 +638,21 @@ class UserController extends Controller
 
     public function user_roles(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         return view('user.user_roles');
     }
 
     public function user_modules(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $typeid = $request->typeid;
         return view('user.user_modules', compact('typeid'));
     }
@@ -625,7 +684,7 @@ class UserController extends Controller
 
         DB::table('user_type')->where('id', $typeid)->update(['permissions' => $json_format]);
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_permissions_updated_successfully').'</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_permissions_updated_successfully').'</div>';
         return Redirect::back()->with('msg', $msg);
 
     }

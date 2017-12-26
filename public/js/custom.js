@@ -188,10 +188,10 @@ $(function() {
  jQuery('.scrollbar-inner').scrollbar();
 		
 		/******** Funtion start **********/
-		
-				setTimeout(function() {
+	setTimeout(function() {
 		
 			var oldURL = window.location.href.substr(window.location.href.lastIndexOf("/")+1);
+			
 			var index = 0;
 			var newURL = oldURL;
 			index = oldURL.indexOf('?');
@@ -207,53 +207,33 @@ $(function() {
 				var avgpos = parseInt(parseInt($( '.scrollbar-inner' ).width()) / parseInt(total_menu_item));
 				var tempcount = 1;
 				 /* END auto scroll to active menu */
-				 
 				$(".navbar-default .navbar-nav > li > a").each(function(index){
-					
-						  if($(this).attr("href") == newURL || $(this).attr("href") == '' ){
-							 
+                    var url = $(this).attr("href");
+                    var parts = url.split("/");
+                    var last_part = parts[parts.length-1];
+					if(last_part == newURL || $(this).attr("href") == '' ){
 						  $(this).addClass("active");
-						  
 						  	if(index > 3) {
 							  /* START auto scroll to active menu */					
 							  $( '.scrollbar-inner' ).animate( {
 										scrollLeft: parseInt(tempcount *  avgpos)
 									}, 500 );
-						  	}
-							  
+						  		}
 							}
-						  
-							  
-							  
 							   /* END auto scroll to active menu */
-						  
-						 
-
 						  if($(this).attr("href") == $(".sidebar-wrapper ul.sidebar-nav > li:first-child > a").attr("href")){
-							
 						  	$(this).addClass("active");
-							
 							if(index > 3) {
 						  /* START auto scroll to active menu */					
 							  $( '.scrollbar-inner' ).animate({
 										scrollLeft: parseInt(tempcount *  avgpos)
 									}, 500 );
-							}
-							  
+								}
 							  }
-							  
 							  tempcount++;
-						  
-						  
 						   /* END auto scroll to active menu */
-						  
-						  
-						  
 					 })
-				
-					 
 				$(".user-menu-tab .list-unstyled > li a").each(function(){
-					
 						  if($(this).attr("href") == newURL || $(this).attr("href") == '' ){
 							 
 						  $(this).addClass("active");

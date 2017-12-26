@@ -23,8 +23,8 @@
          {{--{{ pre($room_details) }}--}}
         {{--@endif--}}
 
-    <div class="room-id">
-        <div class="row">
+    <div class="room-id room-id-rel">
+        <!--<div class="row">
             <div class="col-md-12">
                 <div class="navigation-root">
                     <ul class="navigation-list">
@@ -35,13 +35,14 @@
                     </ul>
                 </div>
             </div>
-        </div>
+        </div>-->
         
                     
 
 
         <div class="row">
-		<?php
+		
+          <?php
             if (isset($room_details) && !empty($room_details) && $action == 'edit') {
                 echo Form::open(array('url' => '/hotel/room/update' . "/" . $room_details->id, 'files' => true, 'id' => 'room_info_form'));
             } else {
@@ -55,7 +56,9 @@
             <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
             
             {{ csrf_field() }}
+        
             <div class="col-md-8 col-sm-12 col-xs-12">
+          
                 <div class="edit-room-lft-side">
                     <div class="section-border">
                         <p class="bold blue-head">{{trans('messages.keyword_basic_information')}}</p>
@@ -109,6 +112,10 @@
                                     <label>@lang('messages.keyword_how_many_rooms_do_you_have_with_this_name')<span class="required">*</span></label>
                                     <input class="form-control" placeholder="@lang('messages.keyword_enter_room')" name="how_many_room" value="{{ isset($room_details->qt_same_name) ? $room_details->qt_same_name : '' }}"
                                            type="number">
+                                </div>
+                                 <div class="form-group">
+                                    <label>@lang('messages.keyword_minimum_quantity_of_people')<span class="required">*</span></label>
+                                    <input class="form-control" placeholder="@lang('messages.keyword_minimum_quantity_of_people')" name="min_stay" value="{{ isset($room_details->min_stay) ? $room_details->min_stay : '' }}"  type="number" required>
                                 </div>
                                
                                
@@ -171,7 +178,7 @@
 														if ($valnoind->is_language == 1) {
 															echo createwizard($valnoind, '2', 'set_option', $selectvaluesetop,$lang);
 														} else {
-																echo createwizard($valnoind, '1', 'set_option', $selectvaluesetop,$lang);
+																echo createwizard($valnoind, '2', 'set_option', $selectvaluesetop,$lang);
 														}
 													}?>
                                             </div>
@@ -183,7 +190,7 @@
                                     @endif
                                     
                                     <div class="hotel-amenties-add">
-                                    	<button class="btn btn-default btn-6-12">Add New</button>
+                                        <a href="javascript:void(0)" onclick="newoption({{$valuesubcat->id}})" data-toggle="modal" data-target="#myModal" class="btn btn-default btn-6-12">Add New</a>
                                     </div>
                                     
                                 </div>
@@ -199,32 +206,41 @@
 							}
 							</script>
                         </div>
-                        <div class="row">
-                    				<div class="col-md-4 col-sm-12 col-xs-12">
+                     
+                    </div>
+                      
+                </div>
+              
+            </div>
+            
+            <div class="room-id-summary-pos-abs">
+            
+               <div class="row">
+                    				<div class="col-md-6 col-sm-12 col-xs-12">
+                                    	<div class="section-border">
                                         <div class="textarea">
                                             <div class="form-group">
                                             <label class="">Summary <span class="required">(*)</span></label>
-                                            <textarea class="form-control" name="summary" id="summary" rows="20" cols="8">{{ isset($room_details->summary) ? $room_details->summary : '' }}</textarea>
+                                            <textarea class="form-control" name="summary" id="summary" rows="20" cols="8" placeholder="Please Enter Summary">{{ isset($room_details->summary) ? $room_details->summary : '' }}</textarea>
                                             </div>
                                         </div>
+                                        	</div>
                                      </div>
                                  
-                                <div class="col-md-8 col-sm-12 col-xs-12">
-                           
+                                <div class="col-md-6 col-sm-12 col-xs-12">
+                           			<div class="section-border">
                             	<div class="textarea">
                                 	<div class="form-group">
                                 	<label class="">{{trans('messages.keyword_description')}} <span class="required">(*)</span></label>
                                 	<textarea class="form-control"  placeholder="{{trans('messages.keyword_description')}}" name="description" id="description" required>{{ isset($room_details->description) ? $room_details->description : '' }}</textarea>
                                     </div>
                                 </div>
-                           
+                           			</div>
                         	</div>
                             </div>
-                    </div>
-                      
-                </div>
-              
+          
             </div>
+            
             <input type="hidden" name="mediaCode" id="mediaCode" value="{{$mediaCode}}" />
            <div class="btn-shape">
             <div class="col-md-6 col-sm-12 col-xs-12 btn-left-shape text-left">
@@ -233,8 +249,9 @@
             <div class="col-md-6 col-sm-12 col-xs-12 btn-right-shape text-right">
                 <button type="submit" class="btn btn-default">{{trans('messages.keyword_proceeds')}}</button>
             </div>
+            <?php echo Form::close(); ?>
         </div>
-             <?php echo Form::close(); ?>
+             
             <div class="col-md-4 col-sm-12 col-xs-12">
                  <div class="section-border">	
                     <div class="slider-hotel-information">
@@ -470,5 +487,69 @@
     });
     </script>
 
+    <script>
+        function fun_checkbox(id){
+
+            $('.'+id).prop('checked',true);
+        }
+    </script>
+
+    <script type="text/javascript">
+        function newoption(val)
+        {
+            $('#catid').val(val);
+        }
+
+        function saveoption()
+        {
+
+            var name=$('#name').val();
+            var catid=$('#catid').val();
+            var urlredirect="{{url('hotel/wizard/new')}}";
+            $.ajax({
+                type: "POST",
+                url :urlredirect ,
+                data:{'name':name,"catid":catid,'_token':'{{csrf_token()}}'},
+                success: function(data) {
+                    $('#myModal').modal('hide');
+                    window.location.reload(true);
+                }
+            });
+        }
+    </script>
+
 @endsection
 
+
+<div class="modal fade hotel-prices1-new-modal"  id="myModal" role="dialog">
+    <div class="modal-dialog" >
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Wizard</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="form-group">
+                            <label for="">Name</label>
+                            <input class="form-control" id="name" placeholder="" name="name" type="text">
+                            <input class="form-control" id="catid" name="catid" placeholder="" type="hidden">
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-6-12" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default btn-6-12" data-dismiss="modal" onclick="saveoption();">save</button>
+            </div>
+        </div>
+
+    </div>
+</div>

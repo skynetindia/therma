@@ -12,12 +12,22 @@
     <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
 
 
+    {{--Style for add review slider remove it after css done--}}
+    <style>
+        .review_slider_ul li{
+            display:inline;
+            margin-left:0px;
+            margin-right:14px;
+        }
+        .ui-widget.ui-widget-content{
+            width:91%;
+        }
+    </style>
+    {{--Style for add review slider remove it after css done--}}
 
     <!-------------------------------->
-
-
     <div class="booking-wrap reservations-list">
-
+        @if(checkpermission($module_id,$parent_id, 1))
         <div class="row">
             <div class="col-md-12 col-sm1-12 col-xs-12">
                 <div class="table-btn">
@@ -29,49 +39,58 @@
                 </div>
             </div>
         </div>
-
+        @endif
         <div class="section-border">
 
 
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="data-table">
-                        <h1 class="cst-datatable-heading">reservations list</h1>
+                        <!--<h1 class="cst-datatable-heading">reservations list</h1>-->
+                        <h1 class="cst-datatable-heading">@lang('messages.keyword_bookings')</h1>
                         <div class="panel panel-default">
                             <div class="panel-heading">
 
                                 <div class="heading-search-dashboard">
                                     {{ Form::open(array('url' => 'bookings/search', 'files' => true, 'id' => 'booking_search_form')) }}
-                                    <div class="form-wrap">
+                                    <div class="form-wrap">                                    	
+                                        <div class="booking-width-calc">                                        
                                         <div class="input form-group">
-                                            <label>search</label>
-                                            <input type="text" class="form-control"/>
+                                            <label>@lang('messages.keyword_search')</label>
+                                            <input type="text" name="general_search" class="form-control" placeholder="@lang('messages.keyword_search')"/>
                                         </div>
                                         <div class="input form-group">
-                                            <label>@lang('messages.keyword_client_status')</label>
+                                            <label>@lang('messages.keyword_order_status')</label>
                                             <select class="form-control bg-arrow" name="client_status">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getClientStatus() as $key => $status)
                                                     <option value="{{ $key }}">{{ $status }}</option>
                                                 @empty
-
                                                 @endforelse
                                             </select>
                                         </div>
-
+                                        
                                         <div class="input form-group">
                                             <div class="date-input ">
                                                 <label>@lang('messages.keyword_start_date')</label>
-                                                <input type="text" id="start_date" value="{{ old('start_date') }}" name="arrival" placeholder="YYYY-MM-DD" class="form-control" readonly/>
+                                                <input type="text" id="start_date" value="{{ old('start_date') }}" name="arrival" placeholder="mm/dd/yyyy" class="form-control startdate"/>
                                             </div>
                                             <div>-</div>
                                             <div class="date-input">
                                                 <label>@lang('messages.keyword_end_date')</label>
-                                                <input type="text" id="end_date" value="{{ old('end_date') }}" placeholder="YYYY-MM-DD" name="departure"
-                                                       class="form-control" readonly/>
+                                                <input type="text" id="end_date" value="{{ old('end_date') }}" placeholder="mm/dd/yyyy" name="departure" class="form-control enddate"/>
                                             </div>
                                         </div>
-
+                                        <div class="input form-group">
+                                            <label>@lang('messages.keyword_booking') @lang('messages.keyword_status')</label>
+                                            <select class="form-control bg-arrow" name="booking_status">
+                                                <option value="">@lang('messages.keyword_--select--')</option>
+                                                 @forelse(getStatus() as $key => $bookingStatus)
+                                                	<option value="{{ $key}}">{{ ucfirst($bookingStatus) }}</option>
+                                                 @empty
+                                                @endforelse
+                                            </select>
+                                        </div>
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_hotel') @lang('messages.keyword_status')</label>
                                             <select class="form-control bg-arrow" name="hotel_status">
@@ -85,7 +104,7 @@
 
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_country') / @lang('messages.keyword_location')</label>
-                                            <input type="text" name="hotel_country" id="hotel_country" value="" class="input form-control" onKeyup="//getHotelList(this)">
+                                            <input type="text" name="hotel_country" id="hotel_country" value="" class="input form-control hotel-country" onKeyup="//getHotelList(this)">
                                         </div>
 
                                         <div class="input form-group">
@@ -101,7 +120,7 @@
                                             <select class="form-control bg-arrow" name="booking_country">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getBookingsCountries() as $key => $country)
-                                                    <option value="{{ $country->country }}">{{ $country->country }}</option>
+                                                    <option value="{{ $country->i_id }}">{{ $country->v_name  }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
@@ -117,19 +136,16 @@
                                                 @endforelse
                                             </select>
                                         </div>
-
-
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_currencies')</label>
                                             <select class="form-control bg-arrow" name="currency">
                                                 <option value="">@lang('messages.keyword_--select--')</option>
                                                 @forelse(getCurrencies() as $key => $currency)
-                                                    <option value="{{ $currency->id }}">{{ $currency->name }} - {{ $currency->symbol }}</option>
+                                                    <option value="{{ $currency->code }}">{{ $currency->name }} - {{ $currency->symbol }}</option>
                                                 @empty
                                                 @endforelse
                                             </select>
                                         </div>
-
                                         <div class="input form-group">
                                             <label>@lang('messages.keyword_cart_guarantee')</label>
                                             <select class="form-control bg-arrow" name="cart_guarantee">
@@ -151,10 +167,10 @@
                                                 @endforelse
                                             </select>
                                         </div>
-
+											</div>
                                         <div class="clearfix"></div>
                                         <div class="dashbord-filter inline-block pull-right">
-                                            <button type="submit" href="#" class="btn btn-default">@lang('messages.keyword_filter')</button>
+                                            <button type="submit" id="booking_filtes_button" href="#" class="btn btn-default">@lang('messages.keyword_filter')</button>
                                             <button href="#" type="reset" class="btn btn-default"><i class="fa fa-times"
                                                                                    aria-hidden="true"></i></button>
                                         </div>
@@ -170,36 +186,37 @@
 
                             <div class="panel-body">
 
-                                <div class="table-responsive">
-                                    <h1 class="cst-datatable-heading">@lang('messages.keyword_bookings')</h1>
+                                <div class="table-responsive">                                    
                                     <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
                                            data-show-refresh="true" data-show-columns="true"
                                            data-url="<?php  echo url('booking/property/json');?>"
                                            data-classes="table table-bordered" id="table">
                                         <thead>
-
-                                        <th data-field="id" data-sortable="true" >{{trans('messages.keyword_id')}}</th>
-                                        <th data-field="client_status" data-sortable="true">{{trans('messages.keyword_client_status')}}</th>
-                                        <th data-field="unique_booking_id" data-sortable="true">{{trans('messages.keyword_booking_id')}}</th>
-                                        <th data-field="created_at" data-sortable="true">{{trans('messages.keyword_date_and_hour')}}</th>
-                                        <th data-field="hotel_status" data-sortable="true">{{trans('messages.keyword_hotel_status')}}</th>
-                                        <th data-field="client_name" data-sortable="true">{{trans('messages.keyword_clientname_country')}}</th>
-                                        <th data-field="email" data-sortable="true">{{trans('messages.keyword_client_email')}}</th>
-                                        <th data-field="phone" data-sortable="true">{{trans('messages.keyword_client_phone')}}</th>
-                                        <th data-field="hotel_id" data-sortable="true">{{trans('messages.keyword_hotel')}}</th>
-                                        <th data-field="city" data-sortable="true">{{trans('messages.keyword_city')}} / {{trans('messages.keyword_country')}}</th>
-                                        <th data-field="arrival" data-sortable="true">{{trans('messages.keyword_check_in')}}</th>
-                                        <th data-field="departure" data-sortable="true">{{trans('messages.keyword_check_out')}}</th>
-                                        <th data-field="cart" data-sortable="true">{{trans('messages.keyword_cart')}}</th>
-                                        <th data-field="price" data-sortable="true">{{trans('messages.keyword_amount')}}</th>
-                                        <th data-field="commission" data-sortable="true">{{trans('messages.keyword_commission')}}</th>
-                                        <th data-field="transfer" data-sortable="true">{{trans('messages.keyword_transfer')}}</th>
-                                        <th data-field="who_booked" data-sortable="true">{{trans('messages.keyword_who_has_booked')}}</th>
-                                        <th data-field="reviews" data-sortable="true">{{trans('messages.keyword_reviews')}}</th>
-                                        <th data-field="confirm" data-sortable="true">{{trans('messages.keyword_checked')}}</th>
-                                        <th data-field="notes" data-sortable="true">{{trans('messages.keyword_note')}}</th>
-
-
+											 <th data-field="id" data-sortable="true" class="none" >{{trans('messages.keyword_id')}}</th>
+                                            <th data-field="temp_booking_id" data-sortable="true" >{{trans('messages.keyword_id')}}</th>
+                                            <th data-field="order_status" data-sortable="true">{{trans('messages.keyword_order_status')}}</th>
+                                           
+                                            <th data-field="create_date" data-sortable="true">{{trans('messages.keyword_date_and_hour')}}</th>
+                                             @if(checkpermission($module_id,$parent_id, 1))
+                                                <th data-field="hotel_status" data-sortable="true">{{trans('messages.keyword_hotel_status')}}</th>
+                                            @endif
+                                            <th data-field="name" data-sortable="true">{{trans('messages.keyword_clientname_country')}}</th>
+                                            <th data-field="email" data-sortable="true">{{trans('messages.keyword_client_email')}}</th>
+                                            <th data-field="phone" data-sortable="true">{{trans('messages.keyword_client_phone')}}</th>
+                                            <th data-field="hotel_id" data-sortable="true">{{trans('messages.keyword_hotel')}}</th>
+                                            <!--<th data-field="city" data-sortable="true">{{trans('messages.keyword_city')}} / {{trans('messages.keyword_country')}}</th>-->
+                                            <th data-field="arrival" data-sortable="true">{{trans('messages.keyword_check_in')}}</th>
+                                            <th data-field="departure" data-sortable="true">{{trans('messages.keyword_check_out')}}</th>
+                                            <th data-field="cart" data-sortable="true">{{trans('messages.keyword_cart')}}</th>
+                                            <th data-field="total_fare" data-sortable="true">{{trans('messages.keyword_amount')}}</th>
+                                            <th data-field="commission" data-sortable="true">{{trans('messages.keyword_commission')}}</th>
+                                            <th data-field="transfer" data-sortable="true">{{trans('messages.keyword_transfer')}}</th>
+                                            <th data-field="who_booked" data-sortable="true">{{trans('messages.keyword_who_has_booked')}}</th>
+                                             @if(checkpermission($module_id,$parent_id, 1))
+                                            <th data-field="reviews" data-sortable="true">{{trans('messages.keyword_reviews')}}</th>
+                                            <th data-field="checked" data-sortable="true">{{trans('messages.keyword_checked')}}</th>
+                                            <th data-field="notes" data-sortable="true">{{trans('messages.keyword_notes')}}</th>
+                                             @endif
                                         </thead>
                                     </table>
                                 </div>
@@ -212,18 +229,11 @@
             </div>
         </div>
     </div>
-
-
     <!---------------------------------->
-
-
-
-
-
-
-
-
     <script>
+	$('#booking_filtes_button').click(function(e) {
+		$("#preloaderdiv").show();
+	});
         function updateBookingStatus(id) {
             var url = "{{ url('/menu/changeactivestatus') }}" + '/';
             var status = '1';
@@ -243,7 +253,6 @@
                 }
             });
         }
-
         function updateBookingConfirmStatus(id) {
             var url = "{{ url('/booking/changeconfirmstatus') }}" + '/';
             var status = '0';
@@ -263,6 +272,32 @@
                 }
             });
         }
+		function updatehotelStatus(id,e){
+			var url = "{{ url('/booking/changeconfirmhotel') }}" + '/';
+            /*var status = '0';
+            if ($("#hotel_status_" + id).is(':checked')) {
+                status = '1';
+            }*/
+			var status = $(e).val();
+			if(confirm("{{trans('messages.keyword_are_you_sure')}}") == true) {
+                $.ajax({
+                    type: "GET",
+                    url: url + id + '/' + status,
+                    error: function (url) {
+                    },
+                    success: function (data) {
+                    }
+                });
+				return true;
+            }else{
+				return false;
+                /*if($("#hotel_status_" + id).is(':checked')){
+                    $("#hotel_status_" + id).prop('checked', false);
+                }else{
+                    $("#hotel_status_" + id).prop('checked', true);
+                }*/
+            }
+		}
 
         var selezione = [];
         var indici = [];
@@ -312,7 +347,7 @@
             switch (act) {
                 case 'delete':
                     link.href = "{{ url('booking/delete') }}" + '/';
-                    alert(link.href + (n));
+                    //alert(link.href + (n));
                     if (check() && n != 0) {
                         //for(var i = 0; i < n; i++) {
                         $.ajax({
@@ -338,27 +373,18 @@
                     break;
                 case 'modify':
                     if (n != 0) {
+						
                         n--;
-                        link.href = "{{ url('booking/edit') }}" + '/' + indici[n];
+                        link.href = "{{ url('booking/managedetail') }}" + '/' + indici[n];
                         n = 0;
                         selezione = undefined;
                         link.dispatchEvent(clickEvent);
                     }
                     break;
-                case 'updatePhase':
-                    if (n != 0) {
-                        n--;
-                        link.href = "{{ url('/language/translation/') }}" + '/' + indici[n];
-                        n = 0;
-                        selezione = undefined;
-                        link.dispatchEvent(clickEvent);
-                    }
-                    break;
+               
             }
         }
     </script>
-
-
     <script>
 
         function getNotesIdToModal(e)
@@ -421,13 +447,7 @@
 
         $(document).ready(function () {
 
-            $('#departure_date, #arrival_date, #end_date, #start_date').datepicker({
-                format: "yyyy-mm-dd",
-                startDate: "18-07-2015",//'-30d',
-                endDate: '+30d',
-            }).datepicker();
-
-        });
+           
 
 
         $("#hotel_country").on("blur", function(){
@@ -444,14 +464,131 @@
                 });
             }
         });
+		});
 
     </script>
+    <script>
+        $('#reviewModal').on('shown.bs.modal', function (e) {
 
+            var booking_id = $("#booking_id_for_review").val();
+            
+            $.ajax({
+                url: '{{ url('booking/getReviews') }}',
+                method: 'POST',
+                data : {"_token": "{{ csrf_token() }}",booking_id: booking_id},
+                success: function(data){
+                    $("#getReviews").html(data);
+                }
+            });
+
+        });
+
+        function getBookingId(e)
+        {
+            var booking_id = $(e).data('booking-id');
+            var hotel_id = $(e).data('hotel-id');
+            
+            
+            $("#booking_id_for_review").val(booking_id);
+            
+            //used in add review form modal
+            $("#add_review_hotel_id").val(hotel_id);
+            $("#add_review_booking_id").val(booking_id);
+        }
+
+        //clear review modal body before viewing another review
+        function clearModalBody(e){
+            $("#getReviews").empty();
+            $("#reviewModal").modal('hide');
+        }
+
+        $('#addReviewModal').on('shown.bs.modal', function (e) {
+
+            var hotel_id = $("#add_review_hotel_id").val();
+            var booking_id = $("#add_review_booking_id").val();
+            
+            $.ajax({
+                url: '{{ url('booking/getAddReviews') }}',
+                method: 'POST',
+                data : {"_token": "{{ csrf_token() }}",hotel_id: hotel_id,booking_id: booking_id, action: 'add'},
+                success: function(data){
+                    $("#getAddReviewForm").html(data);
+                }
+            });
+
+        });
+        
+    </script>
+    {{-- Slider Review --}}
+    <script>
+        $(function () {
+            $(".review_slider").slider({
+                range: false,
+                value: 10,
+                animate: "fast",
+                step: 10,
+                change: function(event, ui) {
+                    var review_id = $(this).data('review-id');
+                    //ui.value gives slider value
+                    $("#review_score_"+review_id).val(ui.value);
+                }
+            });
+        });
+    </script>
+    
+    
+    
+    
 @endsection
 
 
+{{-- Add Review Modal --}}
+<div id="addReviewModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        
+        <!-- Modal content-->
+        <div class="modal-content">
+            {{--{{ Form::open(array('url' => 'booking/submit/note', 'method'=> 'post' , 'id' => 'get_notes_modal_form')) }}--}}
+            <div class="modal-header">
+                <h4 class="modal-title" >@lang('messages.keyword_notes') <span class="getDynamicBookingId pull-right"></span></h4>
+            </div>
+            <input type="hidden" id="add_review_hotel_id" name="hotel_id" value="">
+            <input type="hidden" id="add_review_booking_id" name="booking_id" value="">
+            {{-- due to this is add review form i'm sending action = add with ajax, because i'm using same form in review section for edit review with action ='edit'--}}
+            <div id="getAddReviewForm"></div>
+            {{--{{ Form::close() }}--}}
+        </div>
+    
+    </div>
+</div>
+{{-- Add Review Modal --}}
 
-@section('modals')
+
+<!-----------Review Modal------------>
+<div id="reviewModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">@lang('messages.keyword_reviews')</h4>
+            </div>
+            <input type="hidden" id="booking_id_for_review" name="booking_id_for_review" value="">
+            
+            <!-- Adding modal body and modal footer with ajax, it will dynamically loaded with Bookingcontroller's getReviews function-->
+            {{-- it will load add review add button if no reviews found in modal --}}
+            <div id="getReviews"></div>
+            
+            
+        </div>
+    
+    </div>
+</div>
+<!-----------Review Modal------------>
+
+
+
 <!-----------Notes Modal------------>
 <div id="notesModal" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -483,25 +620,3 @@
 <!-----------Notes Modal------------>
 
 
-<!-----------Review Modal------------>
-<div id="reviewModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">@lang('messages.keyword_reviews')</h4>
-            </div>
-            <div class="modal-body">
-                <p>Some text in the modal.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-
-    </div>
-</div>
-<!-----------Review Modal------------>
-@endsection

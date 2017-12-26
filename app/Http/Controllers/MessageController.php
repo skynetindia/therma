@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use DB;
 use Storage;
 use Redirect;
 use Validator;
@@ -11,6 +10,7 @@ use Mail;
 use File;
 use Hash;
 use Auth;
+use DB;
 use DateTime;
 use Cookie;
 use Carbon\Carbon;
@@ -19,17 +19,30 @@ use Carbon\Carbon;
 class MessageController extends Controller
 {
     public function __construct(Request $request){
+        
+        parent::__construct();
         $this->middleware('auth');
+        
     }
 
     /*alert section*/
     public function alert(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         return view('message.alert');
     }
 
     public function message_add_edit(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $action = 'add';
         $arrRecords = [
             'action' => 'add',
@@ -107,7 +120,7 @@ class MessageController extends Controller
 
             $logs = 'Alert Updated -> (ID:'.$request->alert_id.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_alert_updated_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_alert_updated_successfully').'</div>';
 
         }
         else{
@@ -150,7 +163,7 @@ class MessageController extends Controller
 
             $logs = 'New Alert Created -> (ID:'.$last_inserted_alert.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_alert_created_successfully').'</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_alert_created_successfully').'</div>';
         }
 
         return Redirect::back()->with('msg', $msg);
@@ -170,15 +183,19 @@ class MessageController extends Controller
             foreach($user_types as $key => $value)
             {
                 $checked = in_array($value->id, $user_type_id) ? 'checked' : '';
-                //$radio_html .= '<div class="radio    round-checkbox inline-block"> <input value="'.$value->id.'" id="'.date('dmYHis').$value->type."_".$value->id.'" name="'.date('dmYHis').$value->type."_".$value->id.'" type="radio" '.$checked.' disabled><label for="'.date('dmYHis').$value->type."_".$value->id.'">'.$value->type.'</label><div class="check"><div class="inside"></div></div></div>';
+//                $radio_html .= '<div class="radio    round-checkbox inline-block"> <input value="'.$value->id.'" id="'.$value->type."_".$value->id.'" name="'.$value->type."_".$value->id.'" type="radio" '.$checked.' disabled><label for="'.$value->type."_".$value->id.'">'.$value->type.'</label><div class="check"><div class="inside"></div></div></div>';
                 $radio_html .= '<input value="'.$value->id.'" id="'.$value->type."_".$value->id.'" name="'.date('dmYHis').$value->type."_".$value->id.'" type="checkbox" '.$checked.' disabled> '.$value->type."<br>";
 
             }
 
             $data->user_type_id = $radio_html;
-
+    
             $checked = ($data->is_active == 0) ? 'checked' : '';
-            $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateAlertStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            if(checkpermission($this->module_id,$this->parent_id, 1)) {
+                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateAlertStatus(' . (!empty($data->id) ? $data->id : '0') . ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0') . '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }else{
+                $data->status = '<div class="switch"><input disabled="disabled" name="status" class="currencytogal" onchange="updateAlertStatus(' . (!empty($data->id) ? $data->id : '0') . ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0') . '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }
 
             $taxonomies_alert = getAlertTaxonomiesById($data->type);
             $data->type = $data->type." | ".$taxonomies_alert->name;
@@ -210,12 +227,22 @@ class MessageController extends Controller
     /*support section*/
     public function support(Request $request)
     {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+        
         return view('message.support');
     }
 
     public function support_add_edit(Request $request)
     {
-
+        
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+        
         $action = 'add';
         $arrRecords = [
             'action' => 'add',
@@ -266,7 +293,7 @@ class MessageController extends Controller
             storelogs($request->user()->id,$logs);
         }
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_you_replied_successfully').'</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_you_replied_successfully').'</div>';
         return Redirect::back()->with('msg', $msg);
     }
 
@@ -279,7 +306,15 @@ class MessageController extends Controller
             $checked = ($data->is_active == 0) ? 'checked' : '';
             $data->created_at = Carbon::parse($data->created_at)->diffForHumans();
             $data->updated_at = Carbon::parse($data->updated_at)->diffForHumans();
-            $data->is_active = '<div class="switch"><input name="status" class="currencytogal" onchange="updateSupportStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+    
+    
+            if(checkpermission($this->module_id,$this->parent_id, 1))
+            {
+                $data->is_active = '<div class="switch"><input  name="status" class="currencytogal" onchange="updateSupportStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }else{
+                $data->is_active = '<div class="switch"><input disabled="disabled" name="status" class="currencytogal" onchange="updateSupportStatus(' . (!empty($data->id) ? $data->id : '0' ). ')" id="activestatus_' . (!empty($data->id) ? $data->id : '0' ). '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }
+            
             $support_options[] = $data;
         }
         return json_encode($support_options);
@@ -316,10 +351,9 @@ class MessageController extends Controller
         return view('message.ticket_create_front');
     }
 
-
     public function ticket_store(Request $request)
     {
-       //dd($request->all());
+        //dd($request->all());
 
         $imageName = '';
         if($request->hasFile('image'))
@@ -424,7 +458,7 @@ class MessageController extends Controller
             storelogs($request->user()->id,$logs);
         }
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> You posted successfully</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> You posted successfully</div>';
         return Redirect::back()->with('msg', $msg);
     }
 

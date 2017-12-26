@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\User;
 use Illuminate\Http\Request;
 use DB;
+use App\hotel;
 use Storage;
 use Redirect;
 use Validator;
@@ -13,25 +14,43 @@ use Hash;
 use Auth;
 use DateTime;
 use Cookie;
+use Image;
 
 
 
 class HotelController extends Controller
 {	
-	public function __construct(Request $request){ 
+	public function __construct(Request $request){
+	    parent::__construct();
         $this->middleware('auth');
     }
-	public function index(Request $request) {		
+	public function index(Request $request) {
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+	    
          return view('hotel/hotel_property');
     }
 
     public function getjsonhotelproperty(Request $request) {
+		//DB::enableQueryLog();
     	$hotelDetails = array();
-		$hotel_main = DB::table('hotel_main')->select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0)->get();            		
-
+		$hotel_main = Hotel::select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0);
+		if(Auth::user()->profile_id!=0){
+			$hotel_main=$hotel_main->where('id',Auth::user()->hotel_id);
+		}
+		$hotel_main=$hotel_main->get();            		
+		//dd(DB::getQueryLog());
 		foreach($hotel_main as $data) {							
 			$checked = ($data->is_active==0) ? 'checked' : '';
-			$data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';   	
+            
+            if(checkpermission($this->module_id,$this->parent_id, 1)){
+                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';
+            }else{
+                $data->status = '<div class="switch"><input name="status" disabled="disabled" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';
+            }
+			   	
 
 			$categorydetails = DB::table('hotel_category')->where('id',$data->category_id)->first(); 
 			$countrydetails = DB::table('countries')->where('i_id',$data->country)->first(); 
@@ -56,6 +75,12 @@ class HotelController extends Controller
 		return ($update) ? 'true' : 'false';		
 	}
 	public function hoteledit(Request $request){
+        
+        if(!checkpermission($this->module_id,$this->parent_id, 1))
+        {
+            return redirect('/unauthorized');
+        }
+	    
 		$type = isset($request->type) ? $request->type : 'basic';
 		if($type == 'basic'){
 			return $this->basicinforedit($request);
@@ -224,6 +249,16 @@ class HotelController extends Controller
      /* === Save the Hotel Basic infomation === */
     public function savehotelbasicinfo(Request $request) {
 		
+		$arrAddress = explode(",",$request->address);
+		$country = end($arrAddress);
+		$totalAddress =  count($arrAddress);
+			
+		$countryDetails = DB::table('countries')->where('v_name', 'like', '%'.trim($country).'%')->first();
+		if(isset($arrAddress[$totalAddress - 2])) {
+			$state = $arrAddress[$totalAddress - 2];
+			$stateDetails = DB::table('states')->where('v_name', 'like', '%'.trim($state).'%')->first();
+		}
+		
 			$arrhotelmail = array(
 									'name' 								=> $request->name,
 									'category_id' 						=> $request->hotel_category,
@@ -232,9 +267,9 @@ class HotelController extends Controller
 									'contact_person'					=>$request->contact_person,
 									'address'							=>isset($request->address) ? $request->address : '',
 									'priority'							=>isset($request->priority) ? $request->priority : '0',
-									'country'							=>isset($request->hotel_country) ? $request->hotel_country : '',
-									'state'								=>isset($request->hotel_state) ? $request->hotel_state : '',
-									'city'								=>isset($request->hotel_city) ? $request->hotel_city : '',
+									'country'							=>isset($countryDetails->i_id) ? $countryDetails->i_id : '',
+									'state'								=>isset($stateDetails->i_id) ? $stateDetails->i_id : '',
+									/*'city'								=>isset($request->hotel_city) ? $request->hotel_city : '',*/
 									'contact_no'						=>isset($request->contact_number) ? $request->contact_number : '',
 									'fax'								=>isset($request->hotel_fax)?$request->hotel_fax:'',
 									'phone'								=>isset($request->hotel_phone) ? $request->hotel_phone : '',
@@ -247,6 +282,7 @@ class HotelController extends Controller
 									'sold_out_email'					=>isset($request->sold_out_email) ? $request->sold_out_email : '',
 									'city_tax'							=>isset($request->city_tax) ? $request->city_tax : '',
 									'web_url'							=>isset($request->hotel_website) ? $request->hotel_website : '',
+									'currency'							=>isset($request->currency) ? $request->currency : '',
 									/*'min_price'						=>isset($request->min_price) ? $request->min_price : '',
 									'commission'						=>isset($request->commission) ? $request->commission : '',
 									'standard_reserve'					=>isset($request->standard_reserve) ? $request->standard_reserve : 0,
@@ -312,7 +348,7 @@ class HotelController extends Controller
 			DB::table('hotel_detail')->where('hotel_id',$hotelid)->update($updateData);
 			else
 			DB::table('hotel_detail')->insertGetId($updateData);	
-			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Detail Saved successfully!</div>';
+			$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Detail Saved successfully!</div>';
 			$logs = 'Hotel Detail Info Updated -> (ID:'.$request->hotel_id.')';
 			storelogs($request->user()->id,$logs);
 			return redirect('hotel/edit/detail/'.$hotelid)->with('msg', $msg);  
@@ -351,7 +387,7 @@ class HotelController extends Controller
 			
 			$hotelid=DB::table('hotel_main')->where('id',$request->hotel_id)->first()->id;
 			DB::table('hotel_main')->where('id',$hotelid)->update($arrhotelmail);
-			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_hotel_info_saved_sucessfully').'</div>';
+			$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_hotel_info_saved_sucessfully').'</div>';
 			}
 			
 			$logs = 'Hotel Info Updated -> (ID:'.$hotelid.')';
@@ -382,7 +418,7 @@ class HotelController extends Controller
 			else {								
 				DB::table('hotel_conatct_details')->insertGetId($updateData);		
 			}		
-			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contact Detail Saved successfully!</div>';
+			$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contact Detail Saved successfully!</div>';
 			return redirect('hotel/edit/amenities/'.$request->hotel_id)->with('msg', $msg);     
 		}
     }
@@ -408,7 +444,7 @@ class HotelController extends Controller
 				$updateData['hotel_id']=$request->hotel_id;								
 				DB::table('hotel_contract_details')->insertGetId($updateData);		
 			}		
-			$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contract Saved successfully!</div>';
+			$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Contract Saved successfully!</div>';
 			return redirect('hotel/edit/agreement/'.$request->hotel_id)->with('msg', $msg);     
 		}
     }
@@ -514,9 +550,10 @@ class HotelController extends Controller
 					'age_to'		=>$request->age_to[$akey],
 					'display_name'	=>$request->display_name[$akey],
 					'is_adult'		=>($aval>=18)?1:0,
-					'status'		=>1
+					'status'		=>1,
+					'fixed_price'	=>isset($request->fixed_price[$akey])?$request->fixed_price[$akey]:0,
 					]);
-					
+				$insertid=$agelist->id;	
 			}
 			else{
 				$insertid=DB::table('hotel_agediscount')
@@ -526,14 +563,26 @@ class HotelController extends Controller
 					'age_from'		=>$aval,
 					'age_to'		=>$request->age_to[$akey],
 					'display_name'	=>$request->display_name[$akey],
-					'is_adult'		=>($aval>=18)?1:0
+					'is_adult'		=>($aval>=18)?1:0,
+					'fixed_price'	=>isset($request->fixed_price[$akey])?$request->fixed_price[$akey]:0
 					]);
 
 			}
+			if(isset($request->fixed_price[$akey]) && $request->fixed_price[$akey]==1){
+				$is_extra=($aval>=18)?0:$insertid;
+				$season=DB::table('room_sale_prices')
+						->where(['hotel_id'=>$request->hotel_id,'is_extra_id'=>$is_extra])
+						->update(['prices'=>'{}',
+								  'updated_dt'=>date('Y-m-d H:i:s'),
+								  'update_user_id'=>Auth::user()->id
+								  ]);
+			}
 		}
 		  $logs = 'Age Group Updated -> (hotel ID:'.$request->hotelid.')';
-            storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">Hotel Age Group Updated</div>';
+          storelogs($request->user()->id,$logs);
+		  
+          $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">Hotel Age Group Updated</div>';
+			
 		 return Redirect('hotel/room/room-details/'.$request->hotelid)->with('msg',$msg);
 	}
 
@@ -546,9 +595,30 @@ class HotelController extends Controller
 							->where('status',1)
 							->where('is_delete',0)
 							->get();
-		$arraydetail=['hotelid'=>$hotelid,'age_detail'=>$hotelagedetail];
+		$hotelmealdetail=DB::table('hotel_main')
+							->where('id',$request->hotel_id)
+							->where('is_deleted',0)
+							->first();
+		$arraydetail=['hotelid'=>$hotelid,
+					  'taxinomies_meals' => DB::table('taxinomies_meals')->orderBy('id', 'asc')->get(),
+					  'age_detail'=>$hotelagedetail,
+					  'hotelmeal'=>$hotelmealdetail,
+					  ];
         return view('room/room_details',$arraydetail);
     }
+	
+	public function savemeal(Request $request){
+	
+		$mealarray=[
+					
+					'meals'					=>implode(',',$request->mealtype),
+					'updated_user_id'		=>$request->user()->id,
+					'updated_dt'			=>date('Y-m-d H:i:s')
+					];
+			DB::table('hotel_main')->where('id',$request->hotel_id)->update($mealarray);
+		
+		 return Redirect::back()->with('msg', '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_updated_successfully').'</div>');
+	}
 
     public function roomdetailsaddedit(Request $request)
     {
@@ -580,6 +650,7 @@ class HotelController extends Controller
                 'hotelid'				 	=> $hotelid,
                 'personal_name' 			=> $request->personal_name,
                 'qt_same_name' 				=> $request->how_many_room,
+				'min_stay'					=>$request->min_stay,
 				'standard_bed' 				=> $request->standard_bed,
 				'extra_bed' 				=> $request->extra_bed,
                 'weight' 					=> $request->weight,
@@ -601,7 +672,7 @@ class HotelController extends Controller
             /* Store the log details */
             $logs = 'Room Updated -> (ID:'.$request->room_id.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
             //update in language table
             $lang_data = ['personal_name' => $request->personal_name];            
         }
@@ -614,7 +685,7 @@ class HotelController extends Controller
             /* Store the log details */
             $logs = 'Room Added -> (ID:'.$last_added_id.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room information added successfully!</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room information added successfully!</div>';
             $lang_data = ['personal_name' => $request->personal_name];
             
         }
@@ -734,7 +805,7 @@ class HotelController extends Controller
             /* Store the log details */
             $logs = 'Room Updated -> (ID:'.$request->room_id.')';
             storelogs($request->user()->id,$logs);
-            $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
+            $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Room updated successfully!</div>';
             //update in language table
             $lang_data = ['personal_name' => $request->personal_name];
             language_keyword_add($lang_data);
@@ -761,7 +832,21 @@ class HotelController extends Controller
 
      public function fileuploadroom(Request $request){		
 		 $nome = $request->file('file')->getClientOriginalName();	
-		Storage::put('images/room/'.$nome,file_get_contents($request->file('file')->getRealPath()));		
+		//Storage::put('images/room/'.$nome,file_get_contents($request->file('file')->getRealPath()));	
+		 $image = $request->file('file');
+        $nome = time().'.'.$image->getClientOriginalExtension();
+     
+   
+        $destinationPath = storage_path('/app/images/room/thumbnail/');
+        $img = Image::make($image->getRealPath());
+        $img->resize(60, 40)->save($destinationPath.'/'.$nome);
+
+
+        $destinationPath = storage_path('/app/images/room/');
+        $img = Image::make($image->getRealPath());
+		if(correct_size($request->file('file')))
+        $img=$img->resize(740, 710);
+		$img->save($destinationPath.'/'.$nome);	
 			DB::table('media_files')->insert([
 			'name' => $nome,
 			'code' => $request->code,
@@ -783,6 +868,7 @@ class HotelController extends Controller
 		$mediadata = DB::select($query);
 		foreach($mediadata as $prev) {
 			$imagPath = url('/storage/app/images/room/'.$prev->name);
+			$thumbPath = url('/storage/app/images/room/thumbnail/'.$prev->name);
 			$downloadlink = url('/storage/app/images/room/'.$prev->name);
 			$filename = $prev->name;			
 			$arrcurrentextension = explode(".", $filename);
@@ -795,7 +881,7 @@ class HotelController extends Controller
 				$imagPath = url('/storage/app/images/default/'.$arrextension[$extention]);			
 			}
 			
-			$html = '<li data-thumb="'.$imagPath.'"><img src="'.$imagPath.'" ></li>';
+			$html = '<li data-thumb="'.$thumbPath.'"><img src="'.$imagPath.'" ></li>';
             echo $html ;            
 		}
 		exit;			
@@ -838,7 +924,7 @@ class HotelController extends Controller
 			$newlang[$key]=$string;
 			endforeach;
 		}
-		$setoption=implode(',',$request->set_option);
+		$setoption=isset($request->set_option) ? implode(',',$request->set_option) : "";
 		$langval=implode(',',$newlang);
 		$arraydetail=array(
 							'set_option'=>$setoption,
@@ -920,7 +1006,7 @@ class HotelController extends Controller
 		}
 		/*$query=	DB::getQueryLog();
 		dd(end($query));*/
-		$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Amenities Updated Successfully!</div>';
+		$msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Amenities Updated Successfully!</div>';
 		return redirect('hotel')->with('msg', $msg);    
 	}
     /* End : Amenities */
@@ -948,8 +1034,24 @@ class HotelController extends Controller
     }
 
     public function fileupload(Request $request){		
-		 $nome = $request->file('file')->getClientOriginalName();	
-		Storage::put('images/hotel/'.$nome,file_get_contents($request->file('file')->getRealPath()));		
+		 /*$nome = $request->file('file')->getClientOriginalName();	
+		Storage::put('images/hotel/'.$nome,file_get_contents($request->file('file')->getRealPath()));*/
+		
+		 $image = $request->file('file');
+        $nome = time().'.'.$image->getClientOriginalExtension();
+     
+   
+        $destinationPath = storage_path('/app/images/hotel/thumbnail/');
+        $img = Image::make($image->getRealPath());
+        $img->resize(60, 40)->save($destinationPath.'/'.$nome);
+
+
+        $destinationPath = storage_path('/app/images/hotel/');
+        $img = Image::make($image->getRealPath());
+		if(correct_size($request->file('file')))
+        $img=$img->resize(740, 710);
+		$img->save($destinationPath.'/'.$nome);
+
 			DB::table('media_files')->insert([
 			'name' => $nome,
 			'code' => $request->code,
@@ -960,6 +1062,7 @@ class HotelController extends Controller
 			'date_time'=>time()
 		]);	
 	}
+	
 		
 	public function fileget(Request $request){	
 		DB::enableQueryLog();
@@ -970,6 +1073,7 @@ class HotelController extends Controller
 		$query = "SELECT * FROM media_files WHERE $where order by id desc";		
 		$mediadata = DB::select($query);
 		foreach($mediadata as $prev) {
+			$thumbnailpath = url('/storage/app/images/hotel/thumbnail/'.$prev->name);
 			$imagPath = url('/storage/app/images/hotel/'.$prev->name);
 			$downloadlink = url('/storage/app/images/hotel/'.$prev->name);
 			$filename = $prev->name;			
@@ -986,7 +1090,7 @@ class HotelController extends Controller
 			$title = (!empty($prev->title)) ? '<strong>'.$prev->title.'</strong>' : "";
             $Descriptions = (!empty($prev->description)) ? '<p>'.$prev->description.'</p>' : "";
 			
-			$html = '<li data-thumb="'.$imagPath.'"><img src="'.$imagPath.'" /></li>';
+			$html = '<li data-thumb="'.$thumbnailpath.'"><img src="'.$imagPath.'" /></li>';
             echo $html ;	
 		}
 		exit;			
@@ -1026,6 +1130,36 @@ class HotelController extends Controller
         return view('payment_policy', $arrdata);
     }
     /* End : media*/
+	
+	public function updatePolicy(Request $request)
+    {
+        if(isset($request->title) && isset($request->description))
+        {
+            $title = $request->title;
+            $description = $request->description;
+            $policy = $request->policy_id;
+            foreach($policy as $key=> $value)
+            {
+                $data = [
+                    'hotel_id' => $request->hotel_id,
+                    'title' => $title[$key],
+                    'description' => $description[$key],
+                    'date' => date('Y-m-d H:i:s')
+                ];
+
+                if(isset($value) && ($value == 0))
+                {
+                    DB::table('hotel_plolicies')->insert($data);
+                }else{
+                    DB::table('hotel_plolicies')->where('id', $value)->update($data);
+                }
+
+            }
+
+        }
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel policy updated successfully!</div>';
+        return Redirect::back()->with('msg', $msg);
+    }
 
     /* agreement */
     public function agreement(Request $request)
@@ -1097,7 +1231,7 @@ class HotelController extends Controller
 				/* Store the log details */
 				$logs = 'Hotel Other Detail Updated -> (ID:'.$request->hotel_id.')';
 				storelogs($request->user()->id,$logs);
-				$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Other Details saved successfully!</div>';
+				$msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Other Details saved successfully!</div>';
 			}			
 			$arrlanguages = getlanguages();			
 			$hotelnamelang = str_replace(" ", "_", $hotelDetails->name);
@@ -1201,8 +1335,12 @@ class HotelController extends Controller
 			$updateData['work_with_credit_card']=$request->work_with_credit_card;
 			$updateData['credit_card_amount']=$request->credit_card_amount;			
 			$updateData['credit_card_options'] = isset($request->credit_cards) ? implode(",", $request->credit_cards) : "";
-		
-			$updateData['hotel_id'] = $request->hotel_id;
+			$updateData['days_before_arrival'] = $request->days_before_arrival;
+			$updateData['requested_card_cvc'] = isset($request->card_cvc) ? implode(",", $request->card_cvc) : "";
+			
+			
+
+            $updateData['hotel_id'] = $request->hotel_id;
 			$counter=DB::table('hotel_detail')->where('hotel_id',$request->hotel_id)->count();
 			if($counter!=0)
 			DB::table('hotel_detail')->where('hotel_id',$request->hotel_id)->update($updateData);
@@ -1222,7 +1360,7 @@ class HotelController extends Controller
 					}
 				}
 			}
-			$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Policy Detail Saved successfully!</div>';
+			$msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Policy Detail Saved successfully!</div>';
 			return redirect('hotel/edit/amenities/'.$request->hotel_id)->with('msg', $msg);     
 		}
     }
@@ -1314,28 +1452,36 @@ class HotelController extends Controller
 			DB::table('invoice_address')->insert($arrinvoice_address_operator);*/
 			$logs = 'Hotel Billing Info Updated -> (ID:'.$request->hotel_id.')';
 			storelogs($request->user()->id,$logs);
-			$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Basic Info updated successfully!</div>';
+			$msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Hotel Basic Info updated successfully!</div>';
 		}
 		return redirect('hotel/edit/policies/'.$request->hotel_id)->with('msg', $msg);    
 	}
 	
- public function savewizard(Request $request)
+public function savewizard(Request $request)
     {
 		$name = $request->name;
 		$wizardoptions['user_id'] = $request->user()->id;
 		$wizardoptions['category_id'] = $request->catid;
 		$wizardoptions['title'] = $name;
 		$wizardoptions['is_active'] = 0;
+		$wizardoptions['is_language'] = 0;
+		$name_key = str_replace(" ", "_", strtolower($name));
+        $wizardoptions['language_key'] = 'keyword_' . $name_key;
+		DB::table('wizard_options')->insert($wizardoptions);
+		 $lang_data = [
+                'title' => $name,
+            ];
+
+            language_keyword_add($lang_data);
 	
-		DB::table('wizard_options')->where('id',$request->options_id)->update($wizardoptions);
-	
-		$msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options Updated successfully!</div>';
+		$msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options Updated successfully!</div>';
 	
 	
 	
 	return $msg;
 
     }
+
 
 	 /*
 	  * =================================================== Hotel Prices Section =====================================================
@@ -1372,12 +1518,22 @@ class HotelController extends Controller
 
  /*============================================ Hotel Season section ========================================= */
     public function hotel_season(Request $request) {
+    
+        
+        
+        if(!checkpermission($this->module_id,$this->parent_id, 0))
+        {
+            return redirect('/unauthorized');
+        }
+     
     	$hotelid = $request->user()->hotel_id;
+                    
     	if(isset($request->hotel_id)){
     		$hotelid = $request->hotel_id;
    	 	}
-        /*$seasons = DB::table('hotel_season')->where('hotel_id', $request->hotelid)->get();
-        $arrdata['seasons'] = $seasons;*/
+              
+        $seasons = DB::table('hotel_season')->where('hotel_id', $request->hotelid)->get();
+        $arrdata['seasons'] = $seasons;
         //$arrdata['hotel_id'] = $request->hotelid;
         $arrdata['hotel_id'] =  $hotelid;                
         return view('hotel.hotel_seasons', $arrdata);
@@ -1386,8 +1542,8 @@ class HotelController extends Controller
     public function getjsonseasons(Request $request) {
         $optionsDetails = array();
         $options = array();
-        $options = DB::table('hotel_season')->where('is_deleted','0')->get();
-        /*->where('hotel_id', $request->hotelid)*/
+        $options = DB::table('hotel_season')->where('is_deleted','0')->where('hotel_id', $request->hotel_id)->get();
+        
         foreach ($options as $data) {
         	$data->season_from = dateFormate($data->season_from,'d.m.Y');
         	$data->season_to = dateFormate($data->season_to,'d.m.Y');        	
@@ -1414,14 +1570,25 @@ class HotelController extends Controller
     	if(in_array("ALL", $request->category)) {
     		$allcategory = 'ALL';
     	}
+    	$season_from = date('Y-m-d H:i:s',strtotime($request->season_from));
+    	$season_to = date('Y-m-d H:i:s',strtotime($request->season_to));
         $season_data = [
             'name' => $request->name,
             'category' => $allcategory,           
             'hotel_id' => $request->hotel_id,
             'season_publish_at' => date('Y-m-d H:i:s'),
-            'season_from' => date('Y-m-d H:i:s',strtotime($request->season_from)),
-            'season_to' => date('Y-m-d H:i:s',strtotime($request->season_to))
+            'season_from' => $season_from ,
+            'season_to' => $season_to
         ];
+        $checkExit = DB::table('hotel_season')->where(['hotel_id'=>$request->hotel_id,'category'=>$allcategory])
+        ->whereBetween('season_from', array($season_from, $season_to));
+        if(isset($request->season_id) && $request->season_id != "" && $request->action == 'edit'){
+        	$checkExit = $checkExit->where('id','!=',$request->season_id);
+        }
+        $checkExit = $checkExit->count();        
+        if($checkExit > 0){
+			return Redirect::back()->with('msg', '<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Season Aready Exist!</div>');
+        }
         if(isset($request->season_id) && $request->season_id != "" && $request->action == 'edit'){
 			DB::table('hotel_season')->where(['id'=>$request->season_id])->update($season_data);
 			$seasonID = $request->season_id;
@@ -1431,7 +1598,7 @@ class HotelController extends Controller
     	}
         $lang_data = ['name' => $request->name];
         language_keyword_add($lang_data);
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Season added successfully!</div>';        
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Season added successfully!</div>';        
         return redirect('hotel/season/edit/'.$seasonID)->with('msg', $msg);
     }
 
@@ -1452,19 +1619,23 @@ class HotelController extends Controller
     		$hotelRooms = DB::table('room_details')
     		->select('room_details.*','taxinomies_room_type.name as typename','taxinomies_room_type.code as typeCode','taxinomies_room_type.language_key as typelanguagekey')
     		->leftJoin('taxinomies_room_type', 'taxinomies_room_type.id', '=', 'room_details.type_of_rooms')
-    		->where('hotelid',$seessionData->hotel_id)->get();
+    		->where('hotelid',$seessionData->hotel_id)
+			->where('room_details.is_deleted',0)
+			->get();
          	/* $queries = DB::getQueryLog();
                 $last_query = end($queries);
                 print_r($last_query);
                 exit;*/ 
     		
+    		$hotel_agediscount = DB::table('hotel_agediscount')->where(['hotel_id'=>$seessionData->hotel_id,'is_adult'=>'0','status'=>1])->get();
+    		
     		$hotelDetails = DB::table('hotel_main')->where('id', $seessionData->hotel_id)->first();    
     		$hotelDetails->meals = trim($hotelDetails->meals,",");
     		$arrmealsid = explode(",", $hotelDetails->meals); 
-    		/*$meals = DB::table('taxinomies_meals')->whereIn('id',$arrmealsid)->get();*/
-    		$meals = DB::table('taxinomies_meals')->where('is_deleted','0')->get();
-    		$room_net_prices = DB::table('room_net_prices')->where(['hotel_id'=>$seessionData->hotel_id])->get()->toArray();
-    		$room_sale_prices = DB::table('room_sale_prices')->where(['hotel_id'=>$seessionData->hotel_id])->get()->toArray();
+    		$meals = DB::table('taxinomies_meals')->whereIn('id',$arrmealsid)->where('is_deleted','0')->get();
+    		/*$meals = DB::table('taxinomies_meals')->where('is_deleted','0')->get();*/
+    		$room_net_prices = DB::table('room_net_prices')->where(['hotel_id'=>$seessionData->hotel_id,'season_id'=>$request->seasonid])->get()->toArray();
+    		$room_sale_prices = DB::table('room_sale_prices')->where(['hotel_id'=>$seessionData->hotel_id,'season_id'=>$request->seasonid])->get()->toArray();
     	}  
     	
     	$allPersonType = array();  	
@@ -1476,19 +1647,32 @@ class HotelController extends Controller
     	$arrData['hotelDetails'] = $hotelDetails;    	
     	$arrData['hotelMeals'] = $meals;
     	$arrData['allPersonType'] = $allPersonType;
+    	$arrData['hotel_agediscount'] = $hotel_agediscount;
     	$arrData['room_net_prices'] = $room_net_prices;
     	$arrData['room_sale_prices'] = $room_sale_prices;
+        
+                   /* echo "<Pre>";
+                    print_r($arrData);
+                    echo "</pre>";*/
+               
     	return view('hotel.hotel_seasons_manage', $arrData);
     }
 
   	/* Save the Room Net/Sale Prices */
-	public function roomnetpricessave(Request $request) {			
+	public function roomnetpricessave(Request $request) {
+		//dd($request->all());			
 	/* =============================================== Save Net Price Details ================================================= */
-		$allmeals = isset($request->meals) ?  $request->meals : array();
+		/*$allmeals = isset($request->meals) ?  $request->meals : array();
+                                        //echo "<pre>";
+                                       
+                                       
 		$allextrameals = isset($request->extrameals) ?  $request->extrameals : array();
 		foreach ($allmeals as $kroomid => $vmeals) {
 			$prices= (is_array($vmeals)) ? json_encode($vmeals) : $vmeals;				
 			$oldata = DB::table('room_net_prices')->where(['room_id'=>$kroomid,'season_id'=>$request->season_id,'is_extra_id'=>'0'])->get();
+                                                            /*echo "<br>".(count($oldata));
+                                                            print_r($oldata);
+                                                            echo "<br>";//
 			$arrData['room_id']=$kroomid;
 			$arrData['hotel_id']=$request->hotel_id;
 			$arrData['season_id']=$request->season_id;
@@ -1499,13 +1683,15 @@ class HotelController extends Controller
 				$arrData['update_user_id']=$request->user()->id;
 				$arrData['updated_dt']=date('Y-m-d H:i:s');	
 				DB::table('room_net_prices')->where(['room_id'=>$kroomid,'season_id'=>$request->season_id,'is_extra_id'=>'0'])->update($arrData);
-			}
+                                                                            //echo "update";
+			}   
 			else {
 				$arrData['user_id']=$request->user()->id;
 				$recordid=DB::table('room_net_prices')->insertGetId($arrData);
 			}
 		}
-		/*======================== Save Extra Meals Details =================================== */
+                                        
+		/*======================== Save Extra Meals Details =================================== 
 		foreach ($allextrameals as $kroomid => $vextrameals) {
 			foreach($vextrameals as $kpersontype => $valmeals){
 				$pricesex= (is_array($valmeals)) ? json_encode($valmeals) : $valmeals;				
@@ -1528,17 +1714,18 @@ class HotelController extends Controller
 			}
 		}
 	/* =================================================== Save Sale Price Details ================================================= */
-		$saleallmeals = isset($request->salemeals) ?  $request->salemeals : array();
-		$saleallextrameals = isset($request->saleextrameals) ?  $request->saleextrameals : array();
+		$saleallmeals = isset($request->meals) ?  $request->meals : array();
+		$saleallextrameals = isset($request->extrameals) ?  $request->extrameals : array();		
 		foreach ($saleallmeals as $kroomid => $vmeals) {
 			$prices= (is_array($vmeals)) ? json_encode($vmeals) : $vmeals;				
 			$oldata = DB::table('room_sale_prices')->where(['room_id'=>$kroomid,'season_id'=>$request->season_id,'is_extra_id'=>'0'])->get();
 			$arrData['room_id']=$kroomid;
 			$arrData['hotel_id']=$request->hotel_id;
 			$arrData['season_id']=$request->season_id;
-			$arrData['discount']=$request->discount;
+			//$arrData['discount']=$request->discount;
 			$arrData['prices']=$prices;
 			$arrData['is_extra_id'] = 0;
+
 			if(count($oldata) > 0) {
 				$arrData['update_user_id']=$request->user()->id;
 				$arrData['updated_dt']=date('Y-m-d H:i:s');	
@@ -1557,7 +1744,7 @@ class HotelController extends Controller
 				$arrDataEx['room_id']=$kroomid;
 				$arrDataEx['hotel_id']=$request->hotel_id;
 				$arrDataEx['season_id']=$request->season_id;
-				$arrData['discount']=$request->discount;
+				//$arrDataEx['discount']=$request->discount;
 
 				$arrDataEx['prices']=$pricesex;
 				$arrDataEx['is_extra_id']=$kpersontype;
@@ -1572,11 +1759,34 @@ class HotelController extends Controller
 				}
 			}
 		}
-		$msg =  '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Price updated successfully!</div>';
+		$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Price updated successfully!</div>';
 		$logs = 'Room Prices Updated -> (Hotel ID:'.$request->hotel_id.')';
 		storelogs($request->user()->id,$logs);
 		return redirect('hotel/season/manage/'.$request->season_id)->with('msg', $msg); 		
     }
+	
+	public function hotelseasoncopy(Request $request){
+		$seasonData = DB::table('hotel_season')->where('id', $request->season_id)->first(); 
+		$seasonData=(array)$seasonData;
+		unset($seasonData['id'],$seasonData['season_publish_at']);
+		$seasonData['season_publish_at']=date('Y-m-d H:i:s');
+		$newseasonid=DB::table('hotel_season')->insertGetId($seasonData);
+		$salesseasondata=DB::table('room_sale_prices')->where('season_id',$request->season_id)->get();
+		
+		foreach($salesseasondata as $seasonkey=>$seasonval){
+			$seasonval=(array)$seasonval;
+			unset($seasonval['id']);
+			$seasonval['user_id']=$seasonval['update_user_id']=Auth::user()->id;
+			$seasonval['created_dt']=$seasonval['updated_dt']=date('Y-m-d H:i:s');
+			$seasonval['season_id']=$newseasonid;
+			DB::table('room_sale_prices')->insertGetId($seasonval);
+		}
+		$msg =  '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'.trans('messages.keyword_season_copied_successfully').'</div>';
+		$logs = 'Season Copied Successfully -> (Season ID:'.$request->season_id.')';
+		storelogs($request->user()->id,$logs);
+		return redirect('hotel/seasons/'.$seasonData['hotel_id'])->with('msg', $msg); 
+	}
+
 
 
  /*=================================== Hotel Options Sections ========================================================== */
@@ -1638,16 +1848,15 @@ class HotelController extends Controller
        for($placesEx=1;$placesEx <= $extraplacecount;$placesEx++){
            $html .='<th>Extra Place '.$placesEx.'</th>';
 	   }                         
-           $html .= '</tr></thead><tbody>';
-		
-       $standcount=($placecount>2)?2:$placecount;
+       	$html .= '</tr></thead><tbody>';
+        $standcount=($roomDetails->standard_bed>2)?2:($roomDetails->standard_bed-1);
         $ageType = DB::table('hotel_agediscount')->where('hotel_id',$roomDetails->hotelid)->where('status',1)->orderBy('age_from','desc')->get();
 		$counter=pow($ageType->count(),$standcount);$inside=0;$last=0;$insidex=0;$lastx=0;
 		$places=json_decode($roomDetails->room_places,true);
 		$extra_places=json_decode($roomDetails->room_extra_places,true);
 		//dd($extra_places);
         while($counter>0){  	
-             $counter--;   
+           $counter--;   
            $nameroom = isset($roomDetails->personal_name) ? $roomDetails->personal_name : "-";
            $html .='<tr class="placement'.$counter.'"><td><div class="ryt-chk"><input id="placement'.$counter.'" class="checkremove" type="checkbox"><label for="placement'.$counter.'">'.$nameroom.'</label></div></td>';
            //$html .='<td>'.$nameroom.'</td>';                                                                    
@@ -1657,13 +1866,13 @@ class HotelController extends Controller
 			  $disablepc=($roomDetails->standard_bed<$placesi)?'disabled="disabled"':'';
 			  $html .='<td><div class="form-group">';
 			  if((($placesi + $standcount) > $roomDetails->standard_bed ) && ($placesi<=$roomDetails->standard_bed)){
-					if(($placesi+$standcount)==$roomDetails->standard_bed+1)
-					{
-						//$html.= "<span>inside".$inside.$placesi.$roomDetails->standard_bed."</span>";
+					if(($placesi+$standcount)==($roomDetails->standard_bed+1)){
+						//$html.= "<span>inside:".$last.$inside.$roomDetails->standard_bed."</span>";
 						$markey=$inside;
 					}
 					else
 					{
+						//$html.= "<span>inside:".$last.$inside.$roomDetails->standard_bed."</span>";
 						$markey=$last;
 						$last++;
 						if($last==$ageType->count()){
@@ -1671,20 +1880,24 @@ class HotelController extends Controller
 							$inside++;
 						}
 					}
+					
 				}
 				else{
+					//$html.= "<span>inside".$standcount.$placesi.$roomDetails->standard_bed."</span>";
 					$markey=0;
 				}
-	          $html .='<select class="form-control" name="place['.$counter.'][]" '.$disablepc.'>';	          
+	          $html .='<select class="form-control" name="place['.$counter.'][]" '.$disablepc.'>';	
+	
+			  $html.='<option value="" selected></option>';          
 	          foreach($ageType as $agekey => $ageval) {
 	          	//$select = (isset($places[$i]) && $places[$i] == $ageval->id) ? 'selected' : '';
-				$select =  '';	
+				$select='';
 				if(isset($places))
 				{
-					$select=(isset($places[$counter][$placesi-1]) && $places[$counter][$placesi-1]==$ageval->id) ? 'selected' :$select;
+					$select=(isset($places[$counter][$placesi-1]) && $places[$counter][$placesi-1]==$ageval->id && ($disablepc!='disabled="disabled"')) ? 'selected' :$select;
 					//$name=(isset($places[$counter][$placesi]) && $places[$counter][$placesi]==$ageval->id) ? $places[$counter][$placesi] :'blank';
 				}else{
-					$select = (isset($ageType[$markey]->id) && $ageType[$markey]->id == $ageval->id) ? 'selected' : '';
+					$select = (isset($ageType[$markey]->id) && $ageType[$markey]->id == $ageval->id && ($disablepc!='disabled="disabled"')) ? 'selected' : '';
 				}
 	          	$html .='<option value="'.$ageval->id.'" '.$select.'>'.$ageval->display_name.'</option>';
 	       	  }
@@ -1693,12 +1906,11 @@ class HotelController extends Controller
 			  $html.='</div></td>';
 	       	  $i++;
 	       }
+		   /*************************************Extra Room Section************************************/
 	       $j=0;
+		  
 			for($placesi=1;$placesi <= $extraplacecount;$placesi++) {
-				$disableex=($roomDetails->extra_bed < $placesi)?"disabled='disabled'":'';
-	            $html .='<td><div class="form-group">';
-			    $html.='<select class="form-control" name="extraplace['.$counter.'][]" '.$disableex.'>';
-			    if((($placesi + $standcount) > $roomDetails->extra_bed ) && ($placesi<=$roomDetails->extra_bed)){
+				 if((($placesi + $standcount) > $roomDetails->extra_bed ) && ($placesi<=$roomDetails->extra_bed)){
 				   if(($placesi+$standcount)==$roomDetails->extra_bed+1){
 							$markey=$insidex;
 						}
@@ -1715,15 +1927,22 @@ class HotelController extends Controller
 				else{
 					$markey=0;
 				}
+				$disableex=($roomDetails->extra_bed < $placesi)?"disabled":'';
+	            $html .='<td><div class="form-group">';
+			    $html.='<select class="form-control" name="extraplace['.$counter.'][]" '.$disableex.'>';
+				 $html.='<option value="" selected></option>'; 
+			    
 	          foreach($ageType as $agekey => $ageval) {	          	
 	          	$selectex =  '';
 				if(isset($extra_places))
 				{
-					$selectex=(isset($extra_places[$counter][$placesi-1]) && $extra_places[$counter][$placesi-1]==$ageval->id) ?'selected':$selectex;
+					$selectex=(isset($extra_places[$counter][$placesi-1]) && (($disableex!='disabled') && $extra_places[$counter][$placesi-1]==$ageval->id)) ?'selected':$selectex;
 				}
 				else{
-					$selectex = (isset($ageType[$markey]->id) && $ageType[$markey]->id == $ageval->id) ? 'selected' : '';
+					$selectex = (isset($ageType[$markey]->id) && $ageType[$markey]->id == $ageval->id && $disableex!='disabled') ? "selected" : '';
+				
 				}
+				
 	           	$html .='<option value="'.$ageval->id.'" '.$selectex.'>'.$ageval->display_name.'</option>';
 	       	  }
 	       	  $html .'</select></div></td>';
@@ -1750,7 +1969,7 @@ class HotelController extends Controller
     		$options_data = ['room_places' => $roomPlaces,'room_extra_places'=>$room_extra_places];
     		DB::table('room_details')->where('id', $roomDetails->id)->update($options_data);
     	
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options updated successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options updated successfully!</div>';
         return Redirect::back()->with('msg', $msg);
     }
 
@@ -1835,7 +2054,7 @@ class HotelController extends Controller
         }
 
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options updated successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Options updated successfully!</div>';
 
         return Redirect::back()->with('msg', $msg);
     }
@@ -1887,7 +2106,7 @@ class HotelController extends Controller
 
             DB::table('hotel_main')->where('id', $request->hotel_id)->update($meals_data);
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Meals updated successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Meals updated successfully!</div>';
 
         return Redirect::back()->with('msg', $msg);
     }
@@ -1944,7 +2163,7 @@ class HotelController extends Controller
 
 
 
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Meals Combination successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Meals Combination successfully!</div>';
 
         return Redirect::back()->with('msg', $msg);
     }
@@ -2012,11 +2231,15 @@ class HotelController extends Controller
                 }
             }
         }        
-        $msg = '<div class="alert alert-info"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Penalty updated successfully!</div>';
+        $msg = '<div class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Penalty updated successfully!</div>';
         return Redirect::back()->with('msg', $msg);
     }
     /* Penalty Section */
 
+    public function under_development(Request $request){
+ 
+     return view('undercunstruction');
+}
 
 
 }

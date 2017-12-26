@@ -7,6 +7,8 @@
             document.write(msg);
         </script>
     @endif
+    
+    
     @include('common.errors')
     <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
     <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
@@ -15,7 +17,8 @@
 
 
         <div class="message-wrap alert-wrap">
-
+    
+            @if(checkpermission($module_id,$parent_id, 1))
             <div class="row">
                 <div class="col-md-12 col-sm1-12 col-xs-12">
                     <!--<p class="invoice-information-head">This is was issued on 1 nov 2016, based on the information displayed below. <a href="#">Click here to view the reservations.</a></p>-->
@@ -28,6 +31,7 @@
 
                 </div>
             </div>
+            @endif
 
             <div class="section-border">
                 <div class="row">
@@ -46,6 +50,7 @@
                                     <th data-field="created_at" data-sortable="true">{{trans('messages.keyword_created_at')}}</th>
                                     <th data-field="updated_at" data-sortable="true">{{trans('messages.keyword_last_update')}}</th>
                                     <th data-field="is_active" data-sortable="true">{{trans('messages.keyword_status')}}</th>
+                                    
                                     </thead>
                                 </table>
                             </div>

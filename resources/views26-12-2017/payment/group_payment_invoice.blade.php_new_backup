@@ -1,0 +1,687 @@
+@extends('layouts.app')
+@section('content')
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <link rel="stylesheet" href="{{ asset('public/css/bootstrap-table.min.css') }}">
+    <script src="{{ asset('public/js/bootstrap-table.min.js') }}"></script>
+    <script src="{{ asset('public/js/bootstrap-table-it-IT.min.js') }}"></script>
+    <?php
+    $cur = getActiveCurrency();
+    $user_type = getUserTypeByUsertypeId(Auth::user()->profile_id);
+    ?>
+    
+    
+        <div class="grouping-payment-invoice">
+            
+            <div class="section-border">
+                <div class="row">
+                    <div class="col-md-12 col-sm1-12 col-xs-12">
+                        
+                        <div class="data-table">
+                            <div class="table-responsive">
+                                <h1 class="cst-datatable-heading">Grouping payment invoice</h1>
+                                
+                                
+                                <div class="panel panel-default">
+                                    
+                                    <div class="panel-heading">
+                                        <div class="heading-search-dashboard">
+                                            
+                                            <div class="form-wrap">
+                                                
+                                                <div class="reservation-list-widthcalc">
+                                                    
+                                                    <div class="input form-group">
+                                                        <label>country/city</label>
+                                                        <select class="form-control bg-arrow">
+                                                            <option>Italy</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="input form-group">
+                                                        <label>hotel</label>
+                                                        <select class="form-control bg-arrow">
+                                                            <option>Objednaino</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="input form-group">
+                                                        <label>star</label>
+                                                        <select class="form-control bg-arrow">
+                                                            <option>Objednaino</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="input form-group">
+                                                        <div class="date-input ">
+                                                            <label>Date Range</label>
+                                                            <input type="text" id="example1"
+                                                                   placeholder="01/10/2017"
+                                                                   class="form-control datepicker"/>
+                                                        </div>
+                                                        <div>-</div>
+                                                        <div class="date-input">
+                                                            <label>Date Range</label>
+                                                            <input type="text" id="example2"
+                                                                   placeholder="30/10/2017"
+                                                                   class="form-control datepicker"/>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="input form-group">
+                                                        <label>availability</label>
+                                                        <select class="form-control bg-arrow">
+                                                            <option>....</option>
+                                                        </select>
+                                                    </div>
+                                                
+                                                
+                                                </div>
+                                                
+                                                <div class="dashbord-filter inline-block pull-right">
+                                                    <a href="#" class="btn btn-default">filter</a>
+                                                    <a href="#" class="btn btn-default"><i class="fa fa-times"
+                                                                                           aria-hidden="true"></i></a>
+                                                </div>
+                                            
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    <div class="panel-body">
+                                        <div class="table-responsive">
+                                            
+                                            
+                                            <table id="" class="table table-striped table-bordered payment-invoice-tbl"
+                                                   width="100%" cellspacing="0">
+                                                {{--Main Table Heading--}}
+                                                <thead>
+                                                <tr>
+                                                    <th>Hotels</th>
+                                                    <th>State / City</th>
+                                                    <th>Reservation</th>
+                                                    <th>Total Price</th>
+                                                    <th>Commissions Total</th>
+                                                    <th>State</th>
+                                                    <th>Invoice</th>
+                                                    <th>Reservation</th>
+                                                </tr>
+                                                </thead>
+                                                
+                                                <tbody>
+                                                
+                                                {{--Check if user is super admin or hotel manager--}}
+                                                    @php $hotels = ($user_type->id == '0') ? getHotels() : getHotels(Auth::user()->hotel_id) ; @endphp
+                                                {{--Check if user is super admin or hotel manager--}}
+                                                
+                                                {{--Loop--}}
+                                                @foreach($hotels as $hotel)
+                                                    
+                                                    {{--Calculation for table heading total price and commissions--}}
+                                                    @php $total_price = 0; @endphp
+                                                    @if(count(getBookingAndPaymentDetail($hotel->id)) >0)
+                                                        @foreach(getBookingAndPaymentDetail($hotel->id) as $value)
+                                                            @php $total_price += $value->total_fare @endphp
+                                                        @endforeach
+                                                    @endif
+                                                    @php
+                                                        $total_commission = ((int)$total_price * ($hotel->commission)) / 100;
+                                                        $bookings_count = count(getBookingAndPaymentDetail($hotel->id));
+                                                    @endphp
+                                                    {{--Calculation for table heading total price and commissions--}}
+                                                    
+                                                    <tr>
+                                                        <td>{{ toUcWord($hotel->name) }}</td>
+                                                        <td> {{ getState($hotel->state) }} / {{ getCity($hotel->city) }}</td>
+                                                        <td> {{ ( $bookings_count >0) ? $bookings_count : '--' }} </td>
+                                                        <td>
+                                                            {{--Total Price Field, only available when bookings count bigger than 0--}}
+                                                            {{ ($bookings_count > 0) ? $total_price."".$cur['symbol'] : "--" }}
+                                                        </td>
+                                                        <td>
+                                                            {{--Commissions Total Field, only available when bookings count bigger than 0--}}
+                                                            @if($bookings_count > 0)
+                                                                {{ $total_commission }}{{ $cur['symbol'] }} ({{ $hotel->commission }}%)
+                                                            @else -- @endif
+                                                        </td>
+                                                        <td><span class="green"><i class="fa fa-check"
+                                                                                   aria-hidden="true"></i> Confirm by admin</span>
+                                                        </td>
+                                                        <td><span><i class="fa fa-minus-circle" aria-hidden="true"></i> 17011341</span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="javascript:void(0)" class="reservation-second-tbl"
+                                                               data-toggle="collapse"
+                                                               data-target="#reservation_{{$hotel->id}}">
+                                                                <i class="fa fa-plus" aria-hidden="true"></i>
+                                                                Reservation</a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr id="reservation_{{ $hotel->id }}" class="collapse">
+                                                        <td colspan="8"><br>
+                                                            
+                                                            {{--This button only shows when invoices available--}}
+                                                            @if(count(getBookingAndPaymentDetail($hotel->id)) >0)
+                                                                <div class="row">
+                                                                    <div class="col-md-12 col-sm1-12 col-xs-12">
+                                                                        <div class="table-btn">
+                                                                            <button class="btn btn-default btn-6-12"
+                                                                                    onclick="multipleAction('confirm_payment')"><i
+                                                                                        class="fa fa-money"></i> Confirm Payment
+                                                                            </button>
+                                                                            <button class="btn btn-info btn-6-12" onclick="multipleAction('send_request')"><i
+                                                                                        class="fa fa-paper-plane"></i>
+                                                                                Send Request
+                                                                            </button>
+                                                                            <button class="btn btn-default btn-6-12 checkAllInvoices"
+                                                                                    data-id="check_all_{{ $hotel->id }}"
+                                                                            ><i
+                                                                                        class="fa fa-check-square-o"></i>
+                                                                                Select All Invoices
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                            {{--This button only shows when invoices available--}}
+                                                            
+                                                            <table data-toggle="table" data-search="true"
+                                                                   data-pagination="true" data-id-field="id"
+                                                                   data-show-refresh="true" data-show-columns="true"
+                                                                   data-classes="table table-bordered"
+                                                                   data-show-export="true" class="inner_table">
+                                                                {{--<table class="table table-striped table-bordered">--}}
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>ID</th>
+                                                                    <th class="none"></th>
+                                                                    <th>Client</th>
+                                                                    <th>Created</th>
+                                                                    <th>Arrival</th>
+                                                                    <th>Departure</th>
+                                                                    <th>Price</th>
+                                                                    <th>Commission System (%)</th>
+                                                                    <th>Commission Paid</th>
+                                                                    <th>Remaining Commission</th>
+                                                                    <th>Payment Type</th>
+                                                                    <th>Confirmed</th>
+                                                                    
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                @forelse(getBookingAndPaymentDetail($hotel->id) as $booking)
+                                                                    
+                                                                    <?php $dis = ($booking->is_requested == 1 && $booking->confirm == '0' && $booking->requester_id == Auth::user()->id) ? 'disabled' : ''; ?>
+                                                                    
+                                                                    <tr class="check_all_{{ $hotel->id }} {{ $dis }}" data-booking-id="{{ $booking->id }}">
+                                                                        <td>{{ $booking->id }}</td>
+                                                                        <td class="none">{{ $booking->is_payment_online }}</td>
+                                                                        <td>{{ toUcWord($booking->name) }}</td>
+                                                                        <td>{{ $booking->create_date }}</td>
+                                                                        <td>{{ \Carbon\Carbon::parse($booking->arrival)->format('d.m.Y')  }}</td>
+                                                                        <td>{{ \Carbon\Carbon::parse($booking->departure)->format('d.m.Y')  }}</td>
+                                                                        <td>{{ $booking->total_fare }}{{ $cur['symbol'] }}</td>
+                                                                        <td>
+                                                                            @php
+                                                                                $commission_price = ((int) $booking->total_fare * (int) $booking->hotel_commission ) / 100;
+                                                                                echo $commission_price."".$cur['symbol']." (".$booking->hotel_commission.")%";
+                                                                            @endphp
+                                                                        </td>
+                                                                        <td>
+                                                                            @php
+                                                                                if($booking->commission_paid > 0 && $booking->confirm == '1'){
+                                                                                    if($booking->commission_remaining_price == '0'):
+                                                                                        echo "<span class='green'>".$booking->commission_paid."".$cur['symbol']."</span>";
+                                                                                    else:
+                                                                                        echo "<span class='red'>".$booking->commission_paid."".$cur['symbol']." (".$booking->reason_incomplete_payment.")</span>";
+                                                                                    endif;
+                                                                                }else{
+                                                                                    echo "--";
+                                                                                }
+                                                                            
+                                                                            @endphp
+                                                                        </td>
+                                                                        <td>
+                                                                            @php
+                                                                                if(isset($booking->commission_remaining_price) && $booking->confirm == '1'){
+                                                                                    if($booking->commission_remaining_price == '0'){
+                                                                                        echo "<span class='green'>".$booking->commission_remaining_price."".$cur['symbol']."</span>";
+                                                                                    }else{
+                                                                                        echo "<span class='red'>".$booking->commission_remaining_price."".$cur['symbol']."</span>";
+                                                                                    }
+                                                                                }else{
+                                                                                    echo '--';
+                                                                                }
+                                                                            @endphp
+                                                                        
+                                                                        </td>
+                                                                        
+                                                                        <td>{{ (isset($booking->is_payment_online) && $booking->is_payment_online == '0') ? 'Cash' : 'Online' }}</td>
+                                                                        
+                                                                        <td>
+                                                                            
+                                                                            @if(isset($booking->is_payment_online) && $booking->is_payment_online == '0' && $booking->is_requested=='1' && $user_type->id == 1)
+                                                                            
+                                                                                {{--Swith will disabled when payment confirmed or checked by database dafault--}}
+                                                                                @php
+                                                                                    $checkedAndDisabled = (isset($booking->confirm) && $booking->confirm == '1') ? 'checked disabled' : '';
+                                                                                @endphp
+                                                                                {{-- Data max payable price used in modal to prevent user to enter bigger amount then given--}}
+                                                                                <div class="switch">
+                                                                                    <input value="" class="booking_switch" name="" id="booking_switch_{{ $booking->id }}" data-max-payable-price="{{ $commission_price }}"
+                                                                                           onclick="showPaymentConfirmModal(this)" type="checkbox" {{ $checkedAndDisabled }} >
+                                                                                    <label for="booking_switch_{{ $booking->id }}"></label>
+                                                                                </div>
+                                                                                
+                                                                            @elseif(isset($booking->is_payment_online) && $booking->is_payment_online == '1' && $booking->is_requested == '1' && $user_type->id == 0)
+        
+                                                                                {{--Swith will disabled when payment confirmed or checked by database dafault--}}
+                                                                                @php
+                                                                                    $checkedAndDisabled = (isset($booking->confirm) && $booking->confirm == '1') ? 'checked disabled' : '';
+                                                                                @endphp
+                                                                                <div class="switch">
+                                                                                    <input value="" class="booking_switch" name="" id="booking_switch_{{ $booking->id }}" data-max-payable-price="{{ $commission_price }}"
+                                                                                           onclick="showPaymentConfirmModal(this)" type="checkbox" {{ $checkedAndDisabled }} >
+                                                                                    <label for="booking_switch_{{ $booking->id }}"></label>
+                                                                                </div>
+                                                                                
+                                                                            @elseif($booking->is_requested == '1')
+                                                                                <strong class="red">@lang('messages.keyword_requested')</strong>
+                                                                            @elseif($booking->is_requested == '2')
+                                                                                <strong class="green">@lang('messages.keyword_confirmed')</strong>
+                                                                            @else
+                                                                                --
+                                                                            @endif
+                                                                        </td>
+                                                                    
+                                                                    </tr>
+                                                                @empty
+                                                                    <tr>
+                                                                        <td colspan="11" class="text-center">@lang('messages.keyword_no_bookings_found')</td>
+                                                                    </tr>
+                                                                @endforelse
+                                                                
+                                                                
+                                                                </tbody>
+                                                                
+                                                                {{-- Table foot only available when bookings count bigger than 0--}}
+                                                                @if($bookings_count > 0)
+                                                                    <tfoot>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>
+                                                                            {{--Total Price Field, only available when bookings count bigger than 0--}}
+                                                                            {{ ($bookings_count > 0) ? $total_price."".$cur['symbol'] : "--" }}
+                                                                        </th>
+                                                                        <th>
+                                                                            {{--Commissions Total Field, only available when bookings count bigger than 0--}}
+                                                                            @if($bookings_count > 0)
+                                                                                {{ $total_commission }}{{ $cur['symbol'] }} ({{ $hotel->commission }}%)
+                                                                            @else -- @endif
+                                                                        </th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                        <th>--</th>
+                                                                    </tfoot>
+                                                                @endif
+                                                            
+                                                            </table>
+                                                        </td>
+                                                    
+                                                    
+                                                    </tr>
+                                                @endforeach
+                                                {{--Loop--}}
+                                                
+                                                </tbody>
+                                            
+                                            </table>
+                                        
+                                        
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                            
+                            
+                            </div>
+                        </div>
+                    
+                    </div>
+                
+                </div>
+            </div>
+        
+        </div>
+    
+    
+    
+    <div class="clearfix"></div>
+    
+    {{--=============Validation Js =================--}}
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script src="{{ url('public/js/additional-methods.min.js') }}"></script>
+    <script>
+        $("#paymentConfirmModalForm").validate({
+            rules: {
+                payable_commission_price: {
+                    required: true,
+                    number: true
+                },
+                reason_incomplete_payment: {
+                    required: true,
+                    maxlength: 50
+                }
+            },
+            messages: {
+                payable_commission_price: {
+                    required: "@lang('messages.keyword_please_enter_a_price')",
+                    number: "@lang('messages.keyword_please_enter_valid_price')"
+                },
+                reason_incomplete_payment: {
+                    required: "@lang('messages.keyword_please_enter_a_reason')",
+                    maxlength: "@lang('messages.keyword_please_enter_no_more_than_50_characters')"
+                }
+            }
+        });
+    </script>
+    {{--=============Validation Js =================--}}
+    
+    
+    {{--===========Document on ready functions============--}}
+    <script>
+        $(document).ready(function () {
+            $('.reservation-second-tbl').click(function () {
+                $(this).find('.fa').toggleClass('fa-plus fa-minus');
+            });
+        });
+    </script>
+    {{--===========Document on ready functions============--}}
+    
+    {{--==========Inner Table Js=====================--}}
+    <script>
+        var selezione = [];
+        var indici = [];
+        var n = 0;
+        
+        
+        
+        $('.inner_table').on('click-row.bs.table', function (row, tr, el) {
+            var cod = /\d+/.exec($(el[0]).children()[0].innerHTML);
+            var check_payment = /\d+/.exec($(el[0]).children()[1].innerHTML);
+            
+            
+            
+
+            //sending booking id to the modal for getting records after submitting modal form
+            $("#booking_id_for_modal").val(cod);
+
+
+            if (!selezione[cod]) {
+                $(el[0]).addClass("selected");
+                selezione[cod] = cod;
+                indici[n] = cod;
+                n++;
+            } else {
+                $(el[0]).removeClass("selected");
+                selezione[cod] = undefined;
+                for (var i = 0; i < n; i++) {
+                    if (indici[i] == cod) {
+                        for (var x = i; x < indici.length - 1; x++)
+                            indici[x] = indici[x + 1];
+                        break;
+                    }
+                }
+                n--;
+
+            }
+        });
+
+        $(".checkAllInvoices").on("click", function () {
+            var check_id = $(this).data('id');
+            if ($("." + check_id).hasClass("selected")) {
+                $("." + check_id).removeClass("selected");
+                n = 0;
+                indici = [];
+            } else {
+                n = 0;
+                indici = [];
+                $("." + check_id).each(function () {
+                    $(this).addClass("selected");
+                    var cod = $(this).data('booking-id');
+                    indici[n] = cod;
+                    n++;
+                });
+            }
+        });
+
+
+        function check_confirm_payment() {
+            return confirm("{{trans('messages.keyword_are_you_sure_you_want_to_do_full_payment_of_selected_booking_invoices')}}");
+        }
+        function check_send_request() {
+            return confirm("{{trans('messages.keyword_are_you_sure_you_want_to_send_request_of_selected_booking_invoices')}}");
+        }
+        function checkRecordSelected(){
+            alert('{{ trans('messages.keyword_please_select_atleast_one_record') }}');
+            $(".inner_table tbody tr.selected").removeClass("selected");
+            n=0;
+            exit;
+        }
+        function checkPaymentType(){
+
+            //below functions is used for selecting records filtered with superadmin and hotel manager
+            //admin can not select online payment record and hotel manager can not select cash payment record to request
+            
+            $(".inner_table tbody tr.selected").each(function(){
+                var check_val = $(this).children().eq(1).text();
+                @if(Auth::user()->profile_id == '0')
+                    if(check_val == '1'){
+                        alert("{{ trans('messages.keyword_you_can_only_request_payment_those_records_whose_payment_done_with_cash_or_debit_cards') }}");
+                        $(".inner_table tbody tr.selected").removeClass("selected");
+                        n=0;
+                        exit;
+                    }
+                @else(Auth::user()->id == '1')
+                    if(check_val == '0'){
+                        alert("{{ trans('messages.keyword_you_can_only_request_payment_those_records_whose_payment_done_online') }}");
+                        $(".inner_table tbody tr.selected").removeClass("selected");
+                        n=0;
+                        exit;
+                    }
+                @endif
+            });
+        }
+        function checkConfirmPayment(){
+
+            //below functions is used for selecting records filtered with superadmin and hotel manager
+            //admin can not select online payment record and hotel manager can not select cash payment record to request
+
+            $(".inner_table tbody tr.selected").each(function(){
+                var check_val = $(this).children().eq(1).text();
+                @if(Auth::user()->profile_id == '0')
+                if(check_val == '0'){
+                    alert("You can only confirm those payment whose payment done online");
+                    $(".inner_table tbody tr.selected").removeClass("selected");
+                    n=0;
+                    exit;
+                }
+                @else(Auth::user()->id == '1')
+                if(check_val == '1'){
+                    alert("You can only confirm those payment whose payment done with cash or debit card");
+                    $(".inner_table tbody tr.selected").removeClass("selected");
+                    n=0;
+                    exit;
+                }
+                @endif
+            });
+        }
+        
+        function multipleAction(act) {
+            var error = false;
+            var link = document.createElement("a");
+            var clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+
+           
+            
+            switch (act) {
+                case 'confirm_payment':
+                    if(n=='0'){ checkRecordSelected(); }
+
+                    checkConfirmPayment();
+                    
+                    link.href = "{{ url('payment/confirm/multiple') }}" + '/';
+                    
+                    if (check_confirm_payment()) {
+                        for (var i = 0; i < n; i++) {
+                            $.ajax({
+                                type: "GET",
+                                url: link.href + indici[i],
+                            });
+                            if (i == n) { setTimeout(function () {location.reload();}, 100 * n);
+                                n = 0;
+                            }
+                        }
+                        selezione = undefined;
+                        setTimeout(function () {
+                            location.reload();
+                        }, 100 * n);
+                        n = 0;
+                    }
+                    break;
+                case 'send_request':
+                    if(n=='0'){ checkRecordSelected(); }
+                    
+                    
+                    checkPaymentType();
+                    
+                    
+                    link.href = "{{ url('payment/send/multiple') }}" + '/';
+
+                    if (check_send_request()) {
+
+                        for (var i = 0; i < n; i++) {
+                            
+                            $.ajax({
+                                type: "GET",
+                                url: link.href + indici[i],
+                            });
+                            if (i == n) {setTimeout(function () {location.reload();}, 100 * n);
+                                n = 0;
+                            }
+                        }
+                        selezione = undefined;
+                        setTimeout(function () {location.reload();}, 100 * n);
+                        n = 0;
+                    }
+                    break;
+            }
+        }
+    
+    
+    </script>
+    {{--==========Inner Table Js=====================--}}
+    
+    {{--==========Modal Js ====================--}}
+    <script>
+        function showPaymentConfirmModal(e) {
+            $(e).prop("checked", false);
+            var max_payable_price = $(e).data('max-payable-price');
+            max_payable_price = Math.round(max_payable_price);
+
+            // showing max value on modal show
+            $('#max_payable_price').val(max_payable_price);
+
+            //storing value for comparison in modal on change price , used in preventBiggerAmount function
+            $('#storeMaxAmountForComparison').val(max_payable_price);
+
+            // dynamic value in modal for not
+            $('#showMaxAmountForNote').text(max_payable_price);
+
+            $("#paymentConfirmModal").modal('show');
+        }
+
+        function preventBiggerAmount(e) {
+            $(".max_value_error").remove();
+            var max_value = $("#storeMaxAmountForComparison").val();
+            var field_value = $(e).val();
+
+            if (parseFloat(field_value) > parseInt(max_value)) {
+                $(e).val(max_value);
+                alert('{{ trans('messages.keyword_maximum_payable_amount_for_this_booking_is') }} ' + max_value);
+                $("#reason_incomplete_payment").hide();
+            } else if (parseFloat(field_value) < parseInt(max_value)) {
+                $("#reason_incomplete_payment").show();
+            } else {
+                $("#reason_incomplete_payment").hide();
+            }
+        }
+    </script>
+    {{--========== Modal Js ====================--}}
+@endsection
+
+
+
+
+
+
+<!-- Modal -->
+<div id="paymentConfirmModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        
+        <!-- Modal content-->
+        <div class="modal-content">
+            {{ Form::open(array('url' => 'payment/confirm/', 'files' => true, 'id' => 'paymentConfirmModalForm', 'method'=> 'post')) }}
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><i class="fa fa-times"></i></button>
+                <h4 class="modal-title">@lang('messages.keyword_confirm') @lang('messages.keyword_payment')</h4>
+            </div>
+            <div class="modal-body">
+                
+                <input type="hidden" id="storeMaxAmountForComparison" value="">
+                
+                <div class="form-group">
+                    <label for="Commission Price">@lang('messages.keyword_payable_commission_price') <span
+                                class="required">(*)</span></label>
+                    <div class="input-group">
+                        <input type="text" name="payable_commission_price" id="max_payable_price" value=""
+                               onchange="preventBiggerAmount(this)" class="form-control">
+                        <span class="input-group-addon"><strong>{{ $cur['symbol'] }}</strong></span>
+                    </div>
+                    <div class="help-block">{{ trans('messages.keyword_maximum_payable_amount_for_this_booking_is') }}
+                        <strong><span id="showMaxAmountForNote"></span></strong> {{ $cur['symbol'] }}</div>
+                </div>
+                
+                <div class="form-group none" id="reason_incomplete_payment">
+                    <label for="Discription">@lang('messages.keyword_reason_for_incomplete_payment') <span
+                                class="required">(*)</span></label>
+                    <textarea name="reason_incomplete_payment" class="form-control" id="" row="3"
+                              style="resize: vertical;"></textarea>
+                </div>
+            
+            </div>
+            
+            <div class="modal-footer">
+                <input type="hidden" name="booking_id" id="booking_id_for_modal" value="">
+                <button type="submit" class="btn btn-default" onclick="">@lang('messages.keyword_send')</button>
+            </div>
+            {{ Form::close() }}
+        </div>
+    
+    </div>
+</div>
+

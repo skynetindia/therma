@@ -15,7 +15,7 @@
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="table-btn">
                     <!--<a class="btn btn-add" data-backdrop="static" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i></a>-->
-                    <a href="{{ url('package/edit') }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
+                    <a href="{{ url('package/edit')."/".$hotel_id }}" class="btn btn-add"><i class="fa fa-plus"></i></a>
                     <a href="javascript:void(0);" onclick="multipleAction('modify');" class="btn btn-edit"><i
                                 class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
                     <a href="javascript:void(0);" onclick="multipleAction('delete');" class="btn btn-delete"><i
@@ -28,7 +28,7 @@
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="data-table">
                         <div class="table-responsive">
-                            <h1 class="cst-datatable-heading">@lang('messages.keyword_packages')</h1>
+                            <h1 class="cst-datatable-heading">@lang('messages.keyword_treatment')</h1>
                             <table data-toggle="table" data-search="true" data-pagination="true" data-id-field="id"
                                    data-show-refresh="true" data-show-columns="true"
                                    data-url="{{ url('package/property/json') }}"

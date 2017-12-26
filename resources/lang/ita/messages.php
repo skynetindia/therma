@@ -67,4 +67,15 @@
 							"keyword_20-21_days_before_arrival" => "20-21 days before arrival",
 							"keyword_20-21_days_before_arrival" => "20-21 days before arrival",
 							"keyword_nml" => "NML",
-							"keyword_nml" => "NML"]; ?>
+							"keyword_nml" => "NML",
+							"keyword_payment_via_invoice" => "Payment Via Invoice",
+							"keyword_payment_via_invoice" => "Payment Via Invoice",
+							"keyword_child_11-17" => "Child 11-17",
+							"keyword_waiting" => "Waiting",
+							"keyword_fb" => "FB",
+							"keyword_hb" => "HB",
+							"keyword_bb" => "BB",
+							"keyword_fbt" => "FBT",
+							"keyword_hbt" => "HBT",
+							"keyword_bbt" => "BBT",
+							"keyword_bbt" => "BBT"]; ?>

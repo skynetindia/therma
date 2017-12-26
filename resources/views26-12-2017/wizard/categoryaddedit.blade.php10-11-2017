@@ -1,0 +1,101 @@
+@extends('layouts.app')
+@section('content')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.62/jquery.inputmask.bundle.js"></script>
+    @if(!empty(Session::get('msg')))
+        <script>
+            var msg = '<?php echo html_entity_decode(htmlentities(Session::get('msg'))); ?>';
+            document.write(msg);
+        </script>
+    @endif
+    @include('common.errors')
+    <?php $arrlanguages = getlanguages();?>
+
+    <?php
+    if(isset($categorydetails) && !empty($categorydetails) && $action == 'edit'){
+        echo Form::open(array('url' => '/wizard/update/category' . "/".$categorydetails->id, 'files' => true, 'id' => 'wizard_category_form'));
+    }
+    else {
+        echo Form::open(array('url' => '/wizard/update/category', 'files' => true, 'id' => 'wizard_category_form'));
+    }
+    ?>
+    <input type="hidden" name="parent_category_id" value="{{isset($categorydetails->id) ? $categorydetails->id : ''}}">
+    <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
+
+    {{ csrf_field() }}
+    <div class="basic-info-wrap">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="">
+                    <div class="basic-info-lft">
+                        <div class="basic-data-blk">
+                            <div class="section-border">
+                                <p class="bold blue-head">Category</p>
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_category')}} <span class="required">(*)</span></label>
+                                            <input class="form-control" placeholder="{{trans('messages.keyword_category_name')}}" value="{{(isset($categorydetails->name)) ? $categorydetails->name : old('name')}}" name="name" id="name" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                            <label for="">{{trans('messages.keyword_parent_category')}}</label>
+
+                                            <select class="form-control" name="parent_id" id="parent_id">
+                                                <option value="0">--Please select</option>
+                                                @foreach($categories as $key => $val)
+                                                    <?php $selectedcatStatus = (isset($categorydetails->parent_id) && ($val->id == $categorydetails->parent_id)) ? 'selected' : ''; ?>
+                                                    <option value="{{ $val->id }}" {{$selectedcatStatus}}>{{ $val->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="btn-shape">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-6 btn-left-shape ">
+                <a href="{{ url('wizard/category') }}" class="btn btn-default">{{trans('messages.keyword_back')}}</a>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-6 text-right">
+                <button type="submit" class="btn btn-default">{{trans('messages.keyword_save')}}</button>
+            </div>
+
+        </div>
+    </div>
+    </div>
+    <?php echo Form::close(); ?>
+    <script src="{{ url('public/js/jquery.validate.min.js')}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#wizard_category_form").validate({
+                rules: {
+                    name: {
+                        required: true,
+                        maxlength: 50
+                    }
+                },
+                messages: {
+                    name: {
+                        required: "{{trans('messages.keyword_please_enter_a_category_name')}}",
+                        maxlength: "{{trans('messages.keyword_hotel_name_must_be_less_than_50_characters')}}"
+                    }
+                }
+            });
+        });
+    </script>
+
+    </script>
+
+
+
+
+@endsection

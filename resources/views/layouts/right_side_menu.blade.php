@@ -1,10 +1,21 @@
 <div id="sidebar-wrapper" class="sidebar-wrapper">
-  <div class="side-heading"><h1>@lang('messages.keyword_admin')</h1></div>
+  <div class="side-heading"><h1>
+      <?php
+         if(!empty(Auth::user()))
+         {
+         
+            $utype = getUserTypeByUsertypeId(Auth::user()->profile_id);
+            echo trans('messages.'.$utype->language_key);
+         }
+       ?> 
+      </h1></div>
  <?php
     $request = parse_url($_SERVER['REQUEST_URI']);
-    $path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/betasystemtherma/', '', $request["path"]), '/') : ltrim($request["path"],'/');
-    $cpath = explode('/',$path);    
-    $last = end($cpath);   
+    /*$path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/betasystemtherma/', '', $request["path"]), '/') : $request["path"];*/
+	$path = ($_SERVER['HTTP_HOST'] == 'localhost') ? rtrim(str_replace('/therma/', '', $request["path"]), '/') : ltrim($request["path"],'/');
+    $cpath = explode('/',$path);
+
+    $last = end($cpath);
 
   ?>
 
@@ -14,13 +25,12 @@
 @if(!in_array('login', $cpath) && !in_array('logout', $cpath) && !in_array('wizard',$cpath))
   @if(checkIfLinkExist($path) == true )
     {{-- This will run when primary url found --}}
-    {!! checkUrlAndGetMenus($path) !!}
+    {!! checkUrlAndGetMenus($path, $allotment_status, $roomvalue) !!}
   @else
     {{-- This will run when secondary means edit or update or other urls found --}}
-    {!! checkUrlAndGetMenus(Session::get('main_link')) !!}
+    {!! checkUrlAndGetMenus(Session::get('main_link'), $allotment_status, $roomvalue) !!}
   @endif
 @elseif(in_array('wizard',$cpath))
-
 
   {{--Category listing--}}
   <!--  Tree view  -->
@@ -61,17 +71,6 @@
   <!--  Tree view  -->
 
   {{--Category listing--}}
-
-@elseif(in_array('allotment',$cpath))
-
-    {{--Allot Ment--}}
-        <ul class="sidebar-nav third-step-dropdown">
-            <li class="dropdown">
-                <a href="" class="btn btn-primary dropdown-toggle " >Hello</a>
-            </li>
-        </ul>
-    {{--Allot Ment--}}
-
 @endif
 
 
@@ -96,74 +95,9 @@
 
 </div>
 <script>
-    //appendUserType
-    $(function(){
-
-        $.ajax({
-            url: '{{ url('/appendUserType') }}',
-            method: "GET",
-            success: function(data){
-                $(".appendUserType").after(data);
-            }
-        });
-
-
-    });
-</script>
-
-
-<script>
-    jQuery(document).ready(function(){
-        jQuery('.scrollbar-inner').scrollbar();
-    });
-</script>
-
-
-<script>
-    $('.user-menu-tab ul li a').on('click',function(){
-        /*$('div').removeClass('active');*/
-        $(this).addClass('active');
-    });
-
-    function FullScreen() {
-
-        if ((document.fullScreenElement && document.fullScreenElement !== null) ||
-
-            (!document.mozFullScreen && !document.webkitIsFullScreen)) {
-
-            if (document.documentElement.requestFullScreen) {
-
-                document.documentElement.requestFullScreen();
-
-            } else if (document.documentElement.mozRequestFullScreen) {
-
-                document.documentElement.mozRequestFullScreen();
-
-            } else if (document.documentElement.webkitRequestFullScreen) {
-
-                document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-
-            }
-
-        } else {
-
-            if (document.cancelFullScreen) {
-
-                document.cancelFullScreen();
-
-            } else if (document.mozCancelFullScreen) {
-
-                document.mozCancelFullScreen();
-
-            } else if (document.webkitCancelFullScreen) {
-
-                document.webkitCancelFullScreen();
-
-            }
-
-        }
-
-    }
-
-</script>
-
+    $(document).ready(function(){
+        $(".caret").click(function(){
+            $(this).parent().toggleClass("dropdownopen");
+        })
+    })
+    </script>

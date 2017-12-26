@@ -16,7 +16,7 @@
                     <ul class="navigation-list">
                         <li class="navigation-item navigation-previous-item" id="firstst"></li>
                         <li class="navigation-item navigation-previous-item" id="secondst"></li>
-                        <li class="navigation-item navigation-previous-item navigation-active-item" id="thirdst"></li>
+                        <li class="navigation-item navigation-previous-item  navigation-active-item" id="thirdst"><span>{{trans('messages.keyword_billing_information')}}</span></li>
                         <li class="navigation-item" id="fourthst"></li>
                         <li class="navigation-item" id="fifthst"></li>
                         <li class="navigation-item" id="sixthst"></li>
@@ -35,6 +35,7 @@
     <input type="hidden" name="action" value="{{isset($action) ? $action : 'add'}}">
 
     {{ csrf_field() }}
+    <a href="{{ url('hotel/edit/policies')."/".$hoteldetails->id }}">@lang('messages.keyword_skip')</a>
      <div class="section-border">
                     <div class="billing-information">
            
