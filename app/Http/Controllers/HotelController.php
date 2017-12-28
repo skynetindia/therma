@@ -15,128 +15,112 @@ use Auth;
 use DateTime;
 use Cookie;
 use Image;
-
-
+use Illuminate\Support\Facades\Session;
 
 class HotelController extends Controller
-{	
-	public function __construct(Request $request){
-	    parent::__construct();
+{
+    public function __construct(Request $request)
+    {
+        parent::__construct();
         $this->middleware('auth');
     }
-	public function index(Request $request) {
-        if(!checkpermission($this->module_id,$this->parent_id, 0))
-        {
+    
+    public function index(Request $request)
+    {
+        if (!checkpermission($this->module_id, $this->parent_id, 0)) {
             return redirect('/unauthorized');
         }
-	    
-         return view('hotel/hotel_property');
-    }
-
-    public function getjsonhotelproperty(Request $request) {
-		//DB::enableQueryLog();
-    	$hotelDetails = array();
-		$hotel_main = Hotel::select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0);
-		if(Auth::user()->profile_id!=0){
-			$hotel_main=$hotel_main->where('id',Auth::user()->hotel_id);
-		}
-		$hotel_main=$hotel_main->get();            		
-		//dd(DB::getQueryLog());
-		foreach($hotel_main as $data) {							
-			$checked = ($data->is_active==0) ? 'checked' : '';
-            
-            if(checkpermission($this->module_id,$this->parent_id, 1)){
-                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';
-            }else{
-                $data->status = '<div class="switch"><input name="status" disabled="disabled" class="currencytogal" onchange="updateHotelStatus('.$data->id.')" id="activestatus_'.$data->id.'" '.$checked.' value="1"  type="checkbox"><label for="activestatus_'.$data->id.'"></label></div>';
-            }
-			   	
-
-			$categorydetails = DB::table('hotel_category')->where('id',$data->category_id)->first(); 
-			$countrydetails = DB::table('countries')->where('i_id',$data->country)->first(); 
-			$data->category = isset($categorydetails->title) ? $categorydetails->title : '*'; 
-			$data->country = isset($countrydetails->v_name) ? $countrydetails->v_name : '-'; 
-			/*if($data->icon != ""){					
-				$data->icon = '<img src="'.url('storage/app/images/languageicon').'/'.$data->icon.'" height="100px" width="100px">';			
-			}*/
-			$hotelManagerdetails = DB::table('users')->where(['hotel_id'=>$data->id,'profile_id'=>'1'])->first();			 						
-			if(isset($hotelManagerdetails->id)){
-				$data->access_user = '<a class="btn btn-default" href="'.url('user/access')."/".encodehelper($hotelManagerdetails->id).'" >'.trans('messages.keyword_go').'</a>';
-			}
-			else {
-				$data->access_user = '<a class="btn btn-default" href="javascript:void(0)" >'.trans('messages.keyword_go').'</a>';	
-			}
-			$hotelDetails[] = $data;	
-		}
-		return json_encode($hotelDetails);    
-    }   
-    public function updatehotelstatus(Request $request) {						
-		$update = DB::table('hotel_main')->where('id', $request->id)->update(array('is_active' => $request->status));
-		return ($update) ? 'true' : 'false';		
-	}
-	public function hoteledit(Request $request){
         
-        if(!checkpermission($this->module_id,$this->parent_id, 1))
-        {
+        return view('hotel/hotel_property');
+    }
+    
+    public function getjsonhotelproperty(Request $request)
+    {
+        //DB::enableQueryLog();
+        $hotelDetails = array();
+        $hotel_main = Hotel::select('*')->where('id', '!=', 0)->where('is_deleted', '=', 0);
+        if (Auth::user()->profile_id == '1' && Session::has('sessionForHotel')) {
+            //$hotel_main = $hotel_main->where('id', Auth::user()->hotel_id);
+            $hotel_main = $hotel_main->where('id', Session::get('sessionForHotel'));
+            
+        }
+        $hotel_main = $hotel_main->get();
+        //dd(DB::getQueryLog());
+        foreach ($hotel_main as $data) {
+            $checked = ($data->is_active == 0) ? 'checked' : '';
+            
+            if (checkpermission($this->module_id, $this->parent_id, 1)) {
+                $data->status = '<div class="switch"><input name="status" class="currencytogal" onchange="updateHotelStatus(' . $data->id . ')" id="activestatus_' . $data->id . '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            } else {
+                $data->status = '<div class="switch"><input name="status" disabled="disabled" class="currencytogal" onchange="updateHotelStatus(' . $data->id . ')" id="activestatus_' . $data->id . '" ' . $checked . ' value="1"  type="checkbox"><label for="activestatus_' . $data->id . '"></label></div>';
+            }
+            
+            
+            $categorydetails = DB::table('hotel_category')->where('id', $data->category_id)->first();
+            $countrydetails = DB::table('countries')->where('i_id', $data->country)->first();
+            $data->category = isset($categorydetails->title) ? $categorydetails->title : '*';
+            $data->country = isset($countrydetails->v_name) ? $countrydetails->v_name : '-';
+            /*if($data->icon != ""){
+				$data->icon = '<img src="'.url('storage/app/images/languageicon').'/'.$data->icon.'" height="100px" width="100px">';
+			}*/
+            $hotelManagerdetails = DB::table('users')->where(['hotel_id' => $data->id, 'profile_id' => '1'])->first();
+            if (isset($hotelManagerdetails->id)) {
+                $data->access_user = '<a class="btn btn-default" href="' . url('user/access') . "/" . encodehelper($hotelManagerdetails->id) . '" >' . trans('messages.keyword_go') . '</a>';
+            } else {
+                $data->access_user = '<a class="btn btn-default" href="javascript:void(0)" >' . trans('messages.keyword_go') . '</a>';
+            }
+            $hotelDetails[] = $data;
+        }
+        return json_encode($hotelDetails);
+    }
+    
+    public function updatehotelstatus(Request $request)
+    {
+        $update = DB::table('hotel_main')->where('id', $request->id)->update(array('is_active' => $request->status));
+        return ($update) ? 'true' : 'false';
+    }
+    
+    public function hoteledit(Request $request)
+    {
+        if (!checkpermission($this->module_id, $this->parent_id, 1)) {
             return redirect('/unauthorized');
         }
-	    
-		$type = isset($request->type) ? $request->type : 'basic';
-		if($type == 'basic'){
-			return $this->basicinforedit($request);
-		}
-		else if($type == 'detail'){
-			return $this->detailedit($request);
-		}
-		else if($type == 'billinginfo') {
-			return $this->billinginfo($request);
-		}
-		else if($type == 'contactdetail'){
-			return $this->contactdetail($request);
-		}
-		else if($type == 'media')
-        {
+        
+        $type = isset($request->type) ? $request->type : 'basic';
+        if ($type == 'basic') {
+            return $this->basicinforedit($request);
+        } else if ($type == 'detail') {
+            return $this->detailedit($request);
+        } else if ($type == 'billinginfo') {
+            return $this->billinginfo($request);
+        } else if ($type == 'contactdetail') {
+            return $this->contactdetail($request);
+        } else if ($type == 'media') {
             return $this->media($request);
-        }
-		else if($type == 'amenities')
-        {
+        } else if ($type == 'amenities') {
             return $this->amenities($request);
-        }
-        else if($type == 'policies')
-        {
+        } else if ($type == 'policies') {
             return $this->hotelpolicies($request);
-        }
-		else if($type == 'other') {
-			return $this->otherdetail($request);
-		}	
-		
-		else if($type == 'room-details')
-        {        	
+        } else if ($type == 'other') {
+            return $this->otherdetail($request);
+        } else if ($type == 'room-details') {
             return $this->roomdetails($request);
-        }
-        else if($type == 'room-options')
-        {
+        } else if ($type == 'room-options') {
             return $this->roomoptions($request);
-        }       
-        else if($type == 'extra')
-        {
+        } else if ($type == 'extra') {
             return $this->extra($request);
-        }
-        else if($type == 'media')
-        {
+        } else if ($type == 'media') {
             return $this->media($request);
-        }
-        else if($type == 'policies')
-        {
+        } else if ($type == 'policies') {
             return $this->paymentpolicies($request);
-        }
-        else if($type == 'agreement')
-        {
+        } else if ($type == 'agreement') {
             return $this->agreement($request);
         }
-	}
-	 /* add/edit form details */
-	public function basicinforedit(Request $request) {    
+    }
+    
+    /* add/edit form details */
+    public function basicinforedit(Request $request)
+    {
         $action = 'add';
         $arrDetails = array();
         //$hotelstatus = getTaxonomies('emotional_status');
