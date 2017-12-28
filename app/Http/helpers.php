@@ -1,114 +1,120 @@
 <?php
-	/* This day used for date add/minuser of particular day */
-	$GLOBALS['datedays'] = 10;
-	/*This function is used to store the log details of login user */
-	function storelogs($userID,$logs){
-		DB::table('member_activity_log')->insert(array(
-					'user_id' => $userID,
-					'logs' => $logs,
-					'ip_address' => \Request::ip(),
-					'log_date' => date('Y-m-d H:i:s')));
-	}
-	
-	function getlanguages() {
-		return DB::table('languages')->where('is_deleted','0')->get();
-	}
-	function getWizardCategoryById($id) {
-		return DB::table('wizard_categories')->where(['is_deleted'=>'0','is_active'=>'0','id'=>$id])->first();		
-	}
-	function    getWizardSubCategory($id) {
-		return DB::table('wizard_categories')->where(['is_deleted'=>'0','is_active'=>'0','parent_id'=>$id])->get();
-	}
+/* This day used for date add/minuser of particular day */
+$GLOBALS['datedays'] = 10;
+/*This function is used to store the log details of login user */
+function storelogs($userID, $logs)
+{
+    DB::table('member_activity_log')->insert(array(
+        'user_id' => $userID,
+        'logs' => $logs,
+        'ip_address' => \Request::ip(),
+        'log_date' => date('Y-m-d H:i:s')));
+}
 
-    function dateFormate($date,$formate = 'd/m/Y'){
-        /*
-        $date = str_replace('/', '-', $date);
-        $formate = ($formate == null) ? $arrMainSettings['timeformate'] : $formate;*/
-        $newDate = date($formate,strtotime($date));
-        return $newDate;
-    }
-	
-	function getWizardOptionByCategory($categoyid,$first='get') {
+function getlanguages()
+{
+    return DB::table('languages')->where('is_deleted', '0')->get();
+}
+
+function getWizardCategoryById($id)
+{
+    return DB::table('wizard_categories')->where(['is_deleted' => '0', 'is_active' => '0', 'id' => $id])->first();
+}
+
+function getWizardSubCategory($id)
+{
+    return DB::table('wizard_categories')->where(['is_deleted' => '0', 'is_active' => '0', 'parent_id' => $id])->get();
+}
+
+function dateFormate($date, $formate = 'd/m/Y')
+{
+    /*
+    $date = str_replace('/', '-', $date);
+    $formate = ($formate == null) ? $arrMainSettings['timeformate'] : $formate;*/
+    $newDate = date($formate, strtotime($date));
+    return $newDate;
+}
+
+function getWizardOptionByCategory($categoyid, $first = 'get')
+{
     DB::enableQueryLog();
-    $query=DB::table('wizard_categories')
-    ->where(['wizard_categories.is_deleted'=>'0','wizard_categories.id'=>$categoyid])
-    
-    ->leftjoin('wizard_options', 'wizard_categories.id', '=', 'wizard_options.category_id')
-    ->where(['wizard_options.is_deleted'=>'0','wizard_options.is_active'=>'0'])
+    $query = DB::table('wizard_categories')
+        ->where(['wizard_categories.is_deleted' => '0', 'wizard_categories.id' => $categoyid])
+        ->leftjoin('wizard_options', 'wizard_categories.id', '=', 'wizard_options.category_id')
+        ->where(['wizard_options.is_deleted' => '0', 'wizard_options.is_active' => '0'])
         /*->leftjoin('wizard_options_value', 'wizard_options_value.id_stato', '=', 'stato.id_stato') */
-        ->select('wizard_options.*','wizard_categories.language_key as cat_lang_key','wizard_categories.name as categoryName');
-    if($first=='get')
+        ->select('wizard_options.*', 'wizard_categories.language_key as cat_lang_key', 'wizard_categories.name as categoryName');
+    if ($first == 'get')
         return $query->get();
     else
-    return $query->first();
-  }
+        return $query->first();
+}
 
 
-  /* Create the wizard */
-  function createwizard($value,$isdynamic = '0', $checkboxname=null,$selectedValue=null,$language=null) {
-    if(isset($value->language_key)){    
+/* Create the wizard */
+function createwizard($value, $isdynamic = '0', $checkboxname = null, $selectedValue = null, $language = null)
+{
+    if (isset($value->language_key)) {
 //        $html = '<label for="">'.trans('messages.'.$value->language_key).'</label>';
-            $html = '';
-           
-              $checkboxname = ($checkboxname != null && $checkboxname != "") ? $checkboxname : $value->cat_lang_key;
-
-              $catname = isset($value->cat_lang_key) ? trans('messages.keyword_'.$value->cat_lang_key) : '';
-              $fieldName = $value->cat_lang_key.$value->language_key;
-              $name = $catname.trans('messages.'.$value->language_key);
-              $name = trim(str_replace(' ', '_',$name));
-			  $name = trim(str_replace('(', '',$name));
-			  $name = trim(str_replace(')', '',$name));
-			  $name = trim(str_replace("'", '',$name));
-              $id = 'id_'.$name;
-              $placeholder = trans('messages.'.$value->language_key);
-              $is_required = (isset($value->is_required) && $value->is_required == '1') ? 'required' : '';
-              if(!is_array($selectedValue))
-             $selectedValue = ($selectedValue != null && $selectedValue != "") ? explode(",", $selectedValue) : array();
-              $is_checked = (in_array($value->id, $selectedValue)) ? 'checked' : '';
-
-            if($isdynamic == '1') {
-
-               // $html .= '<div class="col-md-6 col-sm-12 col-xs-12"><div class="ryt-chk">';
-                $html .= '<input name="'.$checkboxname.'[]" '.$is_checked.' id="'.$id.'" value="'.$value->id.'" placeholder="'.$placeholder.'" type="checkbox" '.$is_required.'>';
-                $html .= '<label class="control-label" for="'.$id.'">'.trans('messages.'.$value->language_key).'</label>';
-				//$html.='</div></div>';
-
-            }
-            elseif($isdynamic == '2'){
-                 $html .= '<input name="'.$checkboxname.'[]" '.$is_checked.' class="'.$id.'_language" id="'.$id.'" value="'.$value->id.'" placeholder="'.$placeholder.'" type="checkbox" '.$is_required.'>';
-                $html .= '<label class="control-label" for="'.$id.'">'.trans('messages.'.$value->language_key).'</label>
-						<input class="form-control" name="language['.$value->id.'][]" value="'.$language.'" id="'.$id.'_language" type="text" onKeyDown="fun_checkbox(this.id)"></li>';
-                 
-            }
-            else if($isdynamic == '3')
-            {
-               // $html .= '<div class="col-md-12 col-sm-12 col-xs-12">';
-               // $html .= '<div class="ryt-chk">';
-                $html .= '<input class="form-control" '.$is_checked.'  name="'.$checkboxname.'[]" id="'.$id.'"type="checkbox"  value="'.$value->id.'" '.$is_required.'>';
-                $html .= '<label for="'.$id.'">'.trans('messages.'.$value->language_key).'</label>';
-               // $html .= '</div>';
-                //$html .= '</div>';
-            }
-
-
-          }
-
-        return $html;  
-
-  }
-    function backup_createwizard_backup($value,$isdynamic = '0') {
-    if(isset($value->language_key)){
-        $html = '<label for="">'.trans('messages.'.$value->language_key).'</label>';
-        if($isdynamic == '1') {
-            $html = '<label class="control-label col-md-6 col-sm-12 col-xs-12" for="">'.trans('messages.'.$value->language_key).'</label>';
+        $html = '';
+        
+        $checkboxname = ($checkboxname != null && $checkboxname != "") ? $checkboxname : $value->cat_lang_key;
+        
+        $catname = isset($value->cat_lang_key) ? trans('messages.keyword_' . $value->cat_lang_key) : '';
+        $fieldName = $value->cat_lang_key . $value->language_key;
+        $name = $catname . trans('messages.' . $value->language_key);
+        $name = trim(str_replace(' ', '_', $name));
+        $name = trim(str_replace('(', '', $name));
+        $name = trim(str_replace(')', '', $name));
+        $name = trim(str_replace("'", '', $name));
+        $id = 'id_' . $name;
+        $placeholder = trans('messages.' . $value->language_key);
+        $is_required = (isset($value->is_required) && $value->is_required == '1') ? 'required' : '';
+        if (!is_array($selectedValue))
+            $selectedValue = ($selectedValue != null && $selectedValue != "") ? explode(",", $selectedValue) : array();
+        $is_checked = (in_array($value->id, $selectedValue)) ? 'checked' : '';
+        
+        if ($isdynamic == '1') {
+            
+            // $html .= '<div class="col-md-6 col-sm-12 col-xs-12"><div class="ryt-chk">';
+            $html .= '<input name="' . $checkboxname . '[]" ' . $is_checked . ' id="' . $id . '" value="' . $value->id . '" placeholder="' . $placeholder . '" type="checkbox" ' . $is_required . '>';
+            $html .= '<label class="control-label" for="' . $id . '">' . trans('messages.' . $value->language_key) . '</label>';
+            //$html.='</div></div>';
+            
+        } elseif ($isdynamic == '2') {
+            $html .= '<input name="' . $checkboxname . '[]" ' . $is_checked . ' class="' . $id . '_language" id="' . $id . '" value="' . $value->id . '" placeholder="' . $placeholder . '" type="checkbox" ' . $is_required . '>';
+            $html .= '<label class="control-label" for="' . $id . '">' . trans('messages.' . $value->language_key) . '</label>
+						<input class="form-control" name="language[' . $value->id . '][]" value="' . $language . '" id="' . $id . '_language" type="text" onKeyDown="fun_checkbox(this.id)"></li>';
+        
+        } else if ($isdynamic == '3') {
+            // $html .= '<div class="col-md-12 col-sm-12 col-xs-12">';
+            // $html .= '<div class="ryt-chk">';
+            $html .= '<input class="form-control" ' . $is_checked . '  name="' . $checkboxname . '[]" id="' . $id . '"type="checkbox"  value="' . $value->id . '" ' . $is_required . '>';
+            $html .= '<label for="' . $id . '">' . trans('messages.' . $value->language_key) . '</label>';
+            // $html .= '</div>';
+            //$html .= '</div>';
         }
-        else if($isdynamic == '2') {
-            $html = '<div class="col-md-4 col-sm-12 col-xs-12"><div class="form-group"><label class="bold">'.trans('messages.'.$value->language_key).'</label></div></div>';
-        }
-        $arrtype = DB::table('wizard_options_type')->where(['option_id'=>$value->id,'is_deleted'=>'0','is_active'=>'0'])->get();
-        foreach($arrtype as $keyelement => $valelement) {
+        
+        
+    }
+    
+    return $html;
+    
+}
 
-            $optionValue = DB::table('wizard_options_value')->where(['option_type_id'=>$valelement->id,'is_active'=>'0','is_deleted'=>'0'])->get();
+function backup_createwizard_backup($value, $isdynamic = '0')
+{
+    if (isset($value->language_key)) {
+        $html = '<label for="">' . trans('messages.' . $value->language_key) . '</label>';
+        if ($isdynamic == '1') {
+            $html = '<label class="control-label col-md-6 col-sm-12 col-xs-12" for="">' . trans('messages.' . $value->language_key) . '</label>';
+        } else if ($isdynamic == '2') {
+            $html = '<div class="col-md-4 col-sm-12 col-xs-12"><div class="form-group"><label class="bold">' . trans('messages.' . $value->language_key) . '</label></div></div>';
+        }
+        $arrtype = DB::table('wizard_options_type')->where(['option_id' => $value->id, 'is_deleted' => '0', 'is_active' => '0'])->get();
+        foreach ($arrtype as $keyelement => $valelement) {
+            
+            $optionValue = DB::table('wizard_options_value')->where(['option_type_id' => $valelement->id, 'is_active' => '0', 'is_deleted' => '0'])->get();
             /*print('<pre>');
             print_r($optionValue);
             print_r($valelement);*/
